@@ -69,3 +69,13 @@ Haqiqiy universitet API/tokenlari kiritilmagani uchun real HEMIS/LMS/Telegram ul
 - `python3 -m unittest discover -s tests -p 'test_*.py'`: 86 test; rasm ruxsatlari, yaroqsiz fayllar, almashtirilgan rasmni tozalash, XLSX faqat yangi yozuvni qo‘shishi, takroriy ID va ruxsat tekshirildi.
 - Workflow, enhancements va routing/audio brauzer regressiyalari o‘tdi.
 - Foydalanuvchi fayli 6262 ta noyob ID va 7 ustundan iborat. 43834 ta asl katak qiymati ishchi bazada mustaqil openpyxl o‘qishi bilan solishtirildi. Xususiy fayl/baza repozitoriyga qo‘shilmagan. Asl fayl SHA-256 va import hisoboti xususiy papkada saqlangan.
+
+
+## SSH terminalida test izolyatsiyasi
+
+Birinchi admin CLI testi controlling TTY mavjud bo‘lganda fixture stdin o‘rniga
+operator terminalidan getpass kutishi qayta hosil qilindi (10s TimeoutExpired).
+POSIX test subprocesslari yangi sessiyaga ajratildi; haqiqiy admin yaratish va
+ishchi hisoblar o‘zgartirilmadi. `script -q -e -c "python3 -m unittest discover
+-s tests -p 'test_*.py'" /tmp/navbot-tests.log` bilan haqiqiy PTY ichida94 test
+41.923 soniyada o‘tdi, interaktiv parol so‘rovi bo‘lmadi.

@@ -1,5 +1,6 @@
 """Exercise interrupted first-run recovery through the actual CLI."""
 import pathlib
+import os
 import socket
 import sqlite3
 import subprocess
@@ -12,10 +13,12 @@ import urllib.request
 APP=pathlib.Path(__file__).resolve().parents[1]/'navbot/app.py'
 
 class BootstrapTests(unittest.TestCase):
+    # On SSH, getpass otherwise opens the real controlling terminal instead of
+    # the fixture stdin pipe. Isolate only test children; real CLI is unchanged.
     def test_failed_confirmation_can_be_retried_in_same_run(self):
         with tempfile.TemporaryDirectory() as folder:
             db=pathlib.Path(folder)/'db.sqlite3'
-            result=subprocess.run([sys.executable,str(APP),'--db',str(db),'--init-admin'],input='admin\nBootstrap-Only-123!\nWrong-Only-123!\nadmin\nBootstrap-Only-123!\nBootstrap-Only-123!\n',text=True,capture_output=True,timeout=10)
+            result=subprocess.run([sys.executable,str(APP),'--db',str(db),'--init-admin'],input='admin\nBootstrap-Only-123!\nWrong-Only-123!\nadmin\nBootstrap-Only-123!\nBootstrap-Only-123!\n',text=True,capture_output=True,timeout=10,start_new_session=(os.name=='posix'))
             self.assertEqual(result.returncode,0,result.stderr)
             self.assertIn('Parollar mos emas',result.stdout)
             self.assertNotIn('Bootstrap-Only-123!',result.stdout+result.stderr)
@@ -23,12 +26,12 @@ class BootstrapTests(unittest.TestCase):
     def test_restart_recovers_empty_database_and_keeps_existing_credentials(self):
         with tempfile.TemporaryDirectory() as folder:
             db=pathlib.Path(folder)/'db.sqlite3'
-            failed=subprocess.run([sys.executable,str(APP),'--db',str(db),'--init-admin'],input='admin\nBootstrap-Only-123!\nWrong-Only-123!\n',text=True,capture_output=True,timeout=10)
+            failed=subprocess.run([sys.executable,str(APP),'--db',str(db),'--init-admin'],input='admin\nBootstrap-Only-123!\nWrong-Only-123!\n',text=True,capture_output=True,timeout=10,start_new_session=(os.name=='posix'))
             self.assertNotEqual(failed.returncode,0)
             self.assertTrue(db.is_file())
             for attempt in range(2):
                 with socket.socket() as s:s.bind(('127.0.0.1',0));port=s.getsockname()[1]
-                process=subprocess.Popen([sys.executable,str(APP),'--db',str(db),'--port',str(port),'--ensure-admin'],stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
+                process=subprocess.Popen([sys.executable,str(APP),'--db',str(db),'--port',str(port),'--ensure-admin'],stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True,start_new_session=(os.name=='posix'))
                 try:
                     if attempt==0:
                         process.stdin.write('admin\nBootstrap-Only-123!\nBootstrap-Only-123!\n');process.stdin.flush()
