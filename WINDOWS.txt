@@ -14,7 +14,8 @@ NavBoT v0.5 — Windows lokal sinov
 6. Menejerda talabani arizaga biriktiring va saqlang. Keyin joyida hal qiling yoki
    executor ga muddat/ichki asos bilan yuboring. executor sabab bilan qaytaradi
    yoki javobni tasdiqqa yuboradi; head tasdiqlaydi. director hisobotni ko'radi.
-7. TVda ovozni alohida yoqing. Kioskda chekni qayta chop etish mumkin.
+7. TVni START-TV-WINDOWS.bat orqali oching: ovoz avtomatik, yoqish tugmasi yoq.
+   Kioskda chekni qayta chop etish mumkin.
 
 To'xtatish: Ctrl+C. Navbat va arizalar navbot/navbot.sqlite3 da saqlanadi.
 Yangilashda bazani o'chirmang. Eski dasturni to'xtatib kod fayllarini yangilang.
@@ -22,3 +23,17 @@ Batafsil ishga tushirish/zaxira/cheklovlar README.md da.
 
 Haqiqiy HEMIS/LMS, Telegram, printer va Info KeyOS hali ulanmagan.
 Bu faqat lokal sun'iy ma'lumotli sinov; haqiqiy talabalar ma'lumotini kiritmang.
+
+DIALOGSIZ AVTOMATIK CHEK:
+- 80 mm printer drayverini o'rnating, uni Windowsda Default printer qiling.
+- Windowsning Let Windows manage my default printer parametrini o'chiring.
+- Avval printerdan Windows test sahifasini chiqaring.
+- START-KIOSK-WINDOWS.bat ni bosing. Google Chrome o'rnatilgan bo'lishi kerak.
+- Xizmatni tanlaganda chek avtomatik yaratiladi va chop etishga yuboriladi.
+- Oddiy Chrome tabida dialog chiqadi, maxsus kiosk oynasida chiqmasligi kerak.
+- Kioskni yopish: Alt+F4. Serverni to'xtatish: qora oynada Ctrl+C.
+Haqiqiy Windows printer sinovi foydalanuvchi qurilmasida bajariladi.
+
+TV: START-TV-WINDOWS.bat alohida Chrome profilini avtomatik ovoz siyosati bilan ochadi.
+Oddiy Chrome oynasida brauzer avtomatik ovozni cheklashi mumkin.
+Ovoz darajasi Superadmin sozlamasi va Windows ovoz sozlamasidan boshqariladi.

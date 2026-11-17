@@ -33,6 +33,15 @@ Hammasining dastlabki sinov paroli: `Navbot-Test-2026!`. O‘zgartirilgan parol 
 Talaba sinov IDlari: `100000000001`, `100000000002`, `H24011876`. Bular haqiqiy talabalar emas.
 Profil orqali parol almashtirilganda barcha sessiyalar yopiladi, yangi parol bilan qayta kiring.
 
+
+## Dialogsiz avtomatik chek (Windows kiosk)
+
+80 mm printer drayverini o‘rnating va Windows **Settings → Printers & scanners** ichida uni **Default printer** qiling. Windowsning avtomatik default printer tanlashini o‘chiring; qog‘oz o‘lchami 80 mm ekanini printer sozlamasida tekshiring. Avval Windows test sahifasini chiqarib ko‘ring.
+
+Oddiy Chrome tabini ishlatish o‘rniga **START-KIOSK-WINDOWS.bat** faylini oching. U lokal serverni kerak bo‘lsa ishga tushiradi va alohida NavBoT Chrome profilini `--kiosk-printing --kiosk` bilan ochadi. Katalogdagi xizmat bosilganda bitta chek yaratiladi va `window.print()` avtomatik chaqiriladi; kiosk rejimi chop etish dialogini avtomatik tasdiqlaydi. Qayta chop etish ayni raqamni ishlatadi. Kioskdan chiqish: **Alt+F4**.
+
+Oddiy brauzerda avtomatik print dialogi chiqadi; dialogsizlik faqat maxsus Chrome kiosk oynasida ishlaydi. Printer mavjud bo‘lmasa yoki PDF destination tanlangan bo‘lsa qog‘oz chiqmaydi. Ilova brauzerdan printerning fizik muvaffaqiyatini bila olmaydi; qog‘oz, drayver va default printerni tekshiring. Windows Chrome va haqiqiy printerdagi dialogsizlik bu Linux muhitida tekshirilmagan.
+
 ## Linux/macOS
 
 Ilova Python standart kutubxonalarida ishlaydi, tashqi paket kerak emas:
@@ -108,3 +117,7 @@ Qabul dalillari va talablar qamrovi: [docs/ACCEPTANCE.md](docs/ACCEPTANCE.md).
 ![TV](docs/previews/tv.png)
 
 [Kiosk](docs/previews/kiosk.png) · [Menejer](docs/previews/manager.png)
+
+## TV avtomatik ovozi
+
+TVda ovozni yoqish/o‘chirish tugmasi yo‘q; yangi chaqiruvlar talaba tanlagan tilda avtomatik ovozlashtiriladi. Windowsda **START-TV-WINDOWS.bat** faylini oching: alohida Chrome TV profili `--autoplay-policy=no-user-gesture-required --kiosk` bilan ishga tushadi. Bu maxsus TV oynasi uchun; oddiy brauzer avtomatik ovozni cheklashi mumkin. TV oynasidan chiqish: Alt+F4. Ovoz darajasini Superadmin sozlamasi va Windows/karnaydan belgilang. Haqiqiy Windows/karnayda alohida tekshirish zarur.

@@ -32,7 +32,7 @@ Bu hujjat butun texnik talab yakunlanganini anglatmaydi. Quyidagi lokal funksiya
 - LMSdan ariza/talaba/holat/javob/baho almashish, tashqi ID deduplikatsiyasi va qo‘lda sinxronizatsiya: API manzili, maydonlari va ruxsatlari kerak. Ulangan deb ko‘rsatilmaydi.
 - Katalogni 5×5 dan cheklanmagan yaratish/tartiblash, ixtiyoriy rollar va vakolat matritsasi, bo‘lim boshlig‘ining delegatsiyasi, dinamik ariza shablonlari va fayl ilovalari versiyasi hali bajarilmagan. Yakuniy 19-bo‘lim matritsalari ham berilishi kerak.
 - Xodim kabinetlarining to‘liq ruscha/inglizcha tarjimasi hali yo‘q; kiosk/chek/ovoz uch tilda. TV interfeys tili alohida sozlanadi.
-- Haqiqiy 80mm printer, ovozning eshitilishi, uzbekcha tizim ovozi, Info KeyOS/LED protokoli, boot/kiosk rejimi, printer xatosini qurilmadan olish tekshirilmagan. Hozir brauzer print dialogi ishlatiladi.
+- Haqiqiy 80mm printer, ovozning eshitilishi, uzbekcha tizim ovozi, Info KeyOS/LED protokoli, boot/kiosk rejimi, printer xatosini qurilmadan olish tekshirilmagan. Oddiy brauzer print dialogi ishlatiladi; maxsus Windows kiosk launcher dialogsiz tasdiqlash uchun qo‘shilgan.
 - LAN/WAN, HTTPS, ishchi server/subdomen, zaxiradan real operatsion qaytish, tarmoq uzilishi/tiklanishi, qurilma dasturini yangilash — haqiqiy infratuzilmada qabul qilinadi. Ubuntu yo‘riqnomasi tayyor, lekin serverga o‘rnatilmadi.
 
 ## Ko‘rinishlar
@@ -42,3 +42,7 @@ Bular sun’iy ma’lumotli ishlayotgan ilovadan olingan; dizayn maketi emas.
 - [Kiosk](previews/kiosk.png)
 - [TV](previews/tv.png)
 - [Menejer](previews/manager.png)
+
+Avtomatik print yangilanishi: xizmat bosilganda brauzer print chaqiruvi avtomatik bir marta bajariladi; qayta chop etish ayni chekni ishlatadi. START-KIOSK-WINDOWS.bat alohida Google Chrome profilini --kiosk-printing bilan ochadi. Haqiqiy Windows dialogsiz chop etish va printer holati hali qurilmada tekshirilishi kerak.
+
+TV yangilanishi: ovozni yoqish tugmasi olib tashlandi. Chaqiruv ovozi avtomatik; maxsus Windows TV launcheri autoplay siyosatini belgilaydi. Uch tilli Speech API chaqiruvlari va tugma yo‘qligi brauzer sinovida tekshiriladi; fizik ovoz Windowsda tasdiqlanishi kerak.
