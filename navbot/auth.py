@@ -95,12 +95,15 @@ def initialize(db, demo=False):
             ('admin', 'Sinov Superadmin', 'admin', 'Registrar', None),
             ('manager', 'Sinov Menejer 1', 'manager', 'Registrar', 1),
             ('manager2', 'Sinov Menejer 2', 'manager', 'Registrar', 2),
+            ('manager3', 'Sinov Menejer 3', 'manager', 'Registrar', 3),
+            ('manager4', 'Sinov Menejer 4', 'manager', 'Registrar', 4),
+            ('manager5', 'Sinov Menejer 5', 'manager', 'Registrar', 5),
             ('executor', 'Sinov Ijrochi', 'executor', 'O‘quv bo‘limi', None),
             ('head', 'Sinov Bo‘lim boshlig‘i', 'head', 'O‘quv bo‘limi', None),
             ('director', 'Sinov Direktor', 'director', 'Direktor', None),
         ]
         for username, name, role, department, operator in demo_users:
-            if not _one(db, 'SELECT id FROM users WHERE username=?', (username,)):
+            if not _one(db, 'SELECT id FROM users WHERE username=?', (username,)) and (operator is None or not _one(db,'SELECT id FROM users WHERE operator=?',(operator,))):
                 db.execute('''INSERT INTO users
                     (username,full_name,role,department,operator,password_hash,must_change_password)
                     VALUES (?,?,?,?,?,?,0)''', (username, name, role, department, operator, _hash(DEMO_PASSWORD)))

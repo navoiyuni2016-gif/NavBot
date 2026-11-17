@@ -7,9 +7,9 @@ NavBoT v0.5 — Windows lokal sinov
    Kirish: http://127.0.0.1:8081/login
    TV: http://127.0.0.1:8081/tv
    Tablo: http://127.0.0.1:8081/tablo?id=1
-4. Sinov loginlari: manager, manager2, executor, head, director, admin.
+4. Sinov loginlari: manager, manager2, manager3, manager4, manager5, executor, head, director, admin.
    Dastlabki sinov paroli: Navbot-Test-2026!
-   manager = 1-operator, manager2 = 2-operator.
+   manager = 1-operator, manager2…manager5 = 2…5-operator.
 5. Talaba sinov IDlari: 100000000001, 100000000002, H24011876.
 6. Menejerda talabani arizaga biriktiring va saqlang. Keyin joyida hal qiling yoki
    executor ga muddat/ichki asos bilan yuboring. executor sabab bilan qaytaradi

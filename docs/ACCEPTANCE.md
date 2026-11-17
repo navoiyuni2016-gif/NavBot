@@ -54,3 +54,10 @@ Admin integratsiya shakllari (saqlash, sirni qayta bermaslik, ulanish sinovi, mo
 Fayl yuklash/yuklab olish vakolatlari, buzilgan fayllarni rad etish, takroriy yuklashni bitta saqlash va arxivda saqlash server testlarida tekshirildi. Ijrochi javobiga fayl qo‘shib rahbarga yuborish, rahbar tasdiq fayli qo‘shishi va arxivda ikkala fayl qolishi to‘liq brauzer zanjirida tekshirildi.
 
 Haqiqiy universitet API/tokenlari kiritilmagani uchun real HEMIS/LMS/Telegram ulanishiga muvaffaqiyat da’vo qilinmaydi. Tashqi so‘rovlar bloklarining testlari soxta transport chegarasidan foydalanadi; brauzer testida tashqi tarmoqqa xabar yuborilmagan. Windows, real karnay/printer va Info KeyOS apparat sinovi hali kerak. Batafsil: [admin qo‘llanmasi](ADMIN-QOLLANMA.md).
+
+## Bo‘lim harflari va ommaviy audio
+
+- `python3 -m unittest discover -s tests -p 'test_*.py'`: 57 test o‘tdi; beshta marshrut, mustaqil hisoblagichlar, mavjud chekni saqlash, noto‘g‘ri operatorni rad etish, 500 raqam yozuvi va asl to‘rtta fayl tartibi tekshirildi.
+- `node tests/routing-audio-browser.cjs`: admin sozlamasi, namunani o‘rnatish, interfeysdan 500 raqam + 4 qo‘shimcha harf + 4 operator yozuvini yuklash, beshta menejer inboxi, TV/tablo va ketma-ket 20 audio qismi o‘tdi.
+- `node tests/workflow-browser.cjs` va `node tests/enhancements-browser.cjs`: mavjud jarayonlar regressiyasi o‘tdi; sahifa JavaScript xatosi yo‘q.
+- Audio test ijro chegarasini almashtiradi; haqiqiy karnay va Windows qurilmasidagi tovush alohida tekshiriladi.

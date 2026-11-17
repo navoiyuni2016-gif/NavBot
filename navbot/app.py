@@ -13,6 +13,7 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlsplit
 from uuid import UUID
 import auth
+import routing
 import attachments
 import audio_store
 import excel
@@ -36,6 +37,7 @@ DEFAULT_SETTINGS = {
                         'Номер {navbat}, подойдите к окну номер {operator}.',
                         'Ticket {navbat}, please proceed to counter {operator}.'],
     'receipt_footer': ['Navbatingizni TVda kuzating', 'Следите за очередью на экране', 'Watch the queue display'],
+    'section_routes': routing.DEFAULT_ROUTES,
     'catalog': CATALOG, 'hidden_services': [], 'section_logos': [None] * 5,
 }
 
@@ -82,6 +84,8 @@ def save_settings(db, user, data):
         raise w.Problem('Operator yorliqlarini tekşiring')
     if result['section_logos'] != settings(db)['section_logos']:
         raise w.Problem('Logo faylini yuklaş tugmasidan foydalaning')
+    if not routing.valid(result['section_routes']):
+        raise w.Problem('5 ta bölimga takrorlanmaydigan harf va operator biriktiring')
     catalog = result['catalog']
     if not isinstance(catalog, list) or len(catalog) != len(CATALOG):
         raise w.Problem('Hozir 5 ta bölim saqlanişi kerak')
@@ -103,8 +107,8 @@ def save_settings(db, user, data):
 
 def snapshot(db, operator):
     # Public data is deliberately restricted: no student, request, notes, or staff names.
-    items = [dict(row) for row in db.execute(
-        'SELECT id,lang,section,service,status,operator,called FROM tickets WHERE status != ? ORDER BY id', ('done',))]
+    items = [routing.public_ticket(row) for row in db.execute(
+        'SELECT id,lang,section,service,status,operator,called,prefix,queue_seq,target_operator FROM tickets WHERE status != ? ORDER BY id', ('done',))]
     called = max((i for i in items if i['status'] == 'called'), key=lambda i: i['called'] or 0, default=None)
     return {'waiting': [i for i in items if i['status'] == 'waiting'],
             'serving': sorted((i for i in items if i['status'] == 'serving'), key=lambda i: i['operator']),
@@ -124,11 +128,13 @@ def mutate(db, path, data, user):
         else:
             if f'{section}:{service}' in config['hidden_services']:
                 raise w.Problem('Xizmat vaqtinça mavjud emas', 409)
-            db.execute('INSERT INTO tickets(request_key,lang,section,service,created_at,content_name) VALUES (?,?,?,?,?,?)',
-                       (key, lang, section, service, w.now(), config['catalog'][section][1][service][LANGUAGES.index(lang)]))
+            route = routing.for_section(config['section_routes'], section)
+            sequence = db.execute('SELECT COALESCE(MAX(queue_seq),0)+1 FROM tickets WHERE prefix=?', (route['prefix'],)).fetchone()[0]
+            db.execute('INSERT INTO tickets(request_key,lang,section,service,created_at,content_name,prefix,queue_seq,target_operator) VALUES (?,?,?,?,?,?,?,?,?)',
+                       (key, lang, section, service, w.now(), config['catalog'][section][1][service][LANGUAGES.index(lang)],route['prefix'],sequence,route['operator']))
             ticket = dict(db.execute('SELECT * FROM tickets WHERE request_key=?', (key,)).fetchone())
         w.kiosk_request(db, ticket, ticket['content_name'])
-        return {k: ticket[k] for k in ('id', 'lang', 'section', 'service', 'created_at')} | {'content': ticket['content_name']}
+        return {k: ticket[k] for k in ('id', 'lang', 'section', 'service', 'created_at','prefix','queue_seq','target_operator')} | {'content': ticket['content_name'],'code':routing.code(ticket)}
     w.need(user, auth.ROLES)
     if path == '/api/attachment/upload':
         return attachments.upload(db, user, data)
@@ -136,6 +142,8 @@ def mutate(db, path, data, user):
         response = integrations.save(db, user, data)
         w.audit(db, user, 'integration_save', {'kind': data.get('kind')})
         return response
+    if path == '/api/admin/audio/install-pack':
+        return audio_store.install_pack(db,user)
     if path == '/api/admin/audio/upload':
         return audio_store.upload(db, user, data)
     if path == '/api/admin/audio/delete':
@@ -197,7 +205,7 @@ def mutate(db, path, data, user):
         ticket_id = data.get('ticket_id')
         if ticket_id is not None and type(ticket_id) is not int:
             raise w.Problem('Çek raqamini tekşiring')
-        ticket = db.execute("SELECT * FROM tickets WHERE status='waiting' AND (? IS NULL OR id=?) ORDER BY id LIMIT 1", (ticket_id, ticket_id)).fetchone()
+        ticket = db.execute("SELECT * FROM tickets WHERE status='waiting' AND target_operator=? AND (? IS NULL OR id=?) ORDER BY id LIMIT 1", (operator,ticket_id, ticket_id)).fetchone()
         if ticket is None:
             raise w.Problem('Navbat böş yoki çaqirilgan', 409)
         req = db.execute('SELECT * FROM requests WHERE ticket_id=?', (ticket['id'],)).fetchone()
@@ -207,7 +215,7 @@ def mutate(db, path, data, user):
         if req:
             db.execute('UPDATE requests SET manager_id=COALESCE(manager_id,?),version=version+1,updated_at=? WHERE id=?',
                        (user['id'], w.now(), req['id']))
-            w.record(db, req['id'], user, 'call', {'operator': operator})
+            w.record(db, req['id'], user, 'call', {'operator': operator,'queue_code':routing.code(ticket)})
         desk = ticket
     elif not desk or action == 'call':
         raise w.Problem('Operator holati özgargan', 409)
@@ -224,7 +232,7 @@ def mutate(db, path, data, user):
         req = db.execute('SELECT id FROM requests WHERE ticket_id=?', (desk['id'],)).fetchone()
         if req:
             db.execute('UPDATE requests SET version=version+1,updated_at=? WHERE id=?', (w.now(), req['id']))
-            w.record(db, req['id'], user, 'queue_' + action, {'operator': operator})
+            w.record(db, req['id'], user, 'queue_' + action, {'operator': operator,'queue_code':routing.code(desk)})
     return snapshot(db, operator)
 
 
@@ -278,7 +286,7 @@ class Handler(BaseHTTPRequestHandler):
                     return self.reply(audio_store.metadata(db))
                 if url.path == '/api/audio/plan':
                     q = parse_qs(url.query)
-                    return self.reply(audio_store.plan(db, q.get('lang', ['uz'])[0], int(q.get('ticket', ['0'])[0]), int(q.get('operator', ['0'])[0])))
+                    return self.reply(audio_store.plan(db, q.get('lang', ['uz'])[0], int(q.get('ticket', ['0'])[0]), int(q.get('operator', ['0'])[0]),q.get('prefix',['A'])[0]))
                 if url.path.startswith('/media/audio/'):
                     body, mime = audio_store.read(db, url.path.removeprefix('/media/audio/'))
                     return self.send_body(body, mime)
@@ -293,7 +301,7 @@ class Handler(BaseHTTPRequestHandler):
                         raise w.Problem('Notoğri parametr')
                     response = snapshot(db, operator)
                     response['last'] = db.execute('SELECT COALESCE(MAX(id),0) FROM calls').fetchone()[0]
-                    response['events'] = [dict(row) for row in db.execute('SELECT * FROM calls WHERE id>? ORDER BY id', (after,))] if after >= 0 else []
+                    response['events'] = [dict(row) for row in db.execute('SELECT c.*,t.prefix,t.queue_seq FROM calls c JOIN tickets t ON t.id=c.ticket WHERE c.id>? ORDER BY c.id', (after,))] if after >= 0 else []
                     return self.reply(response)
                 user = self.user(db)
                 if url.path == '/api/me':
@@ -439,7 +447,7 @@ def initialize(demo=False):
     # Preserve a recoverable snapshot before the first v0.5 schema migration.
     if Path(DATABASE).is_file():
         with closing(sqlite3.connect(DATABASE)) as source:
-            if source.execute('PRAGMA user_version').fetchone()[0] < 5:
+            if source.execute('PRAGMA user_version').fetchone()[0] < 6:
                 stamp = w.now().replace(':', '').replace('+', '_')
                 backup_path = str(DATABASE) + '.pre-v05-' + stamp + '.bak'
                 with closing(sqlite3.connect(backup_path)) as backup:
@@ -456,7 +464,7 @@ def initialize(demo=False):
             CREATE TABLE IF NOT EXISTS tickets (
                 id INTEGER PRIMARY KEY, request_key TEXT NOT NULL UNIQUE,
                 lang TEXT NOT NULL, section INTEGER NOT NULL, service INTEGER NOT NULL,
-                status TEXT NOT NULL DEFAULT 'waiting', operator INTEGER, called INTEGER, created_at TEXT, content_name TEXT
+                status TEXT NOT NULL DEFAULT 'waiting', operator INTEGER, called INTEGER, created_at TEXT, content_name TEXT, prefix TEXT, queue_seq INTEGER,target_operator INTEGER
             );
             CREATE UNIQUE INDEX IF NOT EXISTS operator_active ON tickets(operator) WHERE status IN ('called','serving');
             CREATE TABLE IF NOT EXISTS calls (
@@ -464,7 +472,7 @@ def initialize(demo=False):
             );
         ''')
         for table, name, spec in [('students', 'education_form', "TEXT NOT NULL DEFAULT ''"),
-                                  ('students', 'status', "TEXT NOT NULL DEFAULT 'active'"), ('tickets', 'created_at', 'TEXT'), ('tickets', 'content_name', 'TEXT')]:
+                                  ('students', 'status', "TEXT NOT NULL DEFAULT 'active'"), ('tickets', 'created_at', 'TEXT'), ('tickets', 'content_name', 'TEXT'),('tickets','prefix','TEXT'),('tickets','queue_seq','INTEGER'),('tickets','target_operator','INTEGER')]:
             if name not in {r['name'] for r in db.execute(f'PRAGMA table_info({table})')}:
                 db.execute(f'ALTER TABLE {table} ADD COLUMN {name} {spec}')
         auth.initialize(db, demo)
@@ -473,6 +481,11 @@ def initialize(demo=False):
         audio_store.initialize(db)
         integrations.initialize(db)
         with db:
+            config=settings(db)
+            for ticket in db.execute('SELECT * FROM tickets WHERE prefix IS NULL OR queue_seq IS NULL OR target_operator IS NULL').fetchall():
+                route=routing.for_section(config['section_routes'],ticket['section'])
+                db.execute('UPDATE tickets SET prefix=COALESCE(prefix,?),queue_seq=COALESCE(queue_seq,id),target_operator=COALESCE(target_operator,operator,?) WHERE id=?',('A',route['operator'],ticket['id']))
+            db.execute('CREATE UNIQUE INDEX IF NOT EXISTS ticket_code ON tickets(prefix,queue_seq)')
             if demo:
                 db.executemany('INSERT INTO students(hemis_id,full_name,faculty,programme,course,student_group,education_form,status) VALUES (?,?,?,?,?,?,?,?) ON CONFLICT(hemis_id) DO NOTHING', [
                     ('100000000001', 'Sinov Talaba Bir', 'Filologiya (sinov)', 'Özbek tili', 2, 'TEST-201', 'Kunduzgi', 'active'),
@@ -487,7 +500,7 @@ def initialize(demo=False):
                 rid = w.kiosk_request(db, ticket, content)
                 if ticket['created_at'] is None:
                     w.record(db, rid, None, 'legacy_import', {'note': 'Eski çek; yaratilgan vaqt noma’lum. Ariza import vaqti bilan qayd etildi.', 'queue_status': ticket['status']})
-            db.execute('PRAGMA user_version=5')
+            db.execute('PRAGMA user_version=6')
 
 
 if __name__ == '__main__':

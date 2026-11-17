@@ -6,6 +6,7 @@ import re
 import struct
 import uuid
 import wave
+from pathlib import Path
 import workflow as w
 
 LANGUAGES = ('uz', 'ru', 'en')
@@ -21,6 +22,7 @@ def initialize(db):
             UNIQUE(lang,slot)
         );
         CREATE TABLE IF NOT EXISTS audio_modes (lang TEXT PRIMARY KEY, mode TEXT NOT NULL);
+        CREATE TABLE IF NOT EXISTS audio_layouts (lang TEXT PRIMARY KEY, layout TEXT NOT NULL);
     ''')
 
 
@@ -30,18 +32,20 @@ def metadata(db):
     clips = [dict(r) for r in db.execute('SELECT id,lang,slot,label,mime,size,created_at FROM audio_clips ORDER BY lang,slot')]
     for clip in clips:
         clip['url'] = '/media/audio/' + clip['id']
-    return {'modes': modes, 'clips': clips}
+    layouts={lang:'legacy' for lang in LANGUAGES}
+    layouts.update({r['lang']:r['layout'] for r in db.execute('SELECT * FROM audio_layouts')})
+    return {'modes': modes, 'layouts':layouts, 'clips': clips}
 
 
 def validate_slot(slot):
     if not isinstance(slot, str):
         raise w.Problem('Ovoz qismini tanlang')
-    if slot in ('prefix', 'between', 'suffix'):
+    if slot in ('prefix', 'between', 'suffix','intro') or re.fullmatch(r'letter:[A-ZÖĞŞÇ]',slot):
         return slot
     match = re.fullmatch(r'(number|operator):([1-9][0-9]{0,8})', slot)
     if match and (match[1] != 'operator' or int(match[2]) <= 30):
         return slot
-    match = re.fullmatch(r'call:([1-9][0-9]{0,8}):([1-9][0-9]?)', slot)
+    match = re.fullmatch(r'call:(?:[A-ZÖĞŞÇ]:)?([1-9][0-9]{0,8}):([1-9][0-9]?)', slot)
     if match and int(match[2]) <= 30:
         return slot
     raise w.Problem('Ovoz qismi yoki raqam notoğri')
@@ -114,7 +118,7 @@ def upload(db, user, data):
     db.execute('DELETE FROM audio_clips WHERE lang=? AND slot=?', (lang, slot))
     db.execute('INSERT INTO audio_clips VALUES (?,?,?,?,?,?,?,?)', (clip_id, lang, slot, label, mime, len(raw), raw, w.now()))
     w.audit(db, user, 'audio_upload', {'lang': lang, 'slot': slot, 'bytes': len(raw)})
-    return metadata(db)
+    return {'saved':True,'id':clip_id} if data.get('compact') is True else metadata(db)
 
 
 def remove(db, user, data):
@@ -135,22 +139,37 @@ def set_mode(db, user, data):
     lang, mode = data.get('lang'), data.get('mode')
     if lang not in LANGUAGES or mode not in ('speech', 'recorded'):
         raise w.Problem('Ovoz tili yoki usuli notoğri')
+    layout=data.get('layout')
+    if layout is not None and layout not in ('legacy','numbered'):
+        raise w.Problem('Ovoz tartibini tanlang')
+    if layout is not None:
+        db.execute('INSERT INTO audio_layouts VALUES (?,?) ON CONFLICT(lang) DO UPDATE SET layout=excluded.layout',(lang,layout))
     db.execute('INSERT INTO audio_modes VALUES (?,?) ON CONFLICT(lang) DO UPDATE SET mode=excluded.mode', (lang, mode))
     w.audit(db, user, 'audio_mode', {'lang': lang, 'mode': mode})
     return metadata(db)
 
 
-def plan(db, lang, ticket, operator):
+def plan(db, lang, ticket, operator, prefix='A'):
+    if not isinstance(prefix,str) or not re.fullmatch(r'[A-ZÖĞŞÇ]',prefix):
+        raise w.Problem('Navbat harfini tanlang')
     if lang not in LANGUAGES or type(ticket) is not int or not 1 <= ticket <= 999999999 or type(operator) is not int or not 1 <= operator <= 30:
         raise w.Problem('Ovoz tilini va çaqiruv raqamlarini tekşiring')
     mode = db.execute('SELECT mode FROM audio_modes WHERE lang=?', (lang,)).fetchone()
     if not mode or mode['mode'] == 'speech':
         return {'mode': 'speech', 'urls': [], 'missing': []}
     available = {r['slot']: '/media/audio/' + r['id'] for r in db.execute('SELECT slot,id FROM audio_clips WHERE lang=?', (lang,))}
-    full_call = f'call:{ticket}:{operator}'
+    full_call = f'call:{prefix}:{ticket}:{operator}'
+    if full_call not in available and prefix=='A':
+        full_call=f'call:{ticket}:{operator}'
     if full_call in available:
         return {'mode': 'recorded', 'urls': [available[full_call]], 'missing': []}
-    slots = ['prefix', f'number:{ticket}', 'between', f'operator:{operator}', 'suffix']
+    layout=db.execute('SELECT layout FROM audio_layouts WHERE lang=?',(lang,)).fetchone()
+    if layout and layout['layout']=='numbered':
+        slots=['intro',f'letter:{prefix}',f'number:{ticket}',f'operator:{operator}']
+    elif prefix!='A':
+        return {'mode':'incomplete','urls':[],'missing':[f'letter:{prefix}']}
+    else:
+        slots = ['prefix', f'number:{ticket}', 'between', f'operator:{operator}', 'suffix']
     missing = [s for s in slots if s not in available]
     return {'mode': 'incomplete' if missing else 'recorded', 'urls': [] if missing else [available[s] for s in slots], 'missing': missing}
 
@@ -165,3 +184,12 @@ def read(db, clip_id):
     if not row:
         raise w.Problem('Ovoz fayli topilmadi', 404)
     return bytes(row['body']), row['mime']
+
+
+def install_pack(db,user):
+    w.need(user,('admin',))
+    directory=Path(__file__).resolve().parent/'voice'/'uz'
+    for filename,slot in [('default.wav','intro'),('sA.wav','letter:A'),('s1.wav','number:1'),('p1.wav','operator:1')]:
+        raw=(directory/filename).read_bytes()
+        upload(db,user,{'lang':'uz','slot':slot,'label':filename,'mime':'audio/wav','data':base64.b64encode(raw).decode('ascii'),'compact':True})
+    return set_mode(db,user,{'lang':'uz','mode':'recorded','layout':'numbered'})

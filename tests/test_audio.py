@@ -91,6 +91,36 @@ class AudioStorage(unittest.TestCase):
         self.assertEqual(self.audio.plan(self.db, 'uz', 26, 3)['urls'], [])
         self.assertEqual(self.audio.plan(self.db, 'ru', 25, 3)['mode'], 'speech')
 
+    def test_numbered_500_clips_and_prefix_specific_plans(self):
+        for slot in ['intro','letter:A','operator:1']:
+            self.upload(slot)
+        for number in range(1,501):
+            result=self.audio.upload(self.db,ADMIN,dict(clip('number:'+str(number)),label='s'+str(number)+'.wav',compact=True))
+            self.assertTrue(result['saved'])
+            self.assertNotIn('clips',result)
+        self.audio.set_mode(self.db,ADMIN,{'lang':'uz','mode':'recorded','layout':'numbered'})
+        manifest=self.audio.metadata(self.db)
+        self.assertEqual(len(manifest['clips']),503)
+        by_url={c['url']:c['slot'] for c in manifest['clips']}
+        plan=self.audio.plan(self.db,'uz',500,1,'A')
+        self.assertEqual([by_url[u] for u in plan['urls']],['intro','letter:A','number:500','operator:1'])
+        self.assertEqual(self.audio.plan(self.db,'uz',500,1,'B')['mode'],'incomplete')
+        self.upload('letter:B')
+        plan=self.audio.plan(self.db,'uz',500,1,'B')
+        self.assertEqual(plan['mode'],'recorded')
+        self.assertEqual(self.audio.plan(self.db,'ru',500,1,'B')['mode'],'speech')
+
+    def test_provided_pack_is_exact_four_file_sequence(self):
+        from pathlib import Path
+        self.audio.install_pack(self.db,ADMIN)
+        manifest=self.audio.metadata(self.db)
+        by_url={c['url']:c for c in manifest['clips']}
+        plan=self.audio.plan(self.db,'uz',1,1,'A')
+        self.assertEqual([by_url[u]['label'] for u in plan['urls']],['default.wav','sA.wav','s1.wav','p1.wav'])
+        for url in plan['urls']:
+            item=by_url[url]
+            self.assertEqual(self.audio.read(self.db,item['id'])[0],(ROOT/'navbot'/'voice'/'uz'/item['label']).read_bytes())
+
     def test_language_modes_and_delete(self):
         item = self.upload(lang='ru')
         self.audio.set_mode(self.db, ADMIN, {'lang': 'ru', 'mode': 'recorded'})

@@ -1,5 +1,6 @@
 """Local request registry. All mutations run in one SQLite transaction."""
 import json
+import routing
 import re
 from datetime import datetime, timezone
 from uuid import UUID
@@ -58,18 +59,22 @@ def notify(db, user_id, request_id, message):
                    (user_id, request_id, message, now()))
 
 
-def visible(user, row):
+def visible(user, row, db):
     role = user['role']
     return (role in ('admin', 'director') or row['manager_id'] == user['id'] or
             row['assignee_id'] == user['id'] or
-            (role == 'manager' and row['manager_id'] is None and row['channel'] == 'kiosk') or
+            (role == 'manager' and row['manager_id'] is None and row['channel'] == 'kiosk' and db.execute('SELECT 1 FROM tickets WHERE id=? AND target_operator=?',(row['ticket_id'],user['operator'])).fetchone() is not None) or
             (role == 'head' and row['department'] == user['department']))
 
 
 def serialize(db, row):
     result = dict(row)
     result['number'] = f"NAV-{row['id']:04d}"
-    result['queue_number'] = f"A-{row['ticket_id']:03d}" if row['ticket_id'] else None
+    ticket=db.execute('SELECT prefix,queue_seq,target_operator FROM tickets WHERE id=?',(row['ticket_id'],)).fetchone() if row['ticket_id'] else None
+    result['queue_number']=routing.code(ticket) if ticket else None
+    result['queue_prefix']=ticket['prefix'] if ticket else None
+    result['queue_seq']=ticket['queue_seq'] if ticket else None
+    result['target_operator']=ticket['target_operator'] if ticket else None
     result['student'] = student(db, row['student_id']) if row['student_id'] else None
     for key in ('manager', 'assignee'):
         who = db.execute('SELECT full_name FROM users WHERE id=?', (row[key + '_id'],)).fetchone()
@@ -83,7 +88,7 @@ def serialize(db, row):
 
 
 def requests(db, user):
-    return [serialize(db, r) for r in db.execute('SELECT * FROM requests ORDER BY id DESC') if visible(user, r)]
+    return [serialize(db, r) for r in db.execute('SELECT * FROM requests ORDER BY id DESC') if visible(user, r, db)]
 
 
 def get_request(db, user, request_id):
@@ -92,7 +97,7 @@ def get_request(db, user, request_id):
     row = db.execute('SELECT * FROM requests WHERE id=?', (request_id,)).fetchone()
     if not row:
         raise Problem('Ariza topilmadi', 404)
-    if not visible(user, row):
+    if not visible(user, row, db):
         raise Problem('Bu ariza uçun vakolat yöq', 403)
     return row
 
@@ -105,7 +110,7 @@ def kiosk_request(db, ticket, content):
     rid = db.execute('INSERT INTO requests(ticket_id,lang,section,service,content,channel,created_at,updated_at) '
                      "VALUES (?,?,?,?,?,'kiosk',?,?)",
                      (ticket['id'], ticket['lang'], ticket['section'], ticket['service'], content, stamp, stamp)).lastrowid
-    record(db, rid, None, 'created', {'channel': 'kiosk', 'ticket_id': ticket['id'], 'content': content})
+    record(db, rid, None, 'created', {'channel': 'kiosk', 'ticket_id': ticket['id'], 'queue_code': routing.code(ticket), 'content': content})
     return rid
 
 

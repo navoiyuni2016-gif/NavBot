@@ -44,7 +44,7 @@ class AuthTests(unittest.TestCase):
         self.assertNotEqual(token, stored_token)
         self.assertEqual(stored_token, hashlib.sha256(token.encode()).hexdigest())
         self.assertEqual(auth.current(self.db, self.cookie(token)), user)
-        self.assertEqual(len(auth.users(self.db)), 6)
+        self.assertEqual(len(auth.users(self.db)), 9)
 
     def test_logout_and_expiry(self):
         token, _ = self.login()
@@ -76,7 +76,7 @@ class AuthTests(unittest.TestCase):
     def test_create_reset_and_demo_does_not_overwrite_password(self):
         user = auth.create_user(self.db, {
             'username': 'new.manager', 'full_name': 'Test Menejer', 'role': 'manager',
-            'department': 'Registrar', 'operator': 3, 'password': 'Temporary-2026!'})
+            'department': 'Registrar', 'operator': 8, 'password': 'Temporary-2026!'})
         self.db.commit()
         self.assertTrue(user['must_change_password'])
         token, _ = self.login('new.manager', 'Temporary-2026!')
@@ -91,7 +91,7 @@ class AuthTests(unittest.TestCase):
         auth.initialize(self.db, demo=True)
         self.db.commit()
         self.login('manager', 'Changed-Demo-2026!')
-        self.assertEqual(len(auth.users(self.db)), 7)
+        self.assertEqual(len(auth.users(self.db)), 10)
 
     def test_create_validation_uniqueness_and_weak_password(self):
         base = dict(username='test.user', full_name='Test User', role='executor',

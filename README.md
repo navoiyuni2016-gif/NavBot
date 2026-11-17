@@ -25,6 +25,9 @@ Talab manbasi: [0.5 hujjati](docs/requirements-v0.5.txt). Kiosk, TV, tablo va ka
 | `admin` | Superadmin |
 | `manager` | 1-operator menejeri |
 | `manager2` | 2-operator menejeri |
+| `manager3` | 3-operator menejeri |
+| `manager4` | 4-operator menejeri |
+| `manager5` | 5-operator menejeri |
 | `executor` | O‘quv bo‘limi ijrochisi |
 | `head` | O‘quv bo‘limi boshlig‘i |
 | `director` | Direktor / umumiy hisobot |
@@ -124,3 +127,12 @@ Qabul dalillari va talablar qamrovi: [docs/ACCEPTANCE.md](docs/ACCEPTANCE.md).
 ## TV avtomatik ovozi
 
 TVda ovozni yoqish/o‘chirish tugmasi yo‘q; yangi chaqiruvlar talaba tanlagan tilda avtomatik ovozlashtiriladi. Windowsda **START-TV-WINDOWS.bat** faylini oching: alohida Chrome TV profili `--autoplay-policy=no-user-gesture-required --kiosk` bilan ishga tushadi. Bu maxsus TV oynasi uchun; oddiy brauzer avtomatik ovozni cheklashi mumkin. TV oynasidan chiqish: Alt+F4. Ovoz darajasini Superadmin sozlamasi va Windows/karnaydan belgilang. Haqiqiy Windows/karnayda alohida tekshirish zarur.
+
+
+### Beshta yo‘nalish va yozib olingan chaqiruvlar
+
+Superadmin → Sozlamalar sahifasida beshta bo‘limning harfi va operatorini alohida belgilang. Boshlang‘ich tartib A/1, B/2, C/3, D/4, E/5. Har bir harf mustaqil raqamlanadi: A-001, B-001. O‘zgartirish yangi cheklarga qo‘llanadi; mavjud chek raqami va operatori saqlanadi. Menejer faqat o‘z operatoriga kelgan kiosk murojaatini qabul qiladi.
+
+Superadmin → Ovozli chaqiruv → Ommaviy yuklash: `default.wav`, `sA.wav`…`sE.wav`, `s1.wav`…`s500.wav`, `p1.wav`…`p5.wav` fayllarini birga tanlang. Harflarni o‘zgartirsangiz, mos `sX.wav` yozuvini yuklang. Tartib: **default → harf → raqam → operator**. MP3 ham qabul qilinadi. Har bir fayl 5 MB gacha, umumiy audio ombori 200 MB.
+
+Yuborilgan to‘rtta asl yozuv `navbot/voice/uz` ichida. Ovoz sahifasidagi namunani o‘rnatish tugmasi ularni o‘zbekcha ovoz omboriga yozadi va to‘rt qismli tartibni yoqadi. Boshqa harf/raqam/operator yozuvlarini o‘zingiz yuklaysiz. Yetishmagan yozuv bo‘lsa, butun chaqiruv tanlangan tilda brauzer ovozi orqali aytiladi.

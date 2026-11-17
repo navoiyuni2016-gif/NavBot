@@ -20,10 +20,11 @@ Kalit maydoni saqlangandan so‘ng bo‘sh ko‘rinadi. Bo‘sh qoldirish avvalg
 
 **Ovozli chaqiruv** sahifasida har bir til uchun brauzer ovozi yoki yuklangan audio usulini tanlang. MP3 va PCM WAV, eng ko‘pi 5 MB; WAV120 soniyagacha. Ovozlarni bizga yuborish shart emas.
 
-Ikki usul bor:
+Tavsiya etilgan to‘rt qismli tartib: **default.wav → sA.wav → s1.wav → p1.wav**. Harf, navbat raqami va operator chaqiruvga qarab tanlanadi. **Ommaviy yuklash** orqali `s1.wav` dan `s500.wav` gacha birga tanlang; beshta bo‘lim harfi uchun `sA.wav`…`sE.wav`, operatorlar uchun `p1.wav`…`p5.wav` yuklang. MP3 ham shu nomlash tartibida ishlaydi. Yuklash jarayoni natija va xatolarni ko‘rsatadi; to‘xtatilsa oldin saqlangan fayllar qoladi. Bir xil til/qism qayta yuklansa almashtiriladi.
 
-1. **To‘liq chaqiruv:** masalan25-chi chek va3-operator uchun butun iborani yozib yuklang. Bu aynan shu juftlikka ishlaydi.
-2. **Qismlardan yig‘ish:** `Boshlanish` (masalan «A» harfigacha bo‘lgan matn), `Navbat raqami` (masalan25), `Raqamlar orasida` (taklif iborasi), `Operator raqami` (masalan3), `Yakuni`. Tizim besh faylni shu tartibda ketma-ket ijro etadi. Har bir ishlatiladigan navbat/operator raqami uchun kerakli yozuvni yuklang.
+**Namunani o‘rnatish** tugmasi foydalanuvchi yuborgan `default.wav`, `sA.wav`, `s1.wav`, `p1.wav` yozuvlarini o‘zbekcha omborga qo‘shadi va to‘rt qismli tartibni yoqadi. Bu to‘rtta joydagi avvalgi yozuvlarni almashtiradi. Qolgan yozuvlar avtomatik yaratilmaydi.
+
+Avvalgi besh qismli tartib va alohida to‘liq chaqiruv yozuvlari ham mavjud. To‘liq chaqiruvda bo‘lim harfi, raqam va operatorni belgilang.
 
 Bir tilga yuklangan audio boshqa tilga ishlatilmaydi. To‘liq chaqiruv shu raqamlar uchun qismlardan ustun. Kerakli qismlar yetishmasa, noto‘liq ibora ijro etilmaydi: butun chaqiruv talaba tilidagi brauzer ovoziga o‘tadi. Sinov maydonida yetishmayotgan qismlar ko‘rsatiladi. Bir xil til/qismni yuklash oldingi yozuvni almashtiradi. Kutayotgan chaqiruvlar ketma-ket ovozlashtiriladi.
 
@@ -44,3 +45,8 @@ Hisobot oynasidagi **Excel yuklab olish** haqiqiy `.xlsx` chiqaradi. Suratdagi12
 Ariza kartasida va amal/javob shakllarida **Fayl biriktirish** bor. Arizaga kirishga vakolati bor menejer, ijrochi, bo‘lim boshlig‘i, direktor va admin ishlatishi mumkin. PDF, DOC/DOCX, XLS/XLSX, TXT, PNG/JPG qabul qilinadi. Har fayl10MB, arizaga10ta va jami50MBgacha. Fayllar SQLite bazada, ariza va audit tarixi bilan saqlanadi. So‘rov takrorlansa, ayni fayl ikkinchi marta qo‘shilmaydi.
 
 Faylni shu arizani ko‘ra oladigan xodimlargina yuklab oladi; public kiosk/TV orqali olish mumkin emas. Arxivda fayllar qoladi; yopilgan arizaga yangi fayl qo‘shilmaydi. Fayl yuklash javob/tasdiqni alohida avtomatik bajarmaydi; keyingi amal xato bo‘lsa yuklangan hujjat arizada saqlanib qoladi.
+
+
+## Beshta bo‘lim va operator
+
+**Sozlamalar** sahifasidagi bo‘lim jadvalida har biriga takrorlanmaydigan harf va operator tanlang. Boshlang‘ich bog‘lanish A/1, B/2, C/3, D/4, E/5. Har bir harf raqamlari alohida yuritiladi. Sozlama yangi cheklarga ta’sir qiladi; avvalgi cheklar o‘z harfi va operatorida qoladi. Demo hisoblar: `manager`, `manager2`, `manager3`, `manager4`, `manager5`. Ishchi hisoblarni Foydalanuvchilar sahifasida yarating.
