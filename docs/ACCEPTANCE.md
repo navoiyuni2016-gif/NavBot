@@ -61,3 +61,11 @@ Haqiqiy universitet API/tokenlari kiritilmagani uchun real HEMIS/LMS/Telegram ul
 - `node tests/routing-audio-browser.cjs`: admin sozlamasi, namunani o‘rnatish, interfeysdan 500 raqam + 4 qo‘shimcha harf + 4 operator yozuvini yuklash, beshta menejer inboxi, TV/tablo va ketma-ket 20 audio qismi o‘tdi.
 - `node tests/workflow-browser.cjs` va `node tests/enhancements-browser.cjs`: mavjud jarayonlar regressiyasi o‘tdi; sahifa JavaScript xatosi yo‘q.
 - Audio test ijro chegarasini almashtiradi; haqiqiy karnay va Windows qurilmasidagi tovush alohida tekshiriladi.
+
+
+## Logotiplar, ikonalar va asl talabalar importi
+
+- `node tests/branding-browser.cjs`: tizim/kiosk logotiplari, menyu/xizmat/mavzu ikonkalari, saqlanishi va standartga qaytarish o‘tdi. Kiosk yo‘riqnoma qatori va demo login banneri yo‘q. Sahifa xatosi yo‘q.
+- `python3 -m unittest discover -s tests -p 'test_*.py'`: 86 test; rasm ruxsatlari, yaroqsiz fayllar, almashtirilgan rasmni tozalash, XLSX faqat yangi yozuvni qo‘shishi, takroriy ID va ruxsat tekshirildi.
+- Workflow, enhancements va routing/audio brauzer regressiyalari o‘tdi.
+- Foydalanuvchi fayli 6262 ta noyob ID va 7 ustundan iborat. 43834 ta asl katak qiymati ishchi bazada mustaqil openpyxl o‘qishi bilan solishtirildi. Xususiy fayl/baza repozitoriyga qo‘shilmagan. Asl fayl SHA-256 va import hisoboti xususiy papkada saqlangan.

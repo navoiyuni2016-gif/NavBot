@@ -1,4 +1,4 @@
-# NavBoT — v0.5 lokal ishchi sinov
+# NavBoT — Registrator ofisi
 
 ToshDO‘TAU Registrator ofisi: navbat, murojaatlar reyestri va ijro nazorati.
 Talab manbasi: [0.5 hujjati](docs/requirements-v0.5.txt). Kiosk, TV, tablo va kabinetlar navy/teal dizayn namunalariga moslashtirilgan.
@@ -18,24 +18,7 @@ Talab manbasi: [0.5 hujjati](docs/requirements-v0.5.txt). Kiosk, TV, tablo va ka
 | TV | http://127.0.0.1:8081/tv |
 | 1-oyna tablosi | http://127.0.0.1:8081/tablo?id=1 |
 
-**Faqat lokal sinov hisoblari** (`--seed-demo` bilan yaratiladi):
-
-| Login | Rol |
-| --- | --- |
-| `admin` | Superadmin |
-| `manager` | 1-operator menejeri |
-| `manager2` | 2-operator menejeri |
-| `manager3` | 3-operator menejeri |
-| `manager4` | 4-operator menejeri |
-| `manager5` | 5-operator menejeri |
-| `executor` | O‘quv bo‘limi ijrochisi |
-| `head` | O‘quv bo‘limi boshlig‘i |
-| `director` | Direktor / umumiy hisobot |
-
-Hammasining dastlabki sinov paroli: `Navbot-Test-2026!`. O‘zgartirilgan parol qayta ishga tushirganda tiklanmaydi.
-Talaba sinov IDlari: `100000000001`, `100000000002`, `H24011876`. Bular haqiqiy talabalar emas.
-Profil orqali parol almashtirilganda barcha sessiyalar yopiladi, yangi parol bilan qayta kiring.
-
+Yangi, bo‘sh o‘rnatishda `START-WINDOWS.bat` birinchi superadmin login va parolini so‘raydi. Demo hisoblar va sinov talabalari avtomatik yaratilmaydi. Superadmin ishchi hisoblarni **Xodimlar va loginlar** sahifasida yaratadi. Mavjud bazani yangilashda saqlab qoling.
 
 ## Dialogsiz avtomatik chek (Windows kiosk)
 
@@ -136,3 +119,10 @@ Superadmin → Sozlamalar sahifasida beshta bo‘limning harfi va operatorini al
 Superadmin → Ovozli chaqiruv → Ommaviy yuklash: `default.wav`, `sA.wav`…`sE.wav`, `s1.wav`…`s500.wav`, `p1.wav`…`p5.wav` fayllarini birga tanlang. Harflarni o‘zgartirsangiz, mos `sX.wav` yozuvini yuklang. Tartib: **default → harf → raqam → operator**. MP3 ham qabul qilinadi. Har bir fayl 5 MB gacha, umumiy audio ombori 200 MB.
 
 Yuborilgan to‘rtta asl yozuv `navbot/voice/uz` ichida. Ovoz sahifasidagi namunani o‘rnatish tugmasi ularni o‘zbekcha ovoz omboriga yozadi va to‘rt qismli tartibni yoqadi. Boshqa harf/raqam/operator yozuvlarini o‘zingiz yuklaysiz. Yetishmagan yozuv bo‘lsa, butun chaqiruv tanlangan tilda brauzer ovozi orqali aytiladi.
+
+
+### Logotiplar, ikonalar va haqiqiy talabalar
+
+**Superadmin → Tizim sozlamalari → Logotiplar va interfeys belgilari**: tizim logotipi, kiosk logotipi, menyu va boshqaruv belgilarini alohida PNG/JPEG (2 MB gacha) bilan almashtiring. **Standartga qaytarish** faqat tanlangan rasmni bekor qiladi. Kioskdagi uch bosqichli yo‘riqnoma olib tashlangan. Bo‘lim ikonkalari avvalgi **Bo‘lim logotipi** shaklidan boshqariladi.
+
+**Talabalar bazasi → Talabalarni Excel fayldan qo‘shish** yettita ustunli universitet faylini qabul qiladi: Talaba ID, To‘liq ismi, Jins, Kurs, Fakultet, Ta’lim turi, Ta’lim shakli. Mavjud HEMIS ID yozuvi o‘zgarmaydi; faqat yangisi qo‘shiladi. Yetti asl qiymat ham saqlanadi. Faylda yo‘q guruh va yo‘nalish bo‘sh, talabalik holati noma’lum sifatida qoladi. Asl fayl va ishchi SQLite bazasi ochiq repozitoriyga qo‘shilmaydi.

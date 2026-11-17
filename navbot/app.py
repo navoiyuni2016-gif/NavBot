@@ -14,6 +14,8 @@ from urllib.parse import parse_qs, urlsplit
 from uuid import UUID
 import auth
 import routing
+import branding
+import student_xlsx
 import attachments
 import audio_store
 import excel
@@ -38,6 +40,7 @@ DEFAULT_SETTINGS = {
                         'Ticket {navbat}, please proceed to counter {operator}.'],
     'receipt_footer': ['Navbatingizni TVda kuzating', 'Следите за очередью на экране', 'Watch the queue display'],
     'section_routes': routing.DEFAULT_ROUTES,
+    'branding': {'system_logo': None, 'kiosk_logo': None, 'icons': {}},
     'catalog': CATALOG, 'hidden_services': [], 'section_logos': [None] * 5,
 }
 
@@ -82,6 +85,8 @@ def save_settings(db, user, data):
     labels = result['operator_labels']
     if not isinstance(labels, dict) or any(str(k) not in map(str, range(1, 31)) or not translations(v) for k, v in labels.items()):
         raise w.Problem('Operator yorliqlarini tekşiring')
+    if result['branding'] != settings(db)['branding']:
+        raise w.Problem('Logotip faylini yuklaş tugmasidan foydalaning')
     if result['section_logos'] != settings(db)['section_logos']:
         raise w.Problem('Logo faylini yuklaş tugmasidan foydalaning')
     if not routing.valid(result['section_routes']):
@@ -156,8 +161,12 @@ def mutate(db, path, data, user):
         return {'request': w.phone_request(db, user, data, config['catalog'])}
     if path == '/api/request/action':
         return {'request': w.request_action(db, user, data)}
+    if path == '/api/students/import-xlsx':
+        return student_xlsx.upload(db, user, data)
     if path == '/api/students/import':
         return w.import_students(db, user, data)
+    if path == '/api/admin/branding':
+        return branding.update(db, user, data, config)
     if path == '/api/admin/logo':
         w.need(user, ('admin',))
         section, mime = data.get('section'), data.get('mime')
@@ -282,6 +291,11 @@ class Handler(BaseHTTPRequestHandler):
                 return self.send_body((ROOT / 'i18n.js').read_bytes(), 'text/javascript; charset=utf-8')
             with closing(connection()) as db:
                 db.execute('BEGIN')
+                if url.path == '/api/branding':
+                    return self.reply(branding.targets())
+                if url.path.startswith('/media/branding/'):
+                    body, mime = branding.read(db, url.path.removeprefix('/media/branding/'))
+                    return self.send_body(body, mime)
                 if url.path == '/api/audio':
                     return self.reply(audio_store.metadata(db))
                 if url.path == '/api/audio/plan':
@@ -358,7 +372,7 @@ class Handler(BaseHTTPRequestHandler):
         try:
             self.same_origin()
             length = int(self.headers.get('Content-Length', '0'))
-            limit = 16 * 1024 * 1024 if self.path == '/api/attachment/upload' else 8 * 1024 * 1024 if self.path == '/api/admin/audio/upload' else 4 * 1024 * 1024
+            limit = 16 * 1024 * 1024 if self.path == '/api/attachment/upload' else 8 * 1024 * 1024 if self.path in ('/api/admin/audio/upload','/api/students/import-xlsx') else 4 * 1024 * 1024
             if not 0 < length <= limit:
                 raise w.Problem('Sörov hajmi belgilangan limitdan katta', 413)
             data = json.loads(self.rfile.read(length), parse_constant=lambda _: (_ for _ in ()).throw(ValueError()))
@@ -472,12 +486,13 @@ def initialize(demo=False):
             );
         ''')
         for table, name, spec in [('students', 'education_form', "TEXT NOT NULL DEFAULT ''"),
-                                  ('students', 'status', "TEXT NOT NULL DEFAULT 'active'"), ('tickets', 'created_at', 'TEXT'), ('tickets', 'content_name', 'TEXT'),('tickets','prefix','TEXT'),('tickets','queue_seq','INTEGER'),('tickets','target_operator','INTEGER')]:
+                                  ('students', 'status', "TEXT NOT NULL DEFAULT 'active'"), ('students','gender',"TEXT NOT NULL DEFAULT ''"), ('students','education_type',"TEXT NOT NULL DEFAULT ''"), ('students','source_json',"TEXT NOT NULL DEFAULT ''"), ('tickets', 'created_at', 'TEXT'), ('tickets', 'content_name', 'TEXT'),('tickets','prefix','TEXT'),('tickets','queue_seq','INTEGER'),('tickets','target_operator','INTEGER')]:
             if name not in {r['name'] for r in db.execute(f'PRAGMA table_info({table})')}:
                 db.execute(f'ALTER TABLE {table} ADD COLUMN {name} {spec}')
         auth.initialize(db, demo)
         w.initialize(db)
         attachments.initialize(db)
+        branding.initialize(db)
         audio_store.initialize(db)
         integrations.initialize(db)
         with db:

@@ -50,3 +50,12 @@ Faylni shu arizani ko‘ra oladigan xodimlargina yuklab oladi; public kiosk/TV o
 ## Beshta bo‘lim va operator
 
 **Sozlamalar** sahifasidagi bo‘lim jadvalida har biriga takrorlanmaydigan harf va operator tanlang. Boshlang‘ich bog‘lanish A/1, B/2, C/3, D/4, E/5. Har bir harf raqamlari alohida yuritiladi. Sozlama yangi cheklarga ta’sir qiladi; avvalgi cheklar o‘z harfi va operatorida qoladi. Demo hisoblar: `manager`, `manager2`, `manager3`, `manager4`, `manager5`. Ishchi hisoblarni Foydalanuvchilar sahifasida yarating.
+
+
+## Logotiplar va belgilar
+
+Tizim sozlamalaridagi **Logotiplar va interfeys belgilari**dan joyini tanlang, PNG/JPEG yuklang va saqlang. Tizim hamda kiosk logotiplari alohida. Standartga qaytarish faqat tanlangan belgini tiklaydi. Beshta bo‘lim rasmlari **Bo‘lim logotipi** shaklida boshqariladi. Kiosk bosh ekranida yangilanish 10 soniya ichida ko‘rinadi; kabinetni qayta ochganda saqlangan rasmlar yuklanadi.
+
+## Talabalarni o‘zgartirmasdan Excel’dan qo‘shish
+
+Talabalar bazasidagi Excel shaklidan asl faylni tanlang. HEMIS ID bo‘yicha mavjud yozuv o‘zgartirilmaydi. Ism va barcha yettita asl ustun qiymatlari saqlanadi. Takroriy ID yoki noto‘g‘ri qator bo‘lsa butun import bekor qilinadi. Faylda bo‘lmagan guruh, yo‘nalish va tasdiqlangan faol holat taxmin qilinmaydi. Ishchi bazaning zaxirasini saqlang.

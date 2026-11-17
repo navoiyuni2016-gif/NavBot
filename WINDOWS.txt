@@ -1,4 +1,4 @@
-NavBoT v0.5 — Windows lokal sinov
+NavBoT — Windows
 
 1. Python 3.12+ ni python.org dan o'rnating, Add Python to PATH ni belgilang.
 2. ZIPni to'liq yangi papkaga oching; START-WINDOWS.bat faylini bosing.
@@ -7,13 +7,11 @@ NavBoT v0.5 — Windows lokal sinov
    Kirish: http://127.0.0.1:8081/login
    TV: http://127.0.0.1:8081/tv
    Tablo: http://127.0.0.1:8081/tablo?id=1
-4. Sinov loginlari: manager, manager2, manager3, manager4, manager5, executor, head, director, admin.
-   Dastlabki sinov paroli: Navbot-Test-2026!
-   manager = 1-operator, manager2…manager5 = 2…5-operator.
-5. Talaba sinov IDlari: 100000000001, 100000000002, H24011876.
-6. Menejerda talabani arizaga biriktiring va saqlang. Keyin joyida hal qiling yoki
-   executor ga muddat/ichki asos bilan yuboring. executor sabab bilan qaytaradi
-   yoki javobni tasdiqqa yuboradi; head tasdiqlaydi. director hisobotni ko'radi.
+4. Yangi o'rnatishda birinchi superadmin login/parolini yarating.
+   Mavjud bazada o'zingizning superadmin hisobingiz bilan kiring.
+5. Xodimlar va loginlar sahifasidan haqiqiy operator/ijrochi hisoblarini yarating.
+6. Talabalar bazasi sahifasidan asl Excel faylini qo'shing.
+   Mavjud HEMIS ID yozuvlari o'zgarmaydi; faqat yangi talabalar qo'shiladi.
 7. TVni START-TV-WINDOWS.bat orqali oching: ovoz avtomatik, yoqish tugmasi yoq.
    Kioskda chekni qayta chop etish mumkin.
 
@@ -22,7 +20,7 @@ Yangilashda bazani o'chirmang. Eski dasturni to'xtatib kod fayllarini yangilang.
 Batafsil ishga tushirish/zaxira/cheklovlar README.md da.
 
 Haqiqiy HEMIS/LMS, Telegram, printer va Info KeyOS hali ulanmagan.
-Bu faqat lokal sun'iy ma'lumotli sinov; haqiqiy talabalar ma'lumotini kiritmang.
+Demo hisoblar va sinov talabalari avtomatik qo'shilmaydi.
 
 DIALOGSIZ AVTOMATIK CHEK:
 - 80 mm printer drayverini o'rnating, uni Windowsda Default printer qiling.
