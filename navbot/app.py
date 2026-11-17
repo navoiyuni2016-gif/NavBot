@@ -8,7 +8,7 @@ from urllib.parse import urlsplit
 from uuid import UUID
 
 ROOT = Path(__file__).resolve().parent
-CATALOG = json.loads((ROOT / 'catalog.json').read_text())
+CATALOG = json.loads((ROOT / 'catalog.json').read_text(encoding='utf-8'))
 LANGUAGES = ('uz', 'ru', 'en')
 PAGE = (ROOT / 'index.html').read_bytes()
 
