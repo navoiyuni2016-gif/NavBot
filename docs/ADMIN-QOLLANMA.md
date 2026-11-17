@@ -38,7 +38,7 @@ Enli Info KeyOS uchun kiosk3 ta yuqori va2 ta pastki kartadan iborat.1024×768 v
 
 ## Excel
 
-Hisobot oynasidagi **Excel yuklab olish** haqiqiy `.xlsx` chiqaradi. Suratdagi12 ustun ishlatiladi: sana, tartib raqami, F.I.Sh., yo‘nalish, kurs, ta’lim shakli, mazmun, kanal, «Ko‘rilgan chora»ning3 bo‘lagi va menejer F.I.Sh. Yuqori sarlavhalar birlashtirilgan, katak chegaralari va matn o‘rash bor. Filtr va tanlangan interfeys tili eksportga qo‘llanadi. Foydalanuvchi matni formula sifatida bajarilmaydi. [Sun’iy ma’lumotli namuna](EXCEL-NAMUNA.xlsx).
+Hisobot oynasidagi **Excel yuklab olish** haqiqiy `.xlsx` chiqaradi. Suratdagi12 ustun ishlatiladi: sana, tartib raqami, F.I.Sh., yo‘nalish, kurs, ta’lim shakli, mazmun, menejer F.I.Sh., «Ko‘rilgan chora»ning3 bo‘lagi va murojaat qilish usuli. Menejer va murojaat usuli ustunlari o‘rin almashgan Yuqori sarlavhalar birlashtirilgan, katak chegaralari va matn o‘rash bor. Filtr va tanlangan interfeys tili eksportga qo‘llanadi. Foydalanuvchi matni formula sifatida bajarilmaydi. [Sun’iy ma’lumotli namuna](EXCEL-NAMUNA.xlsx).
 
 ## Arizaga fayl biriktirish
 
@@ -64,3 +64,5 @@ Talabalar bazasidagi Excel shaklidan asl faylni tanlang. HEMIS ID bo‘yicha mav
 ## Birinchi admin paroli mos kelmasa
 
 START-WINDOWS.bat endi fayl mavjudligiga emas, bazadagi hisoblar mavjudligiga qaraydi. Bo‘sh baza avvalgi muvaffaqiyatsiz urinishdan qolgan bo‘lsa ham login/parol yaratish takrorlanadi. Parollar mos kelmasa shu oynada qayta kiritiladi. Mavjud hisob/parol o‘zgartirilmaydi. Eski nusxada serverni Ctrl+C bilan to‘xtatib, loyiha papkasida `py -3 navbot\app.py --db navbot\navbot.sqlite3 --init-admin` buyrug‘i bilan birinchi adminni yarating; keyin START-WINDOWS.bat ni oching. Bazani o‘chirmang.
+
+Excel hisobotining yuqorisida universitetning to‘liq nomi, alohida ofis/hisobot sarlavhasi va davr ko‘rsatiladi. To‘q ko‘k sarlavha, yashil ustun nomlari va navbatma-navbat och rangli qatorlar qo‘llanadi. H ustuni — mas’ul menejer; I–K — ko‘rilgan chora; L — murojaat qilish usuli.
