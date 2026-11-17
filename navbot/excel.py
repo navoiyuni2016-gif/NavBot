@@ -72,7 +72,7 @@ def build(report, lang='uz', period=None):
     def row(number, values, style=0, height=None):
         attrs = f' ht="{height}" customHeight="1"' if height else ''
         rows.append(f'<row r="{number}"{attrs}>' + ''.join(cell(chr(65 + i) + str(number), value, style) for i, value in enumerate(values)) + '</row>')
-    row(1, [labels['title']], 1, 48)
+    row(1, [labels['title']], 1, 66)
     row(2, [labels['subtitle']], 6, 28)
     row(3, [labels['period'] + ': ' + (period or labels['all'])], 2, 26)
     top = labels['headers']
@@ -98,7 +98,7 @@ def build(report, lang='uz', period=None):
     cols = ''.join(f'<col min="{i}" max="{i}" width="{width}" customWidth="1"/>' for i, width in enumerate(widths, 1))
     sheet = f'''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <worksheet xmlns="{NS}"><sheetPr><pageSetUpPr fitToPage="1"/></sheetPr><dimension ref="A1:L{last+2}"/>
-<sheetViews><sheetView workbookViewId="0" showGridLines="0"><pane ySplit="5" topLeftCell="A6" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>
+<sheetViews><sheetView workbookViewId="0" showGridLines="1" zoomScale="100"><pane ySplit="5" topLeftCell="A6" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>
 <sheetFormatPr defaultRowHeight="20"/><cols>{cols}</cols><sheetData>{''.join(rows)}</sheetData>
 <mergeCells count="{len(merges)}">{''.join('<mergeCell ref="'+m+'"/>' for m in merges)}</mergeCells>
 <printOptions horizontalCentered="1"/><pageMargins left="0.25" right="0.25" top="0.4" bottom="0.4" header="0.2" footer="0.2"/>
@@ -106,9 +106,9 @@ def build(report, lang='uz', period=None):
 </worksheet>'''
     styles = f'''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <styleSheet xmlns="{NS}">
-<fonts count="4"><font><sz val="11"/><color rgb="FF142E45"/><name val="Calibri"/></font><font><b/><sz val="20"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font><font><b/><sz val="11"/><color rgb="FF006C64"/><name val="Calibri"/></font><font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font></fonts>
-<fills count="6"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFE2F1EC"/><bgColor indexed="64"/></patternFill></fill><fill><patternFill patternType="solid"><fgColor rgb="FF142E45"/><bgColor indexed="64"/></patternFill></fill><fill><patternFill patternType="solid"><fgColor rgb="FF007E73"/><bgColor indexed="64"/></patternFill></fill><fill><patternFill patternType="solid"><fgColor rgb="FFF1F8F7"/><bgColor indexed="64"/></patternFill></fill></fills>
-<borders count="2"><border/><border><left style="thin"><color rgb="FF57736C"/></left><right style="thin"><color rgb="FF57736C"/></right><top style="thin"><color rgb="FF57736C"/></top><bottom style="thin"><color rgb="FF57736C"/></bottom></border></borders>
+<fonts count="4"><font><sz val="11"/><color rgb="FF142E45"/><name val="Calibri"/></font><font><b/><sz val="28"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font><font><b/><sz val="11"/><color rgb="FF142E45"/><name val="Calibri"/></font><font><b/><sz val="12"/><color rgb="FF142E45"/><name val="Calibri"/></font></fonts>
+<fills count="6"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFF0F3F7"/><bgColor indexed="64"/></patternFill></fill><fill><patternFill patternType="solid"><fgColor rgb="FF142E45"/><bgColor indexed="64"/></patternFill></fill><fill><patternFill patternType="solid"><fgColor rgb="FFE7EDF3"/><bgColor indexed="64"/></patternFill></fill><fill><patternFill patternType="solid"><fgColor rgb="FFF6F8FA"/><bgColor indexed="64"/></patternFill></fill></fills>
+<borders count="2"><border/><border><left style="thin"><color rgb="FF718096"/></left><right style="thin"><color rgb="FF718096"/></right><top style="thin"><color rgb="FF718096"/></top><bottom style="thin"><color rgb="FF718096"/></bottom></border></borders>
 <cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
 <cellXfs count="7"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>
 <xf numFmtId="0" fontId="1" fillId="3" borderId="0" xfId="0" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>

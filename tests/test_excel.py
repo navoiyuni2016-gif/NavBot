@@ -135,7 +135,7 @@ class ExcelStructure(unittest.TestCase):
                 self.assertEqual(parsed['cells']['A2'], self.excel.LABELS[lang]['subtitle'])
                 self.assertIn(self.excel.LABELS[lang]['period'], parsed['cells']['A3'])
                 self.assertIn('A3:L3', parsed['merges'])
-                self.assertEqual(parsed['sheet'].find('s:sheetViews/s:sheetView', NS).get('showGridLines'), '0')
+                self.assertEqual(parsed['sheet'].find('s:sheetViews/s:sheetView', NS).get('showGridLines'), '1')
                 self.assertEqual(parsed['cells']['H4'], self.excel.LABELS[lang]['headers'][9])
                 self.assertEqual(parsed['cells']['L4'], self.excel.LABELS[lang]['headers'][7])
                 self.assertEqual(parsed['cells']['H6'], 'Sinov Menejer')
