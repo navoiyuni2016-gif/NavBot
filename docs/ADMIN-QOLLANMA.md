@@ -28,7 +28,7 @@ Avvalgi besh qismli tartib va alohida to‘liq chaqiruv yozuvlari ham mavjud. To
 
 Bir tilga yuklangan audio boshqa tilga ishlatilmaydi. To‘liq chaqiruv shu raqamlar uchun qismlardan ustun. Kerakli qismlar yetishmasa, noto‘liq ibora ijro etilmaydi: butun chaqiruv talaba tilidagi brauzer ovoziga o‘tadi. Sinov maydonida yetishmayotgan qismlar ko‘rsatiladi. Bir xil til/qismni yuklash oldingi yozuvni almashtiradi. Kutayotgan chaqiruvlar ketma-ket ovozlashtiriladi.
 
-`Sinov chaqiruvi` orqali tekshiring. TV uchun `START-TV-WINDOWS.bat`ni ishlating; ovoz darajasi tizim sozlamasi hamda Windows/karnayga bog‘liq. Fizik tovush, o‘zbekcha tizim ovozi va Windowsdagi autoplay alohida qurilmada tekshiriladi.
+`Sinov chaqiruvi` boshlang‘ich qiymatlari A-001 va 1-operator. Yangi to‘rt qism yuklangan, eski boshlanish qismi bo‘lmasa, mos raqamli tartib taklif qilinadi. Sinov tanlangan tildagi ovoz rejimi va tartibini saqlab, shu sozlamada ishlaydi. Boshqa raqamni sinash uchun uning yozuvini ham yuklang. TV uchun `START-TV-WINDOWS.bat`ni ishlating; ovoz darajasi tizim sozlamasi hamda Windows/karnayga bog‘liq. Fizik tovush, o‘zbekcha tizim ovozi va Windowsdagi autoplay alohida qurilmada tekshiriladi.
 
 ## Til, mavzu va kiosk
 
