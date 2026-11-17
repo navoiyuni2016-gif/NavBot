@@ -31,7 +31,7 @@ async function freePort(){const server=net.createServer();await new Promise(r=>s
  async function selectRequest(page,number){await page.locator('.request-row').filter({hasText:number}).click();await page.locator('.summary-banner').getByText(number,{exact:true}).waitFor()}
  const publicContext=await newContext();const kiosk=await publicContext.newPage(),tv=await publicContext.newPage(),tablo=await publicContext.newPage();
  await Promise.all([kiosk.goto(base+'/kiosk'),tv.goto(base+'/tv'),tablo.goto(base+'/tablo?id=1')]);
- await kiosk.getByRole('button',{name:'Özbekça',exact:true}).click();await kiosk.locator('.tile').first().click();await kiosk.locator('.tile').first().click();await kiosk.locator('.receipt').waitFor();
+ await kiosk.locator('#language-menu > summary').click();await kiosk.getByRole('button',{name:'Özbekça',exact:true}).click();await kiosk.locator('.tile').first().click();await kiosk.locator('.tile').first().click();await kiosk.locator('.receipt').waitFor();
  const queue=await kiosk.locator('.receipt h2').innerText();
  const manager=await login('manager');
  await manager.locator('.request-row').filter({hasText:queue}).click();

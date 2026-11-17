@@ -27,8 +27,12 @@ def database_check(path):
         if db.execute('PRAGMA integrity_check').fetchall() != [('ok',)]:
             raise RuntimeError('SQLite integrity check failed')
         tables = {row[0] for row in db.execute("SELECT name FROM sqlite_master WHERE type='table'")}
-        return {name: db.execute(f'SELECT COUNT(*) FROM {name}').fetchone()[0]
+        counts = {name: db.execute(f'SELECT COUNT(*) FROM {name}').fetchone()[0]
                 for name in ('students', 'users', 'requests', 'audio_clips', 'attachments') if name in tables}
+        if 'requests' in tables and 'deleted_at' in {r[1] for r in db.execute('PRAGMA table_info(requests)')}:
+            counts['active_requests'] = db.execute('SELECT COUNT(*) FROM requests WHERE deleted_at IS NULL').fetchone()[0]
+            counts['deleted_request_reservations'] = counts['requests'] - counts['active_requests']
+        return counts
 
 
 def verify_backup(archive):

@@ -79,3 +79,16 @@ POSIX test subprocesslari yangi sessiyaga ajratildi; haqiqiy admin yaratish va
 ishchi hisoblar o‘zgartirilmadi. `script -q -e -c "python3 -m unittest discover
 -s tests -p 'test_*.py'" /tmp/navbot-tests.log` bilan haqiqiy PTY ichida94 test
 41.923 soniyada o‘tdi, interaktiv parol so‘rovi bo‘lmadi.
+
+
+## Ikkita ixcham menyu va boshqariladigan tozalash
+
+102 ta unit/HTTP testi PTY ichida o‘tdi. Yangi tekshiruvlar admin/parol talabi,
+versiyalar mosligi va atomik bekor qilish, barcha umumiy bazalar saqlanishi,
+ilova yuklab olishning bekor qilinishi, eski so‘rovlar va restart orqali qayta
+yaratishning rad etilishini qamraydi. Brauzerda til/mavzu menyulari, bitta
+murojaatni o‘chirish, noto‘g‘ri parolni rad etish, keyin kelgan yangi yozuvni
+saqlab snapshot bo‘yicha tozalash, raqamlarni takrorlamaslik o‘tdi. Workflow,
+enhancements, CSP, branding va500-audio/five-operator regressiyalari o‘tdi.
+Haqiqiy serverdagi tozalash deployment paytida avtomatik bajarilmaydi;
+superadmin ko‘rsatilgan raqamlar va sonni ko‘rib, o‘z paroli bilan ishga tushiradi.

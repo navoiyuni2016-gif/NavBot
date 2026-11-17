@@ -66,3 +66,36 @@ Talabalar bazasidagi Excel shaklidan asl faylni tanlang. HEMIS ID bo‘yicha mav
 START-WINDOWS.bat endi fayl mavjudligiga emas, bazadagi hisoblar mavjudligiga qaraydi. Bo‘sh baza avvalgi muvaffaqiyatsiz urinishdan qolgan bo‘lsa ham login/parol yaratish takrorlanadi. Parollar mos kelmasa shu oynada qayta kiritiladi. Mavjud hisob/parol o‘zgartirilmaydi. Eski nusxada serverni Ctrl+C bilan to‘xtatib, loyiha papkasida `py -3 navbot\app.py --db navbot\navbot.sqlite3 --init-admin` buyrug‘i bilan birinchi adminni yarating; keyin START-WINDOWS.bat ni oching. Bazani o‘chirmang.
 
 Excel hisobotining yuqorisida universitetning to‘liq nomi, alohida ofis/hisobot sarlavhasi va davr ko‘rsatiladi. To‘q ko‘k fonda 28 punktli universitet nomi, och kulrang-ko‘k ustun sarlavhalari va aniq katak chegaralari qo‘llanadi. Yashil fon olib tashlangan; Excelning bo‘sh katak chiziqlari ham ko‘rinadi. H ustuni — mas’ul menejer; I–K — ko‘rilgan chora; L — murojaat qilish usuli.
+
+## Til va ko‘rinish menyulari
+
+Yuqorida joriy til yozilgan bitta ochiladigan tugma bor. Uni bosib o‘zbekcha,
+ruscha yoki inglizchani tanlang. Yonidagi bitta quyosh/oy menyusidan yorug‘ yoki
+to‘q ko‘rinishni tanlang. Tanlov keyingi kirishda ham saqlanadi. Escape yoki
+menyudan tashqariga bosish menyuni yopadi.
+
+## Murojaatlarni o‘chirish va sinov navbatlarini tozalash
+
+Faqat superadmin foydalanadi. Bitta kartada **Murojaatni o‘chirish**, umumiy
+ro‘yxat tepasida **Murojaat va navbatlarni tozalash** tugmalari bor. Tozalash
+barcha joriy murojaatlarni, shu jumladan arxivdagilarni qamraydi. Oynada yozuvlar
+soni va raqamlari ko‘rsatiladi. Sabab, aynan ko‘rsatilgan son va superadminning
+joriy paroli bilan tasdiqlang. Parol urinishlariga mavjud login cheklovi qo‘llanadi.
+
+Talabalar, hisoblar, audio, integratsiya sozlamalari va audit o‘chmaydi. Murojaat
+mazmuni, javobi, izohi, ilovalari, jarayon tarixi va bildirishnomalari olib
+tashlanadi; ariza/chek identifikatorlari qayta ishlatilmasligi uchun shaxssiz
+raqam qaydlari qoladi. Auditda kim, qachon, qaysi raqamlarni, nima sababdan
+olib tashlagani saqlanadi. Eski zaxiralardagi nusxalar o‘z saqlash muddatida qoladi.
+Bu kriptografik yoki sud-ekspertizaviy o‘chirish kafolati emas.
+
+Ko‘rib chiqish oynasi ochilgandan keyin yaratilgan yangi murojaatlar bu amalga
+kirmaydi. Tanlangan yozuvning versiyasi o‘zgarsa, butun amal bekor qilinadi;
+oynani yopib, qayta oching. Tizimni yangilashning o‘zi hech narsani tozalamaydi.
+
+Yangilashdan oldin tekshirilgan zaxira oling. Schema7 deleted_at ustunini qo‘shadi;
+server qayta yoqilganda o‘chirilgan yozuvlar qayta yaratilmaydi. Zaxira hisobotida
+requests jami raqam qaydlarini, active_requests joriy murojaatlarni,
+deleted_request_reservations esa olib tashlangan yozuvlarning raqam qaydlarini
+ko‘rsatadi. Ishchi o‘chirish amali qaytarilmaydi; zaruratda zaxiradan tiklash
+alohida, administrator nazoratidagi jarayon hisoblanadi.

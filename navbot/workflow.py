@@ -88,14 +88,14 @@ def serialize(db, row):
 
 
 def requests(db, user):
-    return [serialize(db, r) for r in db.execute('SELECT * FROM requests ORDER BY id DESC') if visible(user, r, db)]
+    return [serialize(db, r) for r in db.execute('SELECT * FROM requests WHERE deleted_at IS NULL ORDER BY id DESC') if visible(user, r, db)]
 
 
 def get_request(db, user, request_id):
     if type(request_id) is not int:
         raise Problem('Ariza raqamini tekşiring')
     row = db.execute('SELECT * FROM requests WHERE id=?', (request_id,)).fetchone()
-    if not row:
+    if not row or row['deleted_at'] is not None:
         raise Problem('Ariza topilmadi', 404)
     if not visible(user, row, db):
         raise Problem('Bu ariza uçun vakolat yöq', 403)
@@ -246,6 +246,8 @@ def phone_request(db, user, data, catalog):
     key = str(UUID(data.get('key', '')))
     existing = db.execute('SELECT * FROM requests WHERE external_key=?', ('phone:' + key,)).fetchone()
     if existing:
+        if existing['deleted_at'] is not None:
+            raise Problem('Öçirilgan murojaatni qayta yaratib bölmaydi',409)
         if existing['manager_id'] != user['id']:
             raise Problem('Takror sörov kaliti', 409)
         return serialize(db, existing)
@@ -364,3 +366,5 @@ def initialize(db):
         CREATE INDEX IF NOT EXISTS request_manager ON requests(manager_id,status);
         CREATE INDEX IF NOT EXISTS notification_user ON notifications(user_id,read);
     ''')
+    if 'deleted_at' not in {row['name'] for row in db.execute('PRAGMA table_info(requests)')}:
+        db.execute('ALTER TABLE requests ADD COLUMN deleted_at TEXT')

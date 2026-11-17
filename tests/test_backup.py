@@ -83,3 +83,12 @@ class BackupTests(unittest.TestCase):
             saved='config/'+config.relative_to('/').as_posix()
             self.assertEqual(tar.extractfile(saved).read(),config.read_bytes())
         self.assertEqual(backup.verify_backup(archive),{'students':1})
+
+    def test_counts_distinguish_deleted_id_reservations_from_active_requests(self):
+        with sqlite3.connect(self.data/'navbot.sqlite3') as db:
+            db.execute('CREATE TABLE requests(id INTEGER PRIMARY KEY,deleted_at TEXT)')
+            db.execute('INSERT INTO requests VALUES(1,NULL)')
+            db.execute("INSERT INTO requests VALUES(2,'2026-11-17')")
+        archive,counts=backup.create_backup(self.data,self.code,self.out,self.pause)
+        self.assertEqual(counts,{'students':1,'requests':2,'active_requests':1,'deleted_request_reservations':1})
+        self.assertEqual(backup.verify_backup(archive),counts)

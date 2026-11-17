@@ -43,3 +43,9 @@ sudo python3 /usr/local/sbin/navbot-backup.py --verify /var/backups/navbot/navbo
 
 Code and state stay separate: /opt/navbot is code, /var/lib/navbot is private state.
 Do not seed demo users or replace the state folder during a code update.
+
+After request cleanup, counts distinguish total request ID reservations from
+active_requests and deleted_request_reservations. Reserved IDs prevent old
+printed tickets or retried request keys from being reused. They are not active
+requests. Older backup archives retain their prior payloads under the retention
+policy; application cleanup does not purge historical archives.

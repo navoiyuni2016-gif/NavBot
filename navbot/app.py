@@ -18,6 +18,7 @@ import auth
 import routing
 import branding
 import student_xlsx
+import request_delete
 import attachments
 import audio_store
 import excel
@@ -131,6 +132,8 @@ def mutate(db, path, data, user):
         if existing:
             if (existing['lang'], existing['section'], existing['service']) != (lang, section, service):
                 raise w.Problem('Sörov kaliti boşqa tanlov uçun ishlatilgan', 409)
+            if db.execute('SELECT 1 FROM requests WHERE ticket_id=? AND deleted_at IS NOT NULL',(existing['id'],)).fetchone():
+                raise w.Problem('Öçirilgan murojaatni qayta yaratib bölmaydi',409)
             ticket = dict(existing)
         else:
             if f'{section}:{service}' in config['hidden_services']:
@@ -332,7 +335,7 @@ class Handler(BaseHTTPRequestHandler):
                         raise w.Problem('Notoğri parametr')
                     response = snapshot(db, operator)
                     response['last'] = db.execute('SELECT COALESCE(MAX(id),0) FROM calls').fetchone()[0]
-                    response['events'] = [dict(row) for row in db.execute('SELECT c.*,t.prefix,t.queue_seq FROM calls c JOIN tickets t ON t.id=c.ticket WHERE c.id>? ORDER BY c.id', (after,))] if after >= 0 else []
+                    response['events'] = [dict(row) for row in db.execute('SELECT c.*,t.prefix,t.queue_seq FROM calls c JOIN tickets t ON t.id=c.ticket JOIN requests r ON r.ticket_id=t.id WHERE c.id>? AND r.deleted_at IS NULL ORDER BY c.id', (after,))] if after >= 0 else []
                     return self.reply(response)
                 user = self.user(db)
                 if url.path == '/api/me':
@@ -401,6 +404,22 @@ class Handler(BaseHTTPRequestHandler):
                     with db:
                         w.audit(db, user, 'login', {})
                 return self.reply({'user': user}, cookie=f'{auth.COOKIE_NAME}={token}; HttpOnly; SameSite=Strict; Path=/; Max-Age={auth.SESSION_SECONDS}')
+            if self.path == '/api/admin/requests/delete':
+                with closing(connection()) as db:
+                    user = self.user(db)
+                    self.guard(user, self.path)
+                    w.need(user, ('admin',))
+                    # Reuse persistent password-attempt limits on a dedicated connection.
+                    # Revoke only the temporary verification session, keeping the browser session.
+                    token, _ = auth.login(db, user['username'], data.get('password'))
+                    auth.logout(db, auth.COOKIE_NAME + '=' + token)
+                    db.commit()
+                    with db:
+                        db.execute('BEGIN IMMEDIATE')
+                        user = self.user(db)
+                        self.guard(user, self.path)
+                        response = request_delete.remove(db, user, data)
+                return self.reply(response)
             if self.path in ('/api/admin/integrations/test', '/api/admin/integrations/sync'):
                 with closing(connection()) as db, db:
                     user = self.user(db)
@@ -478,7 +497,7 @@ def initialize(demo=False):
     # Preserve a recoverable snapshot before the first v0.5 schema migration.
     if Path(DATABASE).is_file():
         with closing(sqlite3.connect(DATABASE)) as source:
-            if source.execute('PRAGMA user_version').fetchone()[0] < 6:
+            if source.execute('PRAGMA user_version').fetchone()[0] < 7:
                 stamp = w.now().replace(':', '').replace('+', '_')
                 backup_path = str(DATABASE) + '.pre-v05-' + stamp + '.bak'
                 with closing(sqlite3.connect(backup_path)) as backup:
@@ -532,7 +551,7 @@ def initialize(demo=False):
                 rid = w.kiosk_request(db, ticket, content)
                 if ticket['created_at'] is None:
                     w.record(db, rid, None, 'legacy_import', {'note': 'Eski çek; yaratilgan vaqt noma’lum. Ariza import vaqti bilan qayd etildi.', 'queue_status': ticket['status']})
-            db.execute('PRAGMA user_version=6')
+            db.execute('PRAGMA user_version=7')
 
 
 if __name__ == '__main__':
