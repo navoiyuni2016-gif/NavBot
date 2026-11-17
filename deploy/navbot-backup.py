@@ -133,9 +133,11 @@ def main():
         return
     if os.geteuid() != 0:
         parser.error('Run with sudo')
+    configs = [Path('/etc/systemd/system/navbot.service'), Path('/etc/nginx/sites-available/navbot')]
+    # Drop-ins are part of the live service configuration and must be restorable.
+    configs.extend(sorted(Path('/etc/systemd/system/navbot.service.d').glob('*.conf')))
     destination, counts = create_backup('/var/lib/navbot', '/opt/navbot', '/var/backups/navbot',
-        lambda: stopped_service('navbot.service'),
-        ('/etc/systemd/system/navbot.service', '/etc/nginx/sites-available/navbot'))
+        lambda: stopped_service('navbot.service'), configs)
     print('Verified backup:', destination)
     print('Restored record counts:', json.dumps(counts))
 

@@ -74,3 +74,12 @@ class BackupTests(unittest.TestCase):
         self.assertFalse((self.out/'navbot-backup-20260101T000000Z-1234abcd.tar.gz').exists())
         self.assertEqual(len(list(self.out.glob('navbot-backup-*'))),2)
         self.assertTrue(other.is_file())
+
+    def test_live_dropin_configuration_is_archived_and_verified(self):
+        config=Path(self.tmp.name)/'service.d'/'20-hardening.conf'
+        config.parent.mkdir();config.write_text('[Service]\nPrivateDevices=true\n')
+        archive,_=backup.create_backup(self.data,self.code,self.out,self.pause,(config,))
+        with tarfile.open(archive) as tar:
+            saved='config/'+config.relative_to('/').as_posix()
+            self.assertEqual(tar.extractfile(saved).read(),config.read_bytes())
+        self.assertEqual(backup.verify_backup(archive),{'students':1})
