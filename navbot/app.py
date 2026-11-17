@@ -523,6 +523,7 @@ if __name__ == '__main__':
     parser.add_argument('--port', type=int, default=8081)
     parser.add_argument('--host', default='127.0.0.1')
     parser.add_argument('--db', type=Path, default=ROOT / 'navbot.sqlite3')
+    parser.add_argument('--ensure-admin', action='store_true', help='Create first admin if no accounts exist, then start server')
     parser.add_argument('--init-admin', action='store_true', help='Create first admin interactively; no server start')
     parser.add_argument('--seed-demo', action='store_true', help='Add fictitious local students and known demo accounts; local test only')
     args = parser.parse_args()
@@ -530,19 +531,33 @@ if __name__ == '__main__':
     if args.host not in ('127.0.0.1', 'localhost', '::1') and args.seed_demo:
         parser.error('Demo hisoblar bilan faqat loopbackda işga tuşiring')
     initialize(args.seed_demo)
-    if args.init_admin:
+    if args.init_admin or args.ensure_admin:
         import getpass
         with closing(connection()) as db, db:
-            if db.execute('SELECT 1 FROM users').fetchone():
+            has_users = db.execute('SELECT 1 FROM users').fetchone() is not None
+            if has_users and args.init_admin:
                 parser.error('Hisoblar mavjud. Birinçi admin allaqaçon yaratilgan.')
-            username = input('Admin login: ').strip()
-            password = getpass.getpass('Vaqtinçalik parol (kamida 12 belgi): ')
-            if password != getpass.getpass('Parolni takrorlang: '):
-                parser.error('Parollar mos emas')
-            user = auth.create_user(db, {'username': username, 'full_name': 'Superadmin', 'role': 'admin', 'department': 'Registrar', 'operator': None, 'password': password})
-            w.audit(db, user, 'first_admin_create', {})
-        print('Admin yaratildi. Serverni --init-admin parametrisiz işga tuşiring.', flush=True)
-        raise SystemExit(0)
+            while not has_users:
+                try:
+                    username = input('Admin login: ').strip()
+                    password = getpass.getpass('Vaqtinçalik parol (kamida 12 belgi): ')
+                    confirmation = getpass.getpass('Parolni takrorlang: ')
+                except (EOFError, KeyboardInterrupt):
+                    parser.exit(1, '\nAdmin yaratilmadi. Qayta işga tuşirib davom eting.\n')
+                if password != confirmation:
+                    print('Parollar mos emas. Qayta kiriting.', flush=True)
+                    continue
+                try:
+                    user = auth.create_user(db, {'username': username, 'full_name': 'Superadmin', 'role': 'admin', 'department': 'Registrar', 'operator': None, 'password': password})
+                except auth.AuthError as error:
+                    print(str(error), flush=True)
+                    continue
+                w.audit(db, user, 'first_admin_create', {})
+                has_users = True
+                print('Admin yaratildi.', flush=True)
+        if args.init_admin:
+            print('Serverni START-WINDOWS.bat orqali işga tuşiring.', flush=True)
+            raise SystemExit(0)
     print(f'NavBoT: http://{args.host}:{args.port}', flush=True)
     if args.seed_demo:
         print('LOKAL SINOV: demo loginlar admin / manager / manager2 / executor / head / director; parol Navbot-Test-2026!', flush=True)

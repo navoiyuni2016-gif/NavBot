@@ -59,3 +59,8 @@ Tizim sozlamalaridagi **Logotiplar va interfeys belgilari**dan joyini tanlang, P
 ## Talabalarni o‘zgartirmasdan Excel’dan qo‘shish
 
 Talabalar bazasidagi Excel shaklidan asl faylni tanlang. HEMIS ID bo‘yicha mavjud yozuv o‘zgartirilmaydi. Ism va barcha yettita asl ustun qiymatlari saqlanadi. Takroriy ID yoki noto‘g‘ri qator bo‘lsa butun import bekor qilinadi. Faylda bo‘lmagan guruh, yo‘nalish va tasdiqlangan faol holat taxmin qilinmaydi. Ishchi bazaning zaxirasini saqlang.
+
+
+## Birinchi admin paroli mos kelmasa
+
+START-WINDOWS.bat endi fayl mavjudligiga emas, bazadagi hisoblar mavjudligiga qaraydi. Bo‘sh baza avvalgi muvaffaqiyatsiz urinishdan qolgan bo‘lsa ham login/parol yaratish takrorlanadi. Parollar mos kelmasa shu oynada qayta kiritiladi. Mavjud hisob/parol o‘zgartirilmaydi. Eski nusxada serverni Ctrl+C bilan to‘xtatib, loyiha papkasida `py -3 navbot\app.py --db navbot\navbot.sqlite3 --init-admin` buyrug‘i bilan birinchi adminni yarating; keyin START-WINDOWS.bat ni oching. Bazani o‘chirmang.
