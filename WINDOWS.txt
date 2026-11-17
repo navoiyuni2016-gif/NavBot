@@ -1,22 +1,24 @@
-NavBoT — Windows lokal sinov
+NavBoT v0.5 — Windows lokal sinov
 
-1. Python 3 ni https://www.python.org/downloads/windows/ dan o'rnating.
-   O'rnatishda 'Add python.exe to PATH' ni belgilang.
-2. ZIPni alohida papkaga to'liq oching.
-3. START-WINDOWS.bat faylini ikki marta bosing. Ochilgan oynani yopmang.
-4. Chrome yoki Edge brauzerida alohida tablarni oching:
-   http://127.0.0.1:8081/kiosk
-   http://127.0.0.1:8081/operator?id=1
-   http://127.0.0.1:8081/tv
-   http://127.0.0.1:8081/tablo?id=1
-5. Kioskda til, bo'lim va xizmatni tanlang. Chek yaratiladi.
-   Operator oynasida keyingi raqamni chaqiring, qabulni boshlang va tugating.
-   TV va tablo avtomatik yangilanadi. TVda ovozni tugma orqali yoqing.
-6. Operator oynasida HEMIS ID: 100000000001 yoki 100000000002 ni qidiring.
-   Bular sun'iy talabalar. Haqiqiy HEMIS API ulanmagan.
+1. Python 3.12+ ni python.org dan o'rnating, Add Python to PATH ni belgilang.
+2. ZIPni to'liq yangi papkaga oching; START-WINDOWS.bat faylini bosing.
+3. Qora oynani yopmang. Chrome/Edge:
+   Kiosk: http://127.0.0.1:8081/kiosk
+   Kirish: http://127.0.0.1:8081/login
+   TV: http://127.0.0.1:8081/tv
+   Tablo: http://127.0.0.1:8081/tablo?id=1
+4. Sinov loginlari: manager, manager2, executor, head, director, admin.
+   Dastlabki sinov paroli: Navbot-Test-2026!
+   manager = 1-operator, manager2 = 2-operator.
+5. Talaba sinov IDlari: 100000000001, 100000000002, H24011876.
+6. Menejerda talabani arizaga biriktiring va saqlang. Keyin joyida hal qiling yoki
+   executor ga muddat/ichki asos bilan yuboring. executor sabab bilan qaytaradi
+   yoki javobni tasdiqqa yuboradi; head tasdiqlaydi. director hisobotni ko'radi.
+7. TVda ovozni alohida yoqing. Kioskda chekni qayta chop etish mumkin.
 
-Serverni to'xtatish: qora oynada Ctrl+C.
-Navbatlar navbot/navbot.sqlite3 faylida saqlanadi.
-Agar 8081 port band bo'lsa, avvalgi NavBoT oynasini to'xtating.
-Dastur faqat shu kompyuterda ochiladi; boshqa qurilmalar uchun hali sozlanmagan.
-Windowsdagi haqiqiy ovoz va printer alohida tekshirilishi kerak.
+To'xtatish: Ctrl+C. Navbat va arizalar navbot/navbot.sqlite3 da saqlanadi.
+Yangilashda bazani o'chirmang. Eski dasturni to'xtatib kod fayllarini yangilang.
+Batafsil ishga tushirish/zaxira/cheklovlar README.md da.
+
+Haqiqiy HEMIS/LMS, Telegram, printer va Info KeyOS hali ulanmagan.
+Bu faqat lokal sun'iy ma'lumotli sinov; haqiqiy talabalar ma'lumotini kiritmang.

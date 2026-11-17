@@ -1,0 +1,145 @@
+ToshDO‘TAU  |  Registrator ofisi
+NavBoT tizimining texnik talablari va ishga tushirish rejasi
+Xodimlar ko‘rib chiqishi uchun jamlanma  •  0.5-versiya
+1. Maqsad va ish boshlash tartibi
+NavBoT talabalarni elektron navbatga qo‘yish, murojaatlarni ro‘yxatga olish, ijrochiga topshirish va natijani talabaga yetkazishni bir tizimda yuritadi. ToshDO‘TAUning mavjud navbat loyihasidagi ishga yaroqli kiosk, operator, TV va chop etish qismlari inventarizatsiyadan so‘ng qayta ishlatiladi.
+Mas’ul xodim mazkur hujjatni tekshiradi va tuzatishlarni bo‘lim raqami bo‘yicha kiritadi. Talablar yakunlangach dasturlash boshlanadi. Ariza shablonlari ish davomida beriladi va tegishli xizmatlarga biriktiriladi.
+2. Talabadan murojaatni qabul qilish
+Kanal
+Qabul qilish tartibi
+Kiosk
+Talaba 5 ta bo‘limdan birini va uning ichidagi 5 ta xizmatdan birini tanlaydi. Tizim navbat raqamini yaratadi, tanlangan mazmunni saqlaydi va 80 mm printerga chek yuboradi. Menejer talabani chaqirib, murojaatni talaba profiliga biriktiradi.
+Telefon
+Menejer xizmatni tanlaydi va talaba aytgan ma’lumotlarni kiritadi. Talabaning shaxsi belgilangan tartibda tasdiqlangach, murojaat ro‘yxatga olinadi. HEMIS ID qidiruv uchun ishlatiladi.
+LMS
+Yanvarga rejalashtirilgan ulanishda tasdiqlangan LMS kabinetidan yuborilgan ariza NavBoTga kelib tushadi. Bir xil tashqi ID bilan qayta yuborilgan ariza takror ro‘yxatga olinmaydi.
+3. Chek va murojaat mazmuni
+Kioskda tanlangan xizmatning aniq nomi bir vaqtda chekda «Murojaat mazmuni» sifatida chiqadi va menejer kartasidagi «Murojaat mazmuni» maydoniga avtomatik yoziladi. Masalan, «Akademik masalalar → Transkript olish» tanlansa, chekda «A-025 · Murojaat mazmuni — Transkript olish» chiqadi. Bu mazmun menejerda chaqirishdan oldin ko‘rinadi.
+Suhbat davomida aniqlangan qo‘shimcha tafsilotlar «Izoh» maydoniga yoziladi. Ariza yo‘naltirilganda mas’ul xodim ikkala maydonni ham ko‘radi. Takror bosish ikkinchi raqam yaratmasligi, printer xatosida ayni raqamni qayta chop etish mumkin bo‘lishi kerak.
+
+Murojaat ijrosi va muddatlar
+4. Menejer va ijrochi harakatlari
+4.1. Talabani topish. Menejer HEMIS IDni kiritganda F.I.Sh., yo‘nalishi yoki mutaxassisligi, kursi va ta’lim shakli yuklangan bazadan chiqadi. Menejer navbat yozuvini talaba profiliga biriktiradi.
+4.2. Ijro yo‘lini tanlash. Menejer masalani joyida hal qiladi, muddat belgilab o‘zida qoldiradi yoki muddat bilan mas’ulga yo‘naltiradi. Yo‘naltirish ro‘yxatiga ma’lumotlar bazasi menejeri, Xalqaro aloqalar, Kadrlar, O‘quv bo‘limi, Registrator ofisi bo‘lim boshlig‘i va Direktor kiradi.
+4.3. Topshirish va qaytarish. Yangi topshiriq mas’ulning «Menga biriktirilgan» ro‘yxatiga tushadi va panelga push-xabar keladi. Xabar ariza kartasini ochadi. Noto‘g‘ri yuborilgan arizani ijrochi sabab ko‘rsatib yuborgan menejerga qaytaradi. Menejerga ham push keladi. Qayta yo‘naltirilganda ariza raqami, tarix va amaldagi muddat saqlanadi.
+4.4. Tasdiqlash va yopish. Ijrochi javobni tasdiqqa yuboradi. Bo‘lim boshlig‘i tekshirib yopadi yoki izoh bilan tuzatishga qaytaradi. Yopilganda javob berilgan vaqt, yopilgan vaqt, natija va kechikish hisobotga qayd etiladi. Ariza faol ro‘yxatdan arxivga o‘tadi.
+5. Teskari sanoq va muddat asosi
+Belgilangan sana va soat kartada ko‘rinadi. Masalan, 10 kunlik muddat qo‘yilganda «9 kun 23 soat qoldi» chiqadi. Panel qayta ochilganda sanoq amaldagi muddatdan hisoblanadi.
+Belgi
+Panelda ko‘rinishi
+Ijroda
+Qolgan kun va soat.
+Sariq
+Muddat yaqin. Boshlang‘ich taklif — 24 soat. Chegarani Superadmin sozlaydi.
+Qizil
+Muddat o‘tgan. Kechikish vaqti chiqadi va rahbar ro‘yxatida ajratiladi.
+Yashil
+Ariza yopilgan. Muddatida yoki kechikib yakunlangani ko‘rsatiladi.
+Ichki xizmat muddati va huquqiy muddat alohida yuritiladi. Mas’ul xodim tasdiqlagan qoida bo‘yicha talabaga yakuniy sana bilan birga hujjat nomi, raqami, modda yoki bandi va havolasi chiqadi. 1 kunlik ichki muddatga tegishli ichki hujjat bandi biriktiriladi. Manba hujjatida huquqiy asos sifatida O‘RQ-445 bilan yangi tahrirda bayon etilgan qonunning 28-moddasi ko‘rsatilgan. Ishga tushirishdan oldin har bir qoida va uning qo‘llanish holati tasdiqlanadi.
+Muddat o‘zgarsa, eski va yangi sana, sabab va tasdiqlagan xodim tarixda qoladi. Qoida keyin tahrirlansa ham, avvalgi arizada talabaga ko‘rsatilgan asos saqlanadi.
+
+Ish oynalari va boshqaruv
+6. EDO uslubidagi xodim oynasi
+«Yangi», «Menga biriktirilgan», «Men yuborgan», «Qaytarilgan», «Muddati yaqin», «Muddati o‘tgan», «Tasdiqqa yuborilgan» va «Arxiv» bo‘limlari bo‘ladi. Ariza kartasida talaba profili, murojaat mazmuni, izoh, xizmat, kanal, mas’ul, muddat va asos, javob hamda harakatlar tarixi bir joyda ko‘rinadi.
+7. Rahbar paneli va hisobot
+Rahbar arizaning bosqichi, amaldagi ijrochi va qancha vaqt shu bosqichda turganini ko‘radi. Ro‘yxat bo‘lim, menejer, xizmat, kanal, davr va holat bo‘yicha saralanadi. Kunlik, haftalik, oylik, choraklik va yillik hisobotlar shu reyestrdan shakllanadi.
+Hisobotda sana, tartib raqami, talaba F.I.Sh., yo‘nalish yoki mutaxassislik, kurs, ta’lim shakli, mazmun, kanal, mas’ul menejer, ko‘rilgan chora, yo‘naltirilgan muddat, natija, hal etilmaganlik sababi va talaba bahosi ko‘rinadi. Arxivdagi yozuv raqam, talaba, xizmat, ijrochi yoki sana bo‘yicha topiladi.
+8. Superadmin vakolatlari
+Sozlama
+Panelda bajariladigan ish
+Katalog va shablon
+Bo‘lim va xizmat yaratish, tartiblash, ko‘rsatish yoki yashirish. Dastlab 5 × 5 xizmat. Shablon maydonlari, tartibi, majburiyligi, ilovalari va versiyasi belgilanadi.
+Rollar va vakolatlar
+Rol yaratish, xodimga berish va amallarni belgilash. Bo‘lim boshlig‘i faqat o‘z bo‘limida Superadmin ruxsat bergan rollarni biriktiradi. O‘zgarishlar tarixda qayd etiladi.
+Ijro qoidalari
+Xizmatni bo‘limga bog‘lash, tasdiqlovchi rolni, muddat qoidasini va asosini, sariq ogohlantirish chegarasini hamda xabar matnlarini sozlash.
+Qurilmalar
+Xizmat oynalarini, kiosk va TV manzillarini, chek shablonini hamda elektron tablolar biriktirilishini boshqarish.
+Ish davomida beriladigan ariza shablonlari asosida xizmatga mos shakl tayyorlanadi. Avval yaratilgan arizalarda ishlatilgan shablon versiyasi saqlanadi. Kundalik sozlamalar panel orqali kiritiladi.
+
+Talaba kabineti va qurilmalar
+9. Talaba arizasini kuzatishi
+Birinchi ishchi versiyada xabarnomalar Telegram-bot orqali yetkaziladi. Talaba tasdiqlab bog‘langan akkauntida «Mening arizalarim» bo‘limidan o‘z murojaatlarini ko‘radi. Kartada ariza raqami, mazmuni, mas’ul bo‘lim, joriy holat, javob muddati, muddat asosi va yakuniy javob chiqadi.
+Holatlar «Qabul qilindi», «Ko‘rib chiqilmoqda», «Javob tasdiqlanmoqda» va «Yakunlandi» ko‘rinishida beriladi. Holat yoki muddat o‘zgarsa, bot xabar yuboradi. Yopilgan ariza javobi «Yakunlangan arizalar»dan qayta ochiladi. Yakunda 1–5 ballik baho majburiy, izoh ixtiyoriy. Javob talabaga yuboriladi va baholash bajarilguncha alohida vazifa ochiq turadi.
+Talabaning alohida kabineti keyingi bosqich uchun tayyorlanadi. LMS ulangach, talaba odatdagi LMS kabinetidan ariza yuboradi, holatini kuzatadi, javobini oladi va baholaydi. Korporativ pochta keyingi bosqichga rejalashtiriladi.
+10. Talabalar bazasi va LMS sinxronizatsiyasi
+Dastlab talabalar ma’lumoti fayldan yuklanadi. LMS ulangach, Superadmin vakolat bergan bo‘lim boshlig‘i «Talabalar bazasi → LMSdan yangilash» tugmasini o‘zi xohlagan kuni bosadi. Yangilash HEMIS ID bo‘yicha mavjud yozuvlarni yangilaydi va yangi talabalarni qo‘shadi. LMS va telefon murojaatlari «Yangi murojaatlar»ga o‘z kanal belgisi va NAV ariza raqami bilan tushadi. Ularga kiosk navbati, chek va TV chaqiruvi biriktirilmaydi.
+Panelda oxirgi muvaffaqiyatli yangilanish vaqti, boshlagan xodim, qo‘shilgan va yangilangan yozuvlar soni hamda xatolar chiqadi. LMSda topilmagan yozuv tekshirishga belgilanadi. Avvalgi arizalar profilga bog‘liq qoladi. Aloqa uzilganda qidiruv oxirgi muvaffaqiyatli baza orqali ishlaydi. LMS ulanishi ariza, holat, javob, baho va talaba yozuvlari almashinuvini qamrab oladi.
+11. TV va har bir oynaning elektron tablosi
+Menejer «Chaqirish»ni bosganda umumiy TVning chap qismida «A-025 → 3-operator», 3-oyna tablosida «A-025» chiqadi. TVning o‘ng qismida operatorlar va ular xizmat ko‘rsatayotgan chek raqamlari, pastki qismida esa hali chaqirilmagan raqamlar ko‘rinadi. Chaqirilgan raqam kutish ro‘yxatidan chiqadi. Ommaviy TVga faqat navbat raqamlari, operator raqamlari va ekran sarlavhalari chiqariladi.
+Kiosk yoqilganda NavBoTning kiosk oynasi to‘liq ekranda avtomatik ochiladi. TV yoki unga ulangan pleer yoqilganda chaqiruv ekrani avtomatik ochiladi. TV tasvirni Info KeyOSdan olsa, kiosk va TV chiqishlari alohida sozlanadi. Qurilma protokoli real model bo‘yicha aniqlanadi. Superadmin bo‘lim logotiplarini yuklaydi, oldindan ko‘radi va saqlaydi. Kiosk saqlangan logotiplarni serverdan oladi.
+
+TV chaqiruvi va uch tilli xizmat
+12. TV va ovozli chaqiruv
+TV to‘q ko‘k sarlavha, och asos va yashil aksentli dizaynda ishlaydi. Chapda joriy chaqiruv yirik ko‘rinadi. O‘ngda «Xizmat körsatilmoqda» bo‘limi, pastda ekran eni bo‘ylab «Kutilayotgan navbatlar» bo‘limi turadi. Chaqirish va qayta chaqirishda joriy karta 3 marta yonib-o‘chadi. Ovoz navbat va operator raqamini talaba tanlagan tilda e’lon qiladi. Bir nechta chaqiruv ketma-ket ovozlashtiriladi.
+O‘ngdagi «Xizmat körsatilmoqda» bo‘limida faol qabul juftliklari, masalan, «1-operator · A-021» va «2-operator · A-023» ko‘rinadi. Operator qabulni boshlaganda juftlik paydo bo‘ladi, tugatganda ro‘yxatdan chiqadi. Pastki qatorda faqat hali chaqirilmagan raqamlar navbat tartibida yonma-yon ko‘rinadi.
+13. O‘zbekcha ruscha va inglizcha
+Tizim interfeysi, kiosk katalogi, tizim xabarlari, chek va ovozli chaqiruv uch tilda ishlaydi. O‘zbekcha variantda yangi yozuv qo‘llanadi: Sh → Ş, Ch → Ç, O‘ → Ö, G‘ → Ğ va ularning kichik harflari. Kioskda «Özbekça», «Русский», «English» tugmalari chiqadi.
+Kiosk tilini almashtirganda universitetning to‘liq nomi va Registrator ofisi nomi ham tarjimaga almashadi. Tanlov navbat yozuvida saqlanadi. Chekdagi barcha yozuv, jumladan universitet va ofis nomi, sarlavha, bo‘lim, xizmat, sana-vaqt yorlig‘i va pastki ko‘rsatmalar shu tilda chop etiladi. Qayta chop etish va ovozli chaqirish saqlangan tilni ishlatadi. Navbat kodi bir xil qoladi.
+Özbekça — «A-025. Iltimos, 3-operator oynasiga öting».
+Русский — «Номер А-025, подойдите к окну номер три».
+English — “Ticket A-025, please proceed to counter three.”
+14. Menejerning shaxsiy kabineti
+Superadmin har bir menejerga alohida login, vaqtinchalik parol va tegishli rol biriktiradi. Menejer o‘z kabinetida «Profil → Parolni o‘zgartirish» orqali joriy parolini tasdiqlab, yangi parol o‘rnatadi. Parol unutilsa, Superadmin vaqtinchalik parol belgilaydi. Avvalgi parol ochiq ko‘rinishda saqlanmaydi yoki ko‘rsatilmaydi.
+15. Superadmin sozlamalari va qabul sinovi
+Superadmin universitet va ofis nomlarining uch tildagi variantlarini, katalog tarjimalari va logotiplarini, chek matni va ovoz shablonlarini paneldan tahrirlaydi. Saqlashdan oldin kiosk va chekni har bir tilda oldindan ko‘radi. TV interfeysi tili, kutish ro‘yxati, operator yorlig‘i, ovoz darajasi, sinov chaqiruvi va 3 martalik miltillash ham panelda sozlanadi. TVning interfeys tili talabaning chek tilidan alohida belgilanadi. Qabul sinovida uch tilning har birida nomlar, chekdagi barcha yozuvlar, ovoz va kutish ro‘yxati tekshiriladi. Superadmin TV bo‘limlari sarlavhalarining tarjimalarini va operatorlarning TVdagi yorliqlarini sozlaydi. Sinovda juftlik qabul boshlanganda chiqishi va tugaganda olib tashlanishi tekshiriladi.
+
+TV ekranining kelishilgan maketi
+
+Chapda joriy chaqiruv, o‘ngda xizmat ko‘rsatilayotgan chek va operator juftliklari, pastda hali chaqirilmagan navbatlar.
+
+Qurish va ishga tushirish bosqichlari
+16. Bosqichlar va qabul mezonlari
+Bosqich
+Bajariladigan ish va qabul mezoni
+1. Talablarni tasdiqlash
+Xodim fikrlarini yig‘ish, hujjatni yakunlash. Mavjud repo, baza, operator oynalari va qurilmalar inventarini aniqlash. Ishchi baza nusxasini olib, alohida sinov muhitini tayyorlash.
+2. Kompyuterda qurish
+Navbat, menejer oynasi, rol va xizmatlar, ariza ijrosi, hisobot, bot va LMS uchun ulanishlarni qurish. Kiosk, chek, TV va tablo brauzer oynalarida sinovdan o‘tadi.
+3. Kompyuterda to‘liq sinov
+«Transkript olish»dan boshlash. Chek va avtomatik mazmun, TV va tablo chaqiruvi, HEMIS ID, muddat, push, yo‘naltirish va qaytarish, tasdiq, javob, baho, hisobot va arxiv tekshiriladi. Qolgan xizmatlar ham sinovdan o‘tadi.
+4. Sinov serveri
+Alohida sinov manzili va baza. Universitet ichidan lokal ulanish, tashqaridan HTTPS va vakolatlar tekshiriladi.
+5. Info KeyOS sinovi
+Kompyuterdagi to‘liq sinovdan keyin haqiqiy kiosk, 80 mm printer, TV va barcha menejer tablolarini ulash. Avtomatik ochilish, aloqa uzilib tiklanishi, qayta chop etish va chaqiruvlar tekshiriladi.
+6. Ishchi versiya
+Markaziy server va ishchi subdomen. Qurilmalar biriktiriladi, xodimlar rollari beriladi, zaxira va yangilanish sinovdan o‘tkaziladi.
+7. LMS ulanishi
+Yanvarga rejalashtirilgan bosqichda LMS kabinetidan ariza, javob, holat va baho almashinuvi hamda qo‘lda talabalar bazasini yangilash tekshiriladi.
+17. Lokal va global ishlash
+Bitta markaziy server va baza ishlatiladi. Subdomen taklifi — navbot.tsuull.uz. Kiosk, TV, tablolar va operatorlar universitetning lokal tarmog‘idan ulanadi. Internet uzilib, lokal server va LAN ishlab turganda navbat, chop etish, chaqiruv va ichki panellar ishlaydi. Tashqi ulanishlar HTTPS va vakolatlar orqali yuradi. Yuborilmagan Telegram xabarlari aloqa tiklangach qayta ishlanadi.
+18. Versiyalarni yangilash
+Har versiya sinovdan o‘tadi, baza zaxiralanadi va oldingi ishchi versiyaga qaytish tartibi saqlanadi. Kiosk va TV doimiy manzildan yangi interfeysni avtomatik oladi. Kiosk yangilanishni xizmat tanlash yoki chop etish yakunlangach qo‘llaydi. Alohida qurilma dasturi talab qilinsa, uning avtomatik yangilanishi haqiqiy Info KeyOSda tekshiriladi.
+
+Xodim ko‘rib chiqadigan masalalar
+19. Yakuniy hujjatga kiritiladigan aniqliklar
+Masala
+Ko‘rib chiqishda aniqlashtiriladi
+Xizmatlar katalogi
+5 ta bo‘lim va har biridagi 5 ta xizmatning yakuniy nomlari. Ma’naviy-ma’rifiy xizmatlar qaysi bo‘limga kirishi.
+Ariza shablonlari
+Har bir xizmat uchun maydonlar, majburiy ilovalar va javob ko‘rinishi. Shablonlarni ish davomida berish mumkin.
+Telefon orqali tasdiqlash
+Tasdiqlangan Telegram akkaunti orqali arizani tasdiqlash taklifi va bot bog‘lanmagan talabalar uchun muqobil tartib.
+Ijro va vakolatlar
+Har bir xizmat bo‘yicha mas’ul bo‘lim, ijrochi, yopuvchi rahbar va bo‘lim boshlig‘i bera oladigan rollar.
+Muddat asoslari
+Har bir xizmat uchun muddat, qo‘llanish sharti, qonun yoki ichki hujjatning aniq moddasi yoki bandi va uzaytirish vakolati.
+Qurilmalar va server
+Kiosk, printer, TV pleeri, elektron tablolar modeli va ulanish turi. Ishchi subdomen hamda lokal va global kirish tartibi.
+LMS integratsiyasi
+Yanvardagi ulanish kuni, mas’ul xodim, ma’lumot maydonlari, HEMIS ID mosligi va integratsiya sinovi.
+Xodim izohlari
+Tuzatishlar uchun bo‘lim raqami, taklif qilinayotgan matn va zarur bo‘lsa mas’ul xodimni yozing. Jadvalga Wordda qo‘shimcha qator qo‘shish mumkin.
+Bo‘lim
+Tuzatish yoki izoh
+
+
+
+
+
+
+
+
+Asos hujjat
+«Elektron navbat dasturi_loyiha.docx» va NavBoT bo‘yicha kelishilgan qo‘shimcha talablar. Mazkur loyiha xodim izohlaridan so‘ng yakunlanadi.

@@ -1,5 +1,6 @@
 """Reproduce Windows CP1251 default while loading UTF-8 application data."""
 import importlib.util
+import sys
 from pathlib import Path
 import unittest
 from unittest.mock import patch
@@ -16,7 +17,7 @@ class EncodingTest(unittest.TestCase):
 
         spec = importlib.util.spec_from_file_location('encoding_app', APP)
         module = importlib.util.module_from_spec(spec)
-        with patch.object(Path, 'read_text', windows_read_text):
+        with patch.object(sys, 'path', [str(APP.parent), *sys.path]), patch.object(Path, 'read_text', windows_read_text):
             spec.loader.exec_module(module)
         self.assertEqual(module.CATALOG[0][0][1], 'Академические вопросы')
         self.assertEqual(module.CATALOG[0][0][2], 'Academic services')

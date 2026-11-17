@@ -1,168 +1,454 @@
 import argparse
+import base64
+import binascii
+import copy
+import csv
+import io
 import json
+import logging
 import sqlite3
 from contextlib import closing
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import urlsplit
+from urllib.parse import parse_qs, urlsplit
 from uuid import UUID
+import auth
+import workflow as w
 
 ROOT = Path(__file__).resolve().parent
 CATALOG = json.loads((ROOT / 'catalog.json').read_text(encoding='utf-8'))
 LANGUAGES = ('uz', 'ru', 'en')
-PAGE = (ROOT / 'index.html').read_bytes()
+DATABASE = ROOT / 'navbot.sqlite3'
+DEFAULT_SETTINGS = {
+    'university': ['Alişer Navoiy nomidagi Toşkent davlat özbek tili va adabiyoti universiteti',
+                   'Ташкентский государственный университет узбекского языка и литературы имени Алишера Навои',
+                   'Alisher Navo’i Tashkent State University of Uzbek Language and Literature'],
+    'office': ['Registrator ofisi', 'Офис регистратора', 'Registrar’s Office'],
+    'tv_language': 'uz', 'warning_hours': 24, 'volume': 0.75, 'blink_count': 3,
+    'tv_titles': [['Hozir çaqirilmoqda', 'Xizmat körsatilmoqda', 'Kutilayotgan navbatlar'],
+                  ['Сейчас вызывается', 'Обслуживаются', 'Ожидают'], ['Now calling', 'Now serving', 'Waiting']],
+    'operator_labels': {},
+    'voice_templates': ['{navbat}. Iltimos, {operator}-operator oynasiga öting.',
+                        'Номер {navbat}, подойдите к окну номер {operator}.',
+                        'Ticket {navbat}, please proceed to counter {operator}.'],
+    'receipt_footer': ['Navbatingizni TVda kuzating', 'Следите за очередью на экране', 'Watch the queue display'],
+    'catalog': CATALOG, 'hidden_services': [], 'section_logos': [None] * 5,
+}
 
 
 def connection():
-    db = sqlite3.connect(DATABASE)
+    db = sqlite3.connect(DATABASE, timeout=15)
     db.row_factory = sqlite3.Row
+    db.execute('PRAGMA foreign_keys=ON')
     return db
 
 
+def settings(db):
+    row = db.execute('SELECT value FROM settings WHERE id=1').fetchone()
+    result = copy.deepcopy(DEFAULT_SETTINGS)
+    if row:
+        result.update(json.loads(row['value']))
+    return result
+
+
+def save_settings(db, user, data):
+    w.need(user, ('admin',))
+    incoming = data.get('settings')
+    if not isinstance(incoming, dict) or not incoming or set(incoming) - set(DEFAULT_SETTINGS):
+        raise w.Problem('Sozlama maydonlarini tekşiring')
+    result = settings(db)
+    result.update(incoming)
+    def translations(value):
+        return isinstance(value, list) and len(value) == 3 and all(isinstance(s, str) and 0 < len(s) <= 1000 for s in value)
+    for key in ('university', 'office', 'receipt_footer', 'voice_templates'):
+        if not translations(result[key]):
+            raise w.Problem(key + ': uçta tarjima zarur')
+    if result['tv_language'] not in LANGUAGES:
+        raise w.Problem('TV tilini tanlang')
+    if type(result['warning_hours']) is not int or not 1 <= result['warning_hours'] <= 720:
+        raise w.Problem('Ogohlantiriş 1–720 soat oraliğida')
+    if type(result['blink_count']) is not int or not 0 <= result['blink_count'] <= 5:
+        raise w.Problem('Miltillaş soni 0–5 oraliğida')
+    if type(result['volume']) not in (int, float) or not 0 <= result['volume'] <= 1:
+        raise w.Problem('Ovoz darajasi 0–1 oraliğida')
+    if not isinstance(result['tv_titles'], list) or len(result['tv_titles']) != 3 or not all(translations(v) for v in result['tv_titles']):
+        raise w.Problem('TV sarlavhalarini tekşiring')
+    labels = result['operator_labels']
+    if not isinstance(labels, dict) or any(str(k) not in map(str, range(1, 31)) or not translations(v) for k, v in labels.items()):
+        raise w.Problem('Operator yorliqlarini tekşiring')
+    if result['section_logos'] != settings(db)['section_logos']:
+        raise w.Problem('Logo faylini yuklaş tugmasidan foydalaning')
+    catalog = result['catalog']
+    if not isinstance(catalog, list) or len(catalog) != len(CATALOG):
+        raise w.Problem('Hozir 5 ta bölim saqlanişi kerak')
+    for section in catalog:
+        if not isinstance(section, list) or len(section) != 2 or not translations(section[0]) or not isinstance(section[1], list) or len(section[1]) != 5 or not all(translations(s) for s in section[1]):
+            raise w.Problem('Katalog 5×5 va uç tilda bölişi kerak')
+    hidden = result['hidden_services']
+    if not isinstance(hidden, list) or any(i not in [f'{a}:{b}' for a in range(5) for b in range(5)] for i in hidden):
+        raise w.Problem('Yashirilgan xizmatlar ro‘yxatini tekşiring')
+    for template in result['voice_templates']:
+        try:
+            template.format(navbat='A-001', operator=1)
+        except (KeyError, ValueError, IndexError, AttributeError):
+            raise w.Problem('Ovoz şablonida faqat {navbat} va {operator} ishlating')
+    db.execute('INSERT INTO settings(id,value) VALUES (1,?) ON CONFLICT(id) DO UPDATE SET value=excluded.value', (json.dumps(result, ensure_ascii=False),))
+    w.audit(db, user, 'settings_update', {'fields': list(incoming)})
+    return {'settings': result}
+
+
 def snapshot(db, operator):
+    # Public data is deliberately restricted: no student, request, notes, or staff names.
     items = [dict(row) for row in db.execute(
-        'SELECT id,lang,section,service,status,operator,called FROM tickets WHERE status != ? ORDER BY id',
-        ('done',)
-    )]
-    called = max((i for i in items if i['status'] == 'called'),
-                 key=lambda i: i['called'], default=None)
-    return {
-        'waiting': [i for i in items if i['status'] == 'waiting'],
-        'serving': sorted((i for i in items if i['status'] == 'serving'), key=lambda i: i['operator']),
-        'current': called,
-        'desk': next((i for i in items if i['operator'] == operator), None),
-    }
+        'SELECT id,lang,section,service,status,operator,called FROM tickets WHERE status != ? ORDER BY id', ('done',))]
+    called = max((i for i in items if i['status'] == 'called'), key=lambda i: i['called'] or 0, default=None)
+    return {'waiting': [i for i in items if i['status'] == 'waiting'],
+            'serving': sorted((i for i in items if i['status'] == 'serving'), key=lambda i: i['operator']),
+            'current': called, 'desk': next((i for i in items if i['operator'] == operator), None)}
 
 
-def mutate(db, path, data):
-    db.execute('BEGIN IMMEDIATE')
-    if path == '/api/student':
-        hemis_id = data.get('hemis_id')
-        if not isinstance(hemis_id, str) or not hemis_id.isascii() or not hemis_id.isdigit() or not 6 <= len(hemis_id) <= 20:
-            raise ValueError('HEMIS ID 6–20 ta raqamdan iborat bo‘lishi kerak')
-        row = db.execute('SELECT hemis_id,full_name,faculty,programme,course,student_group FROM students WHERE hemis_id=?', (hemis_id,)).fetchone()
-        return {'student': dict(row) if row else None, 'source': 'local'}
+def mutate(db, path, data, user):
+    config = settings(db)
     if path == '/api/ticket':
-        key = str(UUID(data['key']))
-        lang, section, service = (data[k] for k in ('lang', 'section', 'service'))
-        if lang not in LANGUAGES or type(section) is not int or type(service) is not int:
-            raise ValueError('Invalid selection')
-        if not 0 <= section < len(CATALOG) or not 0 <= service < len(CATALOG[section][1]):
-            raise ValueError('Invalid selection')
-        db.execute(
-            'INSERT INTO tickets (request_key,lang,section,service) VALUES (?,?,?,?) '
-            'ON CONFLICT(request_key) DO NOTHING', (key, lang, section, service)
-        )
-        return dict(db.execute(
-            'SELECT id,lang,section,service FROM tickets WHERE request_key=?', (key,)
-        ).fetchone())
-
-    operator = data['operator']
+        key = str(UUID(data.get('key', '')))
+        section, service, lang = w.selection(data, config['catalog'])
+        existing = db.execute('SELECT * FROM tickets WHERE request_key=?', (key,)).fetchone()
+        if existing:
+            if (existing['lang'], existing['section'], existing['service']) != (lang, section, service):
+                raise w.Problem('Sörov kaliti boşqa tanlov uçun ishlatilgan', 409)
+            ticket = dict(existing)
+        else:
+            if f'{section}:{service}' in config['hidden_services']:
+                raise w.Problem('Xizmat vaqtinça mavjud emas', 409)
+            db.execute('INSERT INTO tickets(request_key,lang,section,service,created_at,content_name) VALUES (?,?,?,?,?,?)',
+                       (key, lang, section, service, w.now(), config['catalog'][section][1][service][LANGUAGES.index(lang)]))
+            ticket = dict(db.execute('SELECT * FROM tickets WHERE request_key=?', (key,)).fetchone())
+        w.kiosk_request(db, ticket, ticket['content_name'])
+        return {k: ticket[k] for k in ('id', 'lang', 'section', 'service', 'created_at')} | {'content': ticket['content_name']}
+    w.need(user, auth.ROLES)
+    if path == '/api/student':
+        return {'student': w.student(db, data.get('hemis_id')), 'source': 'local'}
+    if path == '/api/request/create':
+        return {'request': w.phone_request(db, user, data, config['catalog'])}
+    if path == '/api/request/action':
+        return {'request': w.request_action(db, user, data)}
+    if path == '/api/students/import':
+        return w.import_students(db, user, data)
+    if path == '/api/admin/logo':
+        w.need(user, ('admin',))
+        section, mime = data.get('section'), data.get('mime')
+        if type(section) is not int or not 0 <= section < 5 or mime not in ('image/png', 'image/jpeg'):
+            raise w.Problem('Bölim va PNG/JPG formatini tekşiring')
+        try:
+            raw = base64.b64decode(data.get('data', ''), validate=True)
+        except (ValueError, TypeError, binascii.Error):
+            raise w.Problem('Rasm fayli buzilgan')
+        if not 0 < len(raw) <= 2 * 1024 * 1024:
+            raise w.Problem('Rasm 2 MBdan oşmasligi kerak')
+        if (mime == 'image/png' and not raw.startswith(b'\x89PNG\r\n\x1a\n')) or (mime == 'image/jpeg' and not raw.startswith(b'\xff\xd8\xff')):
+            raise w.Problem('Rasm formati fayl bilan mos emas')
+        config['section_logos'][section] = 'data:' + mime + ';base64,' + base64.b64encode(raw).decode('ascii')
+        db.execute('INSERT INTO settings(id,value) VALUES (1,?) ON CONFLICT(id) DO UPDATE SET value=excluded.value', (json.dumps(config, ensure_ascii=False),))
+        w.audit(db, user, 'section_logo_update', {'section': section, 'mime': mime, 'bytes': len(raw)})
+        return {'settings': config}
+    if path == '/api/admin/settings':
+        return save_settings(db, user, data)
+    if path in ('/api/admin/user', '/api/admin/reset'):
+        w.need(user, ('admin',))
+        if path.endswith('/user'):
+            result = auth.create_user(db, data)
+        else:
+            result = auth.reset_password(db, data.get('user_id'), data.get('password'))
+        w.audit(db, user, 'user_create' if path.endswith('/user') else 'password_reset', {'user_id': result['id']})
+        return {'user': result}
+    if path == '/api/notification/read':
+        notification_id = data.get('id')
+        if type(notification_id) is not int:
+            raise w.Problem('Xabar raqamini tekşiring')
+        db.execute('UPDATE notifications SET read=1 WHERE id=? AND user_id=?', (notification_id, user['id']))
+        return {'ok': True}
+    if path != '/api/action':
+        raise w.Problem('Topilmadi', 404)
+    w.need(user, ('admin', 'manager'))
+    operator = data.get('operator')
     if type(operator) is not int or not 1 <= operator <= 30:
-        raise ValueError('Invalid operator')
-    action = data['action']
-    desk = db.execute(
-        "SELECT * FROM tickets WHERE operator=? AND status IN ('called','serving')", (operator,)
-    ).fetchone()
+        raise w.Problem('Operator raqamini tekşiring')
+    if user['role'] == 'manager' and user['operator'] != operator:
+        raise w.Problem('Boşqa operator uçun vakolat yöq', 403)
+    action = data.get('action')
+    desk = db.execute("SELECT * FROM tickets WHERE operator=? AND status IN ('called','serving')", (operator,)).fetchone()
     if action == 'call' and desk is None:
-        ticket = db.execute("SELECT * FROM tickets WHERE status='waiting' ORDER BY id LIMIT 1").fetchone()
+        ticket_id = data.get('ticket_id')
+        if ticket_id is not None and type(ticket_id) is not int:
+            raise w.Problem('Çek raqamini tekşiring')
+        ticket = db.execute("SELECT * FROM tickets WHERE status='waiting' AND (? IS NULL OR id=?) ORDER BY id LIMIT 1", (ticket_id, ticket_id)).fetchone()
         if ticket is None:
-            raise ValueError('Navbat böş')
+            raise w.Problem('Navbat böş yoki çaqirilgan', 409)
+        req = db.execute('SELECT * FROM requests WHERE ticket_id=?', (ticket['id'],)).fetchone()
+        if req and req['manager_id'] not in (None, user['id']) and user['role'] != 'admin':
+            raise w.Problem('Navbat boşqa menejerga biriktirilgan', 409)
         db.execute("UPDATE tickets SET status='called',operator=? WHERE id=?", (operator, ticket['id']))
+        if req:
+            db.execute('UPDATE requests SET manager_id=COALESCE(manager_id,?),version=version+1,updated_at=? WHERE id=?',
+                       (user['id'], w.now(), req['id']))
+            w.record(db, req['id'], user, 'call', {'operator': operator})
         desk = ticket
     elif not desk or action == 'call':
-        raise ValueError('Operator holati özgargan')
+        raise w.Problem('Operator holati özgargan', 409)
     elif action == 'start' and desk['status'] == 'called':
         db.execute("UPDATE tickets SET status='serving' WHERE id=?", (desk['id'],))
     elif action == 'finish' and desk['status'] == 'serving':
         db.execute("UPDATE tickets SET status='done' WHERE id=?", (desk['id'],))
     elif action != 'recall' or desk['status'] != 'called':
-        raise ValueError('Bu amal joriy holatda bajarilmaydi')
+        raise w.Problem('Bu amal joriy holatda bajarilmaydi', 409)
     if action in ('call', 'recall'):
-        event = db.execute('INSERT INTO calls (ticket,operator,lang) VALUES (?,?,?)',
-                           (desk['id'], operator, desk['lang'])).lastrowid
+        event = db.execute('INSERT INTO calls(ticket,operator,lang) VALUES (?,?,?)', (desk['id'], operator, desk['lang'])).lastrowid
         db.execute('UPDATE tickets SET called=? WHERE id=?', (event, desk['id']))
+    if action != 'call':
+        req = db.execute('SELECT id FROM requests WHERE ticket_id=?', (desk['id'],)).fetchone()
+        if req:
+            db.execute('UPDATE requests SET version=version+1,updated_at=? WHERE id=?', (w.now(), req['id']))
+            w.record(db, req['id'], user, 'queue_' + action, {'operator': operator})
     return snapshot(db, operator)
 
 
 class Handler(BaseHTTPRequestHandler):
-    def send_body(self, body, mime, status=200):
+    server_version = 'NavBoT/0.5-local'
+
+    def log_message(self, format, *args):
+        # Do not write ID searches or request contents into access logs.
+        logging.info('%s %s', self.command, urlsplit(self.path).path)
+
+    def send_body(self, body, mime, status=200, cookie=None):
         self.send_response(status)
         self.send_header('Content-Type', mime)
         self.send_header('Cache-Control', 'no-store')
+        self.send_header('X-Content-Type-Options', 'nosniff')
+        self.send_header('Referrer-Policy', 'same-origin')
+        self.send_header('X-Frame-Options', 'DENY')
+        self.send_header('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'")
+        if cookie is not None:
+            self.send_header('Set-Cookie', cookie)
         self.send_header('Content-Length', str(len(body)))
         self.end_headers()
         self.wfile.write(body)
 
-    def reply(self, value, status=200):
-        self.send_body(json.dumps(value, ensure_ascii=False).encode(), 'application/json; charset=utf-8', status)
+    def reply(self, value, status=200, cookie=None):
+        self.send_body(json.dumps(value, ensure_ascii=False, allow_nan=False).encode('utf-8'), 'application/json; charset=utf-8', status, cookie)
+
+    def user(self, db):
+        return auth.current(db, self.headers.get('Cookie', ''))
+
+    def guard(self, user, path):
+        w.need(user, auth.ROLES)
+        if user['must_change_password'] and path not in ('/api/me', '/api/password', '/api/logout'):
+            raise w.Problem('Vaqtinçalik parolni profil orqali özgartiring', 403)
 
     def do_GET(self):
         url = urlsplit(self.path)
-        if url.path in ('/', '/kiosk', '/operator', '/tv', '/tablo'):
-            return self.send_body(PAGE, 'text/html; charset=utf-8')
-        if url.path == '/api/catalog':
-            return self.reply(CATALOG)
-        if url.path != '/api/state':
-            return self.reply({'error': 'Topilmadi'}, 404)
         try:
-            operator, after = map(int, url.query.split(',') if url.query else ('0', '0'))
-        except ValueError:
-            return self.reply({'error': 'Notoğri parametr'}, 400)
-        with closing(connection()) as db:
-            db.execute('BEGIN')
-            response = snapshot(db, operator)
-            response['last'] = db.execute('SELECT COALESCE(MAX(id),0) FROM calls').fetchone()[0]
-            response['events'] = [dict(row) for row in db.execute(
-                'SELECT * FROM calls WHERE id>? ORDER BY id', (after,)
-            )] if after >= 0 else []
-        self.reply(response)
+            if url.path in ('/', '/kiosk', '/operator', '/manager', '/tv', '/tablo', '/login', '/executor', '/head', '/director', '/admin', '/profile'):
+                return self.send_body((ROOT / 'index.html').read_bytes(), 'text/html; charset=utf-8')
+            with closing(connection()) as db:
+                db.execute('BEGIN')
+                if url.path == '/api/catalog':
+                    return self.reply(settings(db)['catalog'])
+                if url.path == '/api/settings':
+                    return self.reply({'settings': settings(db)})
+                if url.path == '/api/state':
+                    try:
+                        operator, after = map(int, url.query.split(',') if url.query else ('0', '-1'))
+                    except ValueError:
+                        raise w.Problem('Notoğri parametr')
+                    response = snapshot(db, operator)
+                    response['last'] = db.execute('SELECT COALESCE(MAX(id),0) FROM calls').fetchone()[0]
+                    response['events'] = [dict(row) for row in db.execute('SELECT * FROM calls WHERE id>? ORDER BY id', (after,))] if after >= 0 else []
+                    return self.reply(response)
+                user = self.user(db)
+                if url.path == '/api/me':
+                    return self.reply({'user': user})
+                self.guard(user, url.path)
+                if url.path == '/api/users':
+                    return self.reply({'users': auth.users(db)})
+                if url.path == '/api/requests':
+                    return self.reply({'requests': w.requests(db, user)})
+                if url.path == '/api/students':
+                    w.need(user, ('admin', 'head', 'director'))
+                    return self.reply({'students': [dict(r) for r in db.execute('SELECT * FROM students ORDER BY full_name')]})
+                if url.path == '/api/notifications':
+                    return self.reply({'notifications': [dict(r) for r in db.execute('SELECT * FROM notifications WHERE user_id=? ORDER BY id DESC LIMIT 200', (user['id'],))]})
+                if url.path == '/api/integrations':
+                    return self.reply({'lms': {'connected': False}, 'telegram': {'connected': False}})
+                if url.path == '/api/audit':
+                    w.need(user, ('admin',))
+                    return self.reply({'events': [dict(r) for r in db.execute("SELECT a.id,COALESCE(u.full_name,'Kiosk') actor,a.action,a.detail,a.created_at FROM audit a LEFT JOIN users u ON u.id=a.actor_id ORDER BY a.id DESC LIMIT 1000")]})
+                if url.path in ('/api/report', '/api/report.csv'):
+                    report = w.report(db, user, parse_qs(url.query))
+                    if url.path.endswith('.csv'):
+                        return self.send_body(report_csv(report).encode('utf-8-sig'), 'text/csv; charset=utf-8')
+                    return self.reply(report)
+                raise w.Problem('Topilmadi', 404)
+        except (w.Problem, auth.AuthError) as error:
+            self.reply({'error': str(error)}, error.status)
+        except (ValueError, TypeError, KeyError) as error:
+            self.reply({'error': 'Sörov parametrlarini tekşiring'}, 400)
+
+    def same_origin(self):
+        origin = self.headers.get('Origin')
+        if self.headers.get('Sec-Fetch-Site') == 'cross-site':
+            raise w.Problem('Boşqa saytdan sörov rad etildi', 403)
+        if origin:
+            parsed = urlsplit(origin)
+            if parsed.scheme not in ('http', 'https') or parsed.netloc != self.headers.get('Host'):
+                raise w.Problem('Boşqa saytdan sörov rad etildi', 403)
+        if self.headers.get('Content-Type', '').split(';')[0].strip().lower() != 'application/json':
+            raise w.Problem('JSON sörov zarur', 415)
 
     def do_POST(self):
-        if self.path not in ('/api/ticket', '/api/action', '/api/student'):
-            return self.reply({'error': 'Topilmadi'}, 404)
         try:
+            self.same_origin()
             length = int(self.headers.get('Content-Length', '0'))
-            if not 0 < length <= 4096:
-                raise ValueError('Notoğri sörov')
-            data = json.loads(self.rfile.read(length))
+            if not 0 < length <= 4 * 1024 * 1024:
+                raise w.Problem('Sörov hajmi 4 MBdan oşmasligi kerak', 413)
+            data = json.loads(self.rfile.read(length), parse_constant=lambda _: (_ for _ in ()).throw(ValueError()))
+            if not isinstance(data, dict):
+                raise w.Problem('JSON obyekt yuboring')
+            if self.path == '/api/login':
+                with closing(connection()) as db:
+                    token, user = auth.login(db, data.get('username'), data.get('password'))
+                    with db:
+                        w.audit(db, user, 'login', {})
+                return self.reply({'user': user}, cookie=f'{auth.COOKIE_NAME}={token}; HttpOnly; SameSite=Strict; Path=/; Max-Age={auth.SESSION_SECONDS}')
+            cookie = None
             with closing(connection()) as db, db:
-                response = mutate(db, self.path, data)
-        except (TypeError, KeyError, ValueError, AttributeError) as error:
-            return self.reply({'error': str(error)}, 400)
-        self.reply(response)
+                db.execute('BEGIN IMMEDIATE')
+                user = self.user(db)
+                if self.path != '/api/ticket':
+                    self.guard(user, self.path)
+                if self.path == '/api/logout':
+                    auth.logout(db, self.headers.get('Cookie', ''))
+                    response = {'ok': True}
+                    cookie = f'{auth.COOKIE_NAME}=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0'
+                elif self.path == '/api/password':
+                    auth.change_password(db, user, data.get('current_password'), data.get('new_password'))
+                    w.audit(db, user, 'password_change', {})
+                    response = {'ok': True}
+                    cookie = f'{auth.COOKIE_NAME}=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0'
+                else:
+                    response = mutate(db, self.path, data, user)
+            self.reply(response, cookie=cookie)
+        except (w.Problem, auth.AuthError) as error:
+            self.reply({'error': str(error)}, error.status)
+        except (TypeError, KeyError, ValueError, AttributeError, UnicodeError):
+            self.reply({'error': 'Sörov maydonlarini tekşiring'}, 400)
+        except sqlite3.IntegrityError:
+            self.reply({'error': 'Yozuv özgargan yoki takrorlangan'}, 409)
+        except sqlite3.OperationalError:
+            logging.exception('Database operation failed')
+            self.reply({'error': 'Baza band. Qayta urinib köring'}, 503)
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--port', type=int, default=8080)
-    parser.add_argument('--db', type=Path, default=ROOT / 'navbot.sqlite3')
-    parser.add_argument('--seed-demo', action='store_true', help='Add fictitious local test students')
-    args = parser.parse_args()
-    DATABASE = args.db
+def report_csv(report):
+    out = io.StringIO(newline='')
+    writer = csv.writer(out)
+    writer.writerow(['Sana', 'Ariza', 'Navbat', 'HEMIS ID', 'F.I.Sh.', 'Yo‘nalish', 'Kurs', 'Ta’lim shakli', 'Mazmun', 'Kanal', 'Menejer', 'Mas’ul', 'Bölim', 'Holat', 'Muddat', 'Ichki asos', 'Huquqiy asos', 'Javob', 'Natija', 'Hal etilmaganlik sababi', 'Javob vaqti', 'Yopilgan vaqt', 'Kechikish soniya', 'Talaba bahosi'])
+    def safe(value):
+        value = '' if value is None else str(value)
+        return "'" + value if value.lstrip().startswith(('=', '+', '-', '@', '\t', '\r')) else value
+    from datetime import datetime
+    for r in report['requests']:
+        s = r['student'] or {}
+        late = ''
+        if r['deadline']:
+            end = r['closed_at'] or w.now()
+            late = max(0, int((datetime.fromisoformat(end) - datetime.fromisoformat(r['deadline'])).total_seconds()))
+        values = [r['created_at'], r['number'], r['queue_number'], r['student_id'], s.get('full_name'), s.get('programme'),
+                  s.get('course'), s.get('education_form'), r['content'], r['channel'], r['manager_name'], r['assignee_name'],
+                  r['department'], r['status'], r['deadline'], r['internal_basis'], r['legal_basis'], r['answer'], r['result'],
+                  r['unresolved_reason'], r['answered_at'], r['closed_at'], late, '']
+        writer.writerow(map(safe, values))
+    return out.getvalue()
+
+
+def initialize(demo=False):
+    # Preserve a recoverable snapshot before the first v0.5 schema migration.
+    if Path(DATABASE).is_file():
+        with closing(sqlite3.connect(DATABASE)) as source:
+            if source.execute('PRAGMA user_version').fetchone()[0] < 5:
+                stamp = w.now().replace(':', '').replace('+', '_')
+                backup_path = str(DATABASE) + '.pre-v05-' + stamp + '.bak'
+                with closing(sqlite3.connect(backup_path)) as backup:
+                    source.backup(backup)
+                print('Baza zaxirasi: ' + backup_path, flush=True)
     with closing(connection()) as db:
-        db.executescript("""
+        db.execute('PRAGMA journal_mode=WAL')
+        db.executescript('''
             CREATE TABLE IF NOT EXISTS students (
                 hemis_id TEXT PRIMARY KEY, full_name TEXT NOT NULL, faculty TEXT NOT NULL,
-                programme TEXT NOT NULL, course INTEGER NOT NULL, student_group TEXT NOT NULL
+                programme TEXT NOT NULL, course INTEGER NOT NULL, student_group TEXT NOT NULL,
+                education_form TEXT NOT NULL DEFAULT '', status TEXT NOT NULL DEFAULT 'active'
             );
             CREATE TABLE IF NOT EXISTS tickets (
                 id INTEGER PRIMARY KEY, request_key TEXT NOT NULL UNIQUE,
                 lang TEXT NOT NULL, section INTEGER NOT NULL, service INTEGER NOT NULL,
-                status TEXT NOT NULL DEFAULT 'waiting', operator INTEGER, called INTEGER
+                status TEXT NOT NULL DEFAULT 'waiting', operator INTEGER, called INTEGER, created_at TEXT, content_name TEXT
             );
-            CREATE UNIQUE INDEX IF NOT EXISTS operator_active ON tickets(operator)
-                WHERE status IN ('called','serving');
+            CREATE UNIQUE INDEX IF NOT EXISTS operator_active ON tickets(operator) WHERE status IN ('called','serving');
             CREATE TABLE IF NOT EXISTS calls (
                 id INTEGER PRIMARY KEY, ticket INTEGER NOT NULL, operator INTEGER NOT NULL, lang TEXT NOT NULL
             );
-        """)
-    if args.seed_demo:
+        ''')
+        for table, name, spec in [('students', 'education_form', "TEXT NOT NULL DEFAULT ''"),
+                                  ('students', 'status', "TEXT NOT NULL DEFAULT 'active'"), ('tickets', 'created_at', 'TEXT'), ('tickets', 'content_name', 'TEXT')]:
+            if name not in {r['name'] for r in db.execute(f'PRAGMA table_info({table})')}:
+                db.execute(f'ALTER TABLE {table} ADD COLUMN {name} {spec}')
+        auth.initialize(db, demo)
+        w.initialize(db)
+        with db:
+            if demo:
+                db.executemany('INSERT INTO students(hemis_id,full_name,faculty,programme,course,student_group,education_form,status) VALUES (?,?,?,?,?,?,?,?) ON CONFLICT(hemis_id) DO NOTHING', [
+                    ('100000000001', 'Sinov Talaba Bir', 'Filologiya (sinov)', 'Özbek tili', 2, 'TEST-201', 'Kunduzgi', 'active'),
+                    ('100000000002', 'Sinov Talaba Ikki', 'Tarjima (sinov)', 'Tarjima nazariyasi', 3, 'TEST-301', 'Kunduzgi', 'active'),
+                    ('H24011876', 'Sinov Mohinur Karimova', 'Filologiya (sinov)', 'Özbek tili', 3, 'TEST-301', 'Kunduzgi', 'active'),
+                ])
+            for ticket in db.execute('SELECT * FROM tickets WHERE content_name IS NULL').fetchall():
+                content = CATALOG[ticket['section']][1][ticket['service']][LANGUAGES.index(ticket['lang'])]
+                db.execute('UPDATE tickets SET content_name=? WHERE id=?', (content, ticket['id']))
+            for ticket in db.execute('SELECT * FROM tickets WHERE id NOT IN (SELECT ticket_id FROM requests WHERE ticket_id IS NOT NULL)').fetchall():
+                content = CATALOG[ticket['section']][1][ticket['service']][LANGUAGES.index(ticket['lang'])]
+                rid = w.kiosk_request(db, ticket, content)
+                if ticket['created_at'] is None:
+                    w.record(db, rid, None, 'legacy_import', {'note': 'Eski çek; yaratilgan vaqt noma’lum. Ariza import vaqti bilan qayd etildi.', 'queue_status': ticket['status']})
+            db.execute('PRAGMA user_version=5')
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--port', type=int, default=8081)
+    parser.add_argument('--host', default='127.0.0.1')
+    parser.add_argument('--db', type=Path, default=ROOT / 'navbot.sqlite3')
+    parser.add_argument('--init-admin', action='store_true', help='Create first admin interactively; no server start')
+    parser.add_argument('--seed-demo', action='store_true', help='Add fictitious local students and known demo accounts; local test only')
+    args = parser.parse_args()
+    DATABASE = args.db
+    if args.host not in ('127.0.0.1', 'localhost', '::1') and args.seed_demo:
+        parser.error('Demo hisoblar bilan faqat loopbackda işga tuşiring')
+    initialize(args.seed_demo)
+    if args.init_admin:
+        import getpass
         with closing(connection()) as db, db:
-            db.executemany('INSERT INTO students VALUES (?,?,?,?,?,?) ON CONFLICT(hemis_id) DO NOTHING', [
-                ('100000000001', 'Sinov Talaba Bir', 'Filologiya (sinov)', 'O‘zbek tili', 2, 'TEST-201'),
-                ('100000000002', 'Sinov Talaba Ikki', 'Tarjima (sinov)', 'Tarjima nazariyasi', 3, 'TEST-301'),
-            ])
-    print(f'NavBoT: http://127.0.0.1:{args.port}', flush=True)
-    with ThreadingHTTPServer(('127.0.0.1', args.port), Handler) as server:
+            if db.execute('SELECT 1 FROM users').fetchone():
+                parser.error('Hisoblar mavjud. Birinçi admin allaqaçon yaratilgan.')
+            username = input('Admin login: ').strip()
+            password = getpass.getpass('Vaqtinçalik parol (kamida 12 belgi): ')
+            if password != getpass.getpass('Parolni takrorlang: '):
+                parser.error('Parollar mos emas')
+            user = auth.create_user(db, {'username': username, 'full_name': 'Superadmin', 'role': 'admin', 'department': 'Registrar', 'operator': None, 'password': password})
+            w.audit(db, user, 'first_admin_create', {})
+        print('Admin yaratildi. Serverni --init-admin parametrisiz işga tuşiring.', flush=True)
+        raise SystemExit(0)
+    print(f'NavBoT: http://{args.host}:{args.port}', flush=True)
+    if args.seed_demo:
+        print('LOKAL SINOV: demo loginlar admin / manager / manager2 / executor / head / director; parol Navbot-Test-2026!', flush=True)
+    with ThreadingHTTPServer((args.host, args.port), Handler) as server:
         server.serve_forever()

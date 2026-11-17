@@ -27,10 +27,14 @@ Tunnel ochiq turganda kompyuteringiz brauzerida:
 - http://127.0.0.1:8081/tablo?id=1
 
 Har bir jismoniy kiosk/TV kompyuteri uchun tunnel kerak. Hozir portni internetga ochmang:
-autentifikatsiya va rollar hali qo‘shilmagan. Ommaviy yoki umumiy LAN foydalanishi uchun
+demo parollar hammaga ma’lum, HTTPS va haqiqiy qurilmalar qabul sinovi hali bajarilmagan. Ommaviy yoki umumiy LAN foydalanishi uchun
 kirish nazorati, HTTPS va maqsad server konfiguratsiyasini keyingi bosqichda tayyorlash kerak.
 Haqiqiy talabalar ma’lumotlarini hozircha kiritmang. Lokal HEMIS qidiruvi haqiqiy HEMIS API emas.
 
 Yangilashda SQLite bazani o‘chirmang. Zaxira olish yoki almashtirish oldidan xizmatni to‘xtating;
 ishga tushirgandan keyin kiosk → chek → operator → TV/tablo → yakunlash oqimini qayta tekshiring.
 Loglar: `sudo journalctl -u navbot -n 100 --no-pager`.
+
+Loginlar va yangi ariza oqimi [README](../README.md) da. Demo bazani haqiqiy ishga ishlatmang.
+Demo hisoblarsiz birinchi admin: `sudo -u navbot python3 /opt/navbot/navbot/app.py --db /var/lib/navbot/production.sqlite3 --init-admin`.
+Service `--db` yo‘lini ayni production bazaga moslang; demo bazani aralashtirmang.
