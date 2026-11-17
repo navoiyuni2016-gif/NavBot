@@ -1,0 +1,11 @@
+[Unit]
+Description=Daily NAVBOT backup at 03:00 Tashkent time
+
+[Timer]
+OnCalendar=*-*-* 03:00:00 Asia/Tashkent
+RandomizedDelaySec=10m
+Persistent=true
+Unit=navbot-backup.service
+
+[Install]
+WantedBy=timers.target
