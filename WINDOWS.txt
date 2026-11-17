@@ -1,0 +1,22 @@
+NavBoT — Windows lokal sinov
+
+1. Python 3 ni https://www.python.org/downloads/windows/ dan o'rnating.
+   O'rnatishda 'Add python.exe to PATH' ni belgilang.
+2. ZIPni alohida papkaga to'liq oching.
+3. START-WINDOWS.bat faylini ikki marta bosing. Ochilgan oynani yopmang.
+4. Chrome yoki Edge brauzerida alohida tablarni oching:
+   http://127.0.0.1:8081/kiosk
+   http://127.0.0.1:8081/operator?id=1
+   http://127.0.0.1:8081/tv
+   http://127.0.0.1:8081/tablo?id=1
+5. Kioskda til, bo'lim va xizmatni tanlang. Chek yaratiladi.
+   Operator oynasida keyingi raqamni chaqiring, qabulni boshlang va tugating.
+   TV va tablo avtomatik yangilanadi. TVda ovozni tugma orqali yoqing.
+6. Operator oynasida HEMIS ID: 100000000001 yoki 100000000002 ni qidiring.
+   Bular sun'iy talabalar. Haqiqiy HEMIS API ulanmagan.
+
+Serverni to'xtatish: qora oynada Ctrl+C.
+Navbatlar navbot/navbot.sqlite3 faylida saqlanadi.
+Agar 8081 port band bo'lsa, avvalgi NavBoT oynasini to'xtating.
+Dastur faqat shu kompyuterda ochiladi; boshqa qurilmalar uchun hali sozlanmagan.
+Windowsdagi haqiqiy ovoz va printer alohida tekshirilishi kerak.

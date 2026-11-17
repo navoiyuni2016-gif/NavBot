@@ -1,0 +1,32 @@
+[
+ [["Akademik masalalar","Академические вопросы","Academic services"],[
+ ["Transkript oliş","Получение транскрипта","Request a transcript"],
+ ["Öqişni köçiriş","Перевод на обучение","Transfer studies"],
+ ["HEMIS parolini tiklaş","Восстановление пароля HEMIS","Reset HEMIS password"],
+ ["Ariza beriş","Подача заявления","Submit an application"],
+ ["Boşqa masala","Другой вопрос","Other request"]]],
+ [["Ilmiy va innovatsion","Наука и инновации","Research and innovation"],[
+ ["Ilmiy tögaraklar","Научные кружки","Research clubs"],
+ ["Ustoz-şogird","Наставничество","Mentoring"],
+ ["Yoş olimlar","Молодые учёные","Young researchers"],
+ ["Grant va stipendiyalar","Гранты и стипендии","Grants and scholarships"],
+ ["Boşqa masala","Другой вопрос","Other request"]]],
+ [["Xalqaro hamkorlik","Международное сотрудничество","International cooperation"],[
+ ["Xorijiy talabalar","Иностранные студенты","International students"],
+ ["Akademik mobillik","Академическая мобильность","Academic mobility"],
+ ["Qöşma ta’lim","Совместное обучение","Joint programmes"],
+ ["Xalqaro grantlar","Международные гранты","International grants"],
+ ["Boşqa masala","Другой вопрос","Other request"]]],
+ [["Moliya va bandlik","Финансы и занятость","Finance and employment"],[
+ ["Tölovlar","Платежи","Payments"],
+ ["Stipendiya","Стипендия","Scholarship"],
+ ["Bandlik","Занятость","Employment"],
+ ["Şartnoma va subsidiya","Договор и субсидия","Contracts and subsidies"],
+ ["Boşqa masala","Другой вопрос","Other request"]]],
+ [["Amaliyot va stajirovka","Практика и стажировка","Placements and internships"],[
+ ["Amaliyot bazalari","Места практики","Placement opportunities"],
+ ["Amaliyot jadvali","График практики","Placement schedule"],
+ ["Qayta ötaş","Повторная практика","Repeat a placement"],
+ ["Ariza beriş","Подача заявления","Submit an application"],
+ ["Boşqa masala","Другой вопрос","Other request"]]]
+]

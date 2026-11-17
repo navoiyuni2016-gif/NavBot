@@ -1,0 +1,19 @@
+[Unit]
+Description=NavBoT local pilot
+After=network.target
+
+[Service]
+User=navbot
+Group=navbot
+WorkingDirectory=/opt/navbot
+ExecStart=/usr/bin/python3 /opt/navbot/navbot/app.py --port 8081 --db /var/lib/navbot/navbot.sqlite3
+StateDirectory=navbot
+Restart=on-failure
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

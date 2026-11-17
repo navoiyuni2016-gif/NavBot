@@ -1,0 +1,247 @@
+<!doctype html><html lang="uz"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NavBoT</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f3f7fa;color:#111f37;font:16px system-ui,sans-serif}header{background:#111f37;color:white;padding:18px clamp(16px,4vw,60px);display:flex;gap:22px;align-items:center}header strong{font-size:28px;letter-spacing:1px}header span{max-width:800px}main{margin:auto;padding:clamp(16px,3vw,48px);max-width:1600px}button,a{font:inherit}button{border:1px solid #cad9d8;background:white;color:inherit;border-radius:10px;padding:12px 17px;cursor:pointer}button:hover,button:focus-visible{border-color:#008477}button.primary,button[aria-pressed=true]{background:#00766a;color:white}button:disabled{opacity:.5;cursor:default}h1,h2,p{margin:0 0 14px}h1{font-size:clamp(26px,4vw,48px)}.controls{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 18px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(230px,100%),1fr));gap:12px}.tile{text-align:left;min-height:88px;font-weight:650}.panel{background:white;border:1px solid #d4e1e2;border-radius:16px;padding:20px;min-width:0}.tv{display:grid;grid-template-columns: minmax(0,1.7fr) minmax(0,1fr);gap:18px}.tv .waiting{grid-column:1/-1}.current{background:#e1f7ef;border:2px solid #008477;text-align:center;padding:clamp(16px,4vw,60px) 12px}.number{font-size:clamp(40px,10vw,150px);font-weight:850;line-height:1.05}.target{font-size:clamp(20px,4vw,66px);font-weight:750}.line{padding:10px 0;border-bottom:1px solid #e4eded;overflow-wrap:anywhere}.queue{display:flex;gap:14px;flex-wrap:wrap}.chip{border:1px solid #9bd1c4;border-radius:10px;font-size:clamp(20px,4vw,58px);font-weight:800;padding:8px 20px}.pulse{animation:flash .7s 3}@keyframes flash{50%{background:#f3f7fa;border-color:#9bd1c4}}#notice{color:#a12c21;min-height:24px;margin-bottom:8px}.receipt{max-width:350px;margin:18px auto;padding:25px;text-align:center;background:white;border:1px solid #d4e1e2}.receipt h2{font-size:45px}.desk-display{text-align:center;margin:10vh auto}.desk-display .number{color:#006f62}@media(max-width:620px){.tv{grid-template-columns:1fr}}@media print{@page{margin:3mm}body{background:white}header,#controls,#notice,#content>*:not(.receipt){display:none!important}main{padding:0}.receipt{width:72mm;margin:0;padding:2mm;border:0;color:#000}}
+</style>
+<header><strong>NAVBOT</strong><span id="brand"></span></header>
+<main><div id="controls" class="controls"></div><div id="notice" role="status"></div><div id="content"></div></main>
+<script>
+'use strict';
+const content=document.querySelector('#content');
+const controls=document.querySelector('#controls');
+const notice=document.querySelector('#notice');
+const brand=document.querySelector('#brand');
+const university=[
+ 'Alişer Navoiy nomidagi Toşkent davlat özbek tili va adabiyoti universiteti',
+ 'Ташкентский государственный университет узбекского языка и литературы имени Алишера Навои',
+ 'Alisher Navo’i Tashkent State University of Uzbek Language and Literature'];
+const office=['Registrator ofisi','Офис регистратора','Registrar’s Office'];
+const languages=['uz','ru','en'];
+const dictionary=[
+ ['Bölimni tanlang','Xizmatni tanlang','Orqaga','Navbat raqami','Murojaat mazmuni','Çekni chop etiş','Yangi navbat','Hozir çaqirilmoqda','Xizmat körsatilmoqda','Kutilayotgan navbatlar','operator','Navbatingizni TVda kuzating','Bölim'],
+ ['Выберите раздел','Выберите услугу','Назад','Номер очереди','Тема обращения','Печать талона','Новый талон','Сейчас вызывается','Обслуживаются','Ожидают','окно','Следите за очередью на экране','Раздел'],
+ ['Choose a section','Choose a service','Back','Queue number','Request','Print ticket','New ticket','Now calling','Now serving','Waiting','counter','Watch the queue display','Section']];
+const page=location.pathname.slice(1)||'kiosk';
+const query=new URLSearchParams(location.search);
+const desk=Math.min(30,Math.max(1,Number.parseInt(query.get('id'),10)||1));
+let lang=Math.max(0,languages.indexOf(query.get('lang')));
+let catalog, section=null, ticket=null, busy=false, requestKey=null, pendingService=null;
+let after=-1, audioEnabled=false, lastCall;
+const tr=i=>dictionary[lang][i];
+const number=id=>'A-'+String(id).padStart(3,'0');
+function node(tag,text='',cls=''){
+ const el=document.createElement(tag);
+ el.textContent=text;
+ el.className=cls;
+ return el;
+}
+function button(label,action,cls=''){
+ const el=node('button',label,cls);
+ el.onclick=action;
+ return el;
+}
+function title(){
+ document.documentElement.lang=languages[lang];
+ brand.textContent=university[lang]+' · '+office[lang];
+}
+async function api(path,data){
+ const response=await fetch(path,data?{
+  method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)
+ }:undefined);
+ const result=await response.json();
+ if(!response.ok)throw new Error(result.error);
+ return result;
+}
+function languageButtons(action){
+ for(const [i,label] of ['Özbekça','Русский','English'].entries()){
+  const el=button(label,()=>action(i));
+  el.setAttribute('aria-pressed',i===lang);
+  controls.append(el);
+ }
+}
+function serviceName(t,index=languages.indexOf(t.lang)){
+ return catalog[t.section][1][t.service][index];
+}
+function kiosk(){
+ title();
+ controls.replaceChildren();
+ content.replaceChildren();
+ if(ticket){
+  const receipt=node('section','','receipt');
+  receipt.append(node('p',university[lang]),node('p',office[lang]),
+   node('p',tr(3)),node('h2',number(ticket.id)),
+   node('p',tr(12)+' · '+catalog[ticket.section][0][lang]),
+   node('p',tr(4)+' · '+serviceName(ticket)),node('p',tr(11)));
+  content.append(receipt,button(tr(5),()=>window.print(),'primary'),
+   button(tr(6),()=>{ticket=null;section=null;requestKey=null;kiosk()}));
+  return;
+ }
+ languageButtons(i=>{if(!busy&&pendingService===null){lang=i;section=null;kiosk()}});
+ if(section!==null) controls.append(button(tr(2),()=>{if(!busy&&pendingService===null){section=null;kiosk()}}));
+ content.append(node('h1',section===null?tr(0):tr(1)));
+ const grid=node('div','','grid');
+ const choices=section===null?catalog.map(s=>s[0]):catalog[section][1];
+ for(const [i,translations] of choices.entries()){
+  const el=button(translations[lang],()=>{
+   if(section===null){section=i;kiosk();return}
+   issue(i);
+  },'tile');
+  el.disabled=busy||(pendingService!==null&&pendingService!==i);
+  grid.append(el);
+ }
+ content.append(grid);
+}
+async function issue(service){
+ if(busy)return;
+ busy=true;
+ if(!requestKey)requestKey=crypto.randomUUID();
+ pendingService=service;
+ notice.textContent='';
+ kiosk();
+ try{
+  ticket=await api('/api/ticket',{lang:languages[lang],section,service,key:requestKey});
+  pendingService=null;
+ }catch(error){notice.textContent=error.message}
+ finally{busy=false;kiosk()}
+}
+function heading(parent,label){parent.append(node('h2',label))}
+function panel(label,cls=''){
+ const box=node('section','','panel '+cls);
+ heading(box,label);
+ return box;
+}
+function callLabel(i){
+ return i.operator+(lang===0?'-operator':lang===1?'-е окно':' · counter');
+}
+function speak(events){
+ if(!audioEnabled||!('speechSynthesis' in window))return;
+ for(const e of events){
+  const code=number(e.ticket);
+  const messages=[code+'. Iltimos, '+e.operator+'-operator oynasiga öting.',
+    'Номер '+code+', подойдите к окну номер '+e.operator,
+    'Ticket '+code+', please proceed to counter '+e.operator];
+  const i=languages.indexOf(e.lang);
+  const line=new SpeechSynthesisUtterance(messages[i]);
+  line.lang=['uz-UZ','ru-RU','en-GB'][i];
+  speechSynthesis.speak(line);
+ }
+}
+function tv(state){
+ const currentId=state.current?.called;
+ if(currentId===lastCall && content.childElementCount){
+  content.querySelector('.serving').replaceWith(serving(state));
+  content.querySelector('.waiting').replaceWith(waiting(state));
+  return;
+ }
+ const current=panel(tr(7),'current'+(currentId&&lastCall!==undefined?' pulse':''));
+ current.append(node('div',state.current?number(state.current.id):'—','number'));
+ if(state.current)current.append(node('div','→ '+callLabel(state.current),'target'));
+ const grid=node('div','','tv');
+ grid.append(current,serving(state),waiting(state));
+ content.replaceChildren(grid);
+ lastCall=currentId??null;
+}
+function serving(state){
+ const box=panel(tr(8),'serving');
+ for(const item of state.serving)box.append(node('div',callLabel(item)+' · '+number(item.id),'line target'));
+ if(!state.serving.length)box.append(node('p','—'));
+ return box;
+}
+function waiting(state){
+ const box=panel(tr(9),'waiting');
+ const row=node('div','','queue');
+ for(const item of state.waiting)row.append(node('div',number(item.id),'chip'));
+ if(!state.waiting.length)row.append(node('p','—'));
+ box.append(row);
+ return box;
+}
+async function act(action){
+ if(busy)return;
+ busy=true;
+ try{notice.textContent='';operator(await api('/api/action',{operator:desk,action}))}
+ catch(error){notice.textContent=error.message}
+ finally{busy=false}
+}
+let operatorView;
+function operator(state){
+ const view=JSON.stringify([state.desk,state.waiting]);
+ if(view===operatorView)return;
+ operatorView=view;
+ const section=panel(desk+'-operator');
+ const options=node('div','','controls');
+ if(!state.desk){
+  const next=button('Keyingi raqamni çaqiriş',()=>act('call'),'primary');
+  next.disabled=!state.waiting.length;
+  options.append(next);
+ }else{
+  section.append(node('h1',number(state.desk.id)));
+  section.append(node('p','Murojaat mazmuni — '+serviceName(state.desk)));
+  if(state.desk.status==='called'){
+   options.append(button('Qayta çaqiriş',()=>act('recall')),
+     button('Qabulni boşlaş',()=>act('start'),'primary'));
+  }else options.append(button('Qabulni tugatiş',()=>act('finish'),'primary'));
+ }
+ section.append(options);
+ const queue=panel('Kutilayotgan navbatlar');
+ for(const item of state.waiting)queue.append(node('p',number(item.id)+' · '+serviceName(item),'line'));
+ const grid=node('div','','grid');grid.append(section,queue);
+ content.replaceChildren(grid);
+}
+async function poll(){
+ try{
+  const state=await api('/api/state?'+desk+','+after);
+  after=state.last;
+  if(page==='tv'){tv(state);speak(state.events)}
+  else if(page==='operator'&&!busy)operator(state);
+  else if(page==='tablo'){
+   const box=node('section','','desk-display');
+   box.append(node('h1',desk+'-operator'),node('div',state.desk?number(state.desk.id):'—','number'));
+   content.replaceChildren(box);
+  }
+  if(notice.textContent==='Server bilan aloqa uzildi')notice.textContent='';
+ }catch{notice.textContent='Server bilan aloqa uzildi'}
+ finally{setTimeout(poll,700)}
+}
+(async()=>{
+ title();
+ if(page==='kiosk'||page==='operator')catalog=await api('/api/catalog');
+ if(page==='kiosk'){kiosk();return}
+ if(page==='operator')studentLookup();
+ if(page==='tv'){
+  controls.append(button('Ovozni yoqiş',eventToggle));
+ }
+ poll();
+})().catch(error=>{notice.textContent=error.message});
+function studentLookup(){
+ const box=panel('Talabani HEMIS ID orqali qidirish');
+ box.style.width='100%';
+ box.append(node('p','Lokal sinov bazasi. Bu haqiqiy HEMIS ulanishi emas.'));
+ const form=node('form');
+ const label=node('label','HEMIS ID ');
+ const input=node('input'); input.name='hemis_id'; input.inputMode='numeric';
+ input.required=true; input.pattern='[0-9]{6,20}'; input.maxLength=20;
+ input.placeholder='100000000001'; input.style.padding='12px';
+ label.append(input);
+ const submit=node('button','Qidirish','primary'); submit.type='submit';
+ const result=node('div'); result.setAttribute('role','status'); result.id='student-result';
+ form.append(label,submit); box.append(form,result); controls.append(box);
+ form.onsubmit=async event=>{
+  event.preventDefault(); submit.disabled=true; result.replaceChildren(node('p','Qidirilmoqda…'));
+  try{
+   const response=await api('/api/student',{hemis_id:input.value.trim()});
+   result.replaceChildren();
+   if(!response.student){result.append(node('p','Talaba topilmadi. HEMIS IDni tekshiring.'));return}
+   const student=response.student;
+   for(const [label,value] of [['HEMIS ID',student.hemis_id],['F.I.Sh.',student.full_name],['Fakultet',student.faculty],['Yo‘nalish',student.programme],['Kurs',student.course],['Guruh',student.student_group]]){
+    result.append(node('p',label+': '+value));
+   }
+  }catch(error){result.replaceChildren(node('p',error.message))}
+  finally{submit.disabled=false}
+ };
+}
+function eventToggle(){
+ audioEnabled=!audioEnabled;
+ if(!audioEnabled&&'speechSynthesis' in window)speechSynthesis.cancel();
+ controls.firstElementChild.textContent=audioEnabled?'Ovozni öçiriş':'Ovozni yoqiş';
+}
+</script></html>
