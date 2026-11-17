@@ -13,7 +13,7 @@ const assert=require('node:assert/strict');
  const base=process.env.NAVBOT_URL||'http://127.0.0.1:8081';
  await tv.addInitScript(()=>{
   window.spoken=[];
-  window.speechSynthesis.speak=u=>window.spoken.push({lang:u.lang,text:u.text,volume:u.volume});
+  window.speechSynthesis.speak=u=>{window.spoken.push({lang:u.lang,text:u.text,volume:u.volume});queueMicrotask(()=>u.onend?.());};
  });
  await Promise.all([kiosk.goto(base+'/kiosk'),operator.goto(base+'/login'),tv.goto(base+'/tv'),tablo.goto(base+'/tablo?id=1')]);
  await operator.locator('#login-form [name=username]').fill('manager');

@@ -9,9 +9,9 @@ Bu hujjat butun texnik talab yakunlanganini anglatmaydi. Quyidagi lokal funksiya
 | 4.2–4.4: ijro | Menejerda saqlash/joyida hal qilish, mas’ulga topshirish, sabab bilan qaytarish, amaldagi muddatni saqlab qayta topshirish, javob/tasdiq/tuzatish/yopish |
 | 5: muddat | UTC saqlash, Toşkentda ko‘rsatish, qayta ochilganda hisoblash, sariq chegara, kechikish, rahbar muddat o‘zgartirish tarixi. Huquqiy qoidalar tasdiqlanmagan |
 | 6: EDO | Yangi/biriktirilgan/yuborilgan/qaytarilgan/yaqin/o‘tgan/tasdiq/arxiv filtrlari, talaba/izoh/javob/tarix |
-| 7: hisobot | Saqlangan reyestr, sana/bo‘lim/menejer/xizmat bo‘limi/kanal/holat filtrlari, kunlar dinamikasi, bo‘limlar kesimi, CSV, arxiv |
+| 7: hisobot | Saqlangan reyestr, sana/bo‘lim/menejer/xizmat bo‘limi/kanal/holat filtrlari, kunlar dinamikasi, bo‘limlar kesimi, XLSX/CSV, arxiv |
 | 8: Superadmin | Xodim yaratish, vaqtinchalik parol, mavjud rollar; katalog/tarjima/TV/ovoz parametrlarini saqlash. Cheklanmagan rol/shablon konstruktorlari hali yo‘q |
-| 10: talabalar | JSON fayldan atomar import va HEMIS ID bo‘yicha yangilash, offline lokal qidiruv; LMS ulanmagan |
+| 10: talabalar | JSON fayldan atomar import va HEMIS ID bo‘yicha yangilash, offline lokal qidiruv; admin sozlaydigan LMS sinxronlash (mos JSON formatida) |
 | 11–13: TV/tablo/tillar | Chap chaqiruv, o‘ng xizmat, past kutish; qabulda qo‘shish/yakunida chiqarish; 3 miltillash; tanlangan chek/ovoz tili; TV tili alohida |
 | 14: shaxsiy kabinet | Login, xeshlangan parol, sessiya, joriy parol bilan yangilash, resetda vaqtinchalik parol va sessiyalarni bekor qilish |
 | 15: sozlamalar | Uch tilda nomlar/chek pastki matni/ovoz/TV sarlavhalari, oldindan ko‘rish, PNG/JPEG logo yuklash va kioskda yangilash |
@@ -19,7 +19,7 @@ Bu hujjat butun texnik talab yakunlanganini anglatmaydi. Quyidagi lokal funksiya
 
 ## Bajarilgan tekshiruvlar
 
-- `python3 -m unittest discover -s tests -p 'test_*.py' -v`: 22 ta muvaffaqiyatli test.
+- `python3 -m unittest discover -s tests -p 'test_*.py' -v`: 52 ta muvaffaqiyatli test.
 - `node tests/workflow-browser.cjs`: bo‘sh vaqtinchalik bazada to‘liq Chromium UI zanjiri; sahifa JS xatolari yo‘q.
 - `node tests/queue-browser.cjs`: 3/3 til, chek/vaqt/qayta chop etish, chaqirish/qayta chaqirish/miltillash/qabul/yakunlash, TV/tablo, TV joylashuvi va shaxsiy ma’lumot ko‘rinmasligi.
 - `node tests/student-browser.cjs`: login bilan topish/topilmaslik/noto‘g‘ri ID, maydonni pollingda saqlash.
@@ -31,7 +31,7 @@ Bu hujjat butun texnik talab yakunlanganini anglatmaydi. Quyidagi lokal funksiya
 - Telegramga tasdiqlangan talaba akkauntini bog‘lash, javob/baho 1–5, yuborilmagan xabarlar navbati: bot va identifikatsiya shartnomasi bilan keyingi bosqich. Hozir panel ichida davriy olinadigan xabarlar bor; bu haqiqiy Telegram/OS push emas.
 - LMSdan ariza/talaba/holat/javob/baho almashish, tashqi ID deduplikatsiyasi va qo‘lda sinxronizatsiya: API manzili, maydonlari va ruxsatlari kerak. Ulangan deb ko‘rsatilmaydi.
 - Katalogni 5×5 dan cheklanmagan yaratish/tartiblash, ixtiyoriy rollar va vakolat matritsasi, bo‘lim boshlig‘ining delegatsiyasi, dinamik ariza shablonlari va fayl ilovalari versiyasi hali bajarilmagan. Yakuniy 19-bo‘lim matritsalari ham berilishi kerak.
-- Xodim kabinetlarining to‘liq ruscha/inglizcha tarjimasi hali yo‘q; kiosk/chek/ovoz uch tilda. TV interfeys tili alohida sozlanadi.
+- Xodim kabinetlariga uch til va yorug‘/to‘q mavzu qo‘shilgan. Shaxsiy matnlar va ismlar tarjima qilinmaydi. TV interfeys tili alohida sozlanadi.
 - Haqiqiy 80mm printer, ovozning eshitilishi, uzbekcha tizim ovozi, Info KeyOS/LED protokoli, boot/kiosk rejimi, printer xatosini qurilmadan olish tekshirilmagan. Oddiy brauzer print dialogi ishlatiladi; maxsus Windows kiosk launcher dialogsiz tasdiqlash uchun qo‘shilgan.
 - LAN/WAN, HTTPS, ishchi server/subdomen, zaxiradan real operatsion qaytish, tarmoq uzilishi/tiklanishi, qurilma dasturini yangilash — haqiqiy infratuzilmada qabul qilinadi. Ubuntu yo‘riqnomasi tayyor, lekin serverga o‘rnatilmadi.
 
@@ -46,3 +46,11 @@ Bular sun’iy ma’lumotli ishlayotgan ilovadan olingan; dizayn maketi emas.
 Avtomatik print yangilanishi: xizmat bosilganda brauzer print chaqiruvi avtomatik bir marta bajariladi; qayta chop etish ayni chekni ishlatadi. START-KIOSK-WINDOWS.bat alohida Google Chrome profilini --kiosk-printing bilan ochadi. Haqiqiy Windows dialogsiz chop etish va printer holati hali qurilmada tekshirilishi kerak.
 
 TV yangilanishi: ovozni yoqish tugmasi olib tashlandi. Chaqiruv ovozi avtomatik; maxsus Windows TV launcheri autoplay siyosatini belgilaydi. Uch tilli Speech API chaqiruvlari va tugma yo‘qligi brauzer sinovida tekshiriladi; fizik ovoz Windowsda tasdiqlanishi kerak.
+
+## Oxirgi qabul: admin qo‘lda sozlamalari, enli kiosk, Excel va fayllar
+
+Admin integratsiya shakllari (saqlash, sirni qayta bermaslik, ulanish sinovi, mos formatdagi talabalar sinxronlash), audio yuklash/usul/sinov/TV ketma-ket ijrosi, til/mavzu va ochiq shakl matnini saqlash `tests/enhancements-browser.cjs` orqali tekshirildi.1024×768 va1280×1024 ekranlarda kiosk3+2 bo‘limni scrollsiz chiqaradi. Excel sarlavhalari,12ustun, vaqt zonasi, xavfsiz matnlar va vakolat filtrlari XMLtest hamda mustaqil openpyxl o‘qishi bilan tekshirildi. openpyxl faqat tekshiruv vositasi, ilovaga tashqi paket kerak emas.
+
+Fayl yuklash/yuklab olish vakolatlari, buzilgan fayllarni rad etish, takroriy yuklashni bitta saqlash va arxivda saqlash server testlarida tekshirildi. Ijrochi javobiga fayl qo‘shib rahbarga yuborish, rahbar tasdiq fayli qo‘shishi va arxivda ikkala fayl qolishi to‘liq brauzer zanjirida tekshirildi.
+
+Haqiqiy universitet API/tokenlari kiritilmagani uchun real HEMIS/LMS/Telegram ulanishiga muvaffaqiyat da’vo qilinmaydi. Tashqi so‘rovlar bloklarining testlari soxta transport chegarasidan foydalanadi; brauzer testida tashqi tarmoqqa xabar yuborilmagan. Windows, real karnay/printer va Info KeyOS apparat sinovi hali kerak. Batafsil: [admin qo‘llanmasi](ADMIN-QOLLANMA.md).

@@ -74,6 +74,8 @@ def serialize(db, row):
     for key in ('manager', 'assignee'):
         who = db.execute('SELECT full_name FROM users WHERE id=?', (row[key + '_id'],)).fetchone()
         result[key + '_name'] = who['full_name'] if who else None
+    import attachments
+    result['attachments'] = attachments.list_for(db, row['id'])
     result['history'] = [dict(i) for i in db.execute(
         "SELECT h.id,COALESCE(u.full_name,'Kiosk') actor,h.action,h.detail,h.created_at FROM history h "
         'LEFT JOIN users u ON u.id=h.actor_id WHERE request_id=? ORDER BY h.id', (row['id'],))]

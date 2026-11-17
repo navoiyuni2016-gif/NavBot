@@ -61,11 +61,11 @@ Menejer HEMIS ID bilan talabani topib arizaga biriktiradi, mazmun/izohni saqlayd
 
 Telefon orqali murojaatni menejer talaba shaxsini tasdiqlaganini belgilab kiritadi; unga chek, kiosk navbati yoki TV chaqiruvi yaratilmaydi. Bu belgi avtomatik shaxs tasdig‘i emas: universitet tasdiqlash tartibini belgilashi kerak.
 
-Hisobot bazadagi yozuvlardan hisoblanadi. Filtrlar, bo‘limlar kesimi, arxiv va UTF-8 CSV eksport mavjud. Tashqi jadvalga eksportda formula kiritish himoyasi ishlaydi.
+Hisobot bazadagi yozuvlardan hisoblanadi. Filtrlar, bo‘limlar kesimi, arxiv, suratdagi shaklda haqiqiy XLSX va UTF-8 CSV eksport mavjud. Tashqi jadvalga eksportda formula kiritish himoyasi ishlaydi.
 
 ## Saqlash va yangilash
 
-Baza `navbot/navbot.sqlite3` ichida; o‘chirmang yoki yangi ZIP bilan almashtirmang. Serverni Ctrl+C bilan to‘xtatib yangilang. Birinchi v0.5 migratsiyasidan oldin SQLite backup API orqali `.pre-v05-….bak` nusxasi olinadi. Oldingi chek/student/call yozuvlari qoladi. Eski cheklarda vaqt bo‘lmagan: import vaqtini haqiqiy qabul vaqti deb qabul qilmang, tarixda `legacy_import` belgisi bor.
+Baza `navbot/navbot.sqlite3` ichida; integratsiya kalitlari uning yonidagi `.integration-secrets` papkasida (himoyalangan zaxiraga uni ham qo‘shing); o‘chirmang yoki yangi ZIP bilan almashtirmang. Serverni Ctrl+C bilan to‘xtatib yangilang. Birinchi v0.5 migratsiyasidan oldin SQLite backup API orqali `.pre-v05-….bak` nusxasi olinadi. Oldingi chek/student/call yozuvlari qoladi. Eski cheklarda vaqt bo‘lmagan: import vaqtini haqiqiy qabul vaqti deb qabul qilmang, tarixda `legacy_import` belgisi bor.
 
 Bazani ko‘chirish/zaxiralash: serverni to‘xtating, `.sqlite3`, mavjud bo‘lsa `.sqlite3-wal` va `.sqlite3-shm` fayllarini birga saqlang yoki SQLite backup API ishlating. Qaytishda eski kod va unga mos to‘liq baza zaxirasini birga tiklang; ishlayotgan bazani qisman almashtirmang.
 
@@ -100,15 +100,18 @@ Playwright va Chromium o‘rnatilgan muhitda, alohida bo‘sh demo bazasidagi se
 ```sh
 NAVBOT_URL=http://127.0.0.1:8081 node tests/queue-browser.cjs
 NAVBOT_URL=http://127.0.0.1:8081 node tests/student-browser.cjs
+node tests/enhancements-browser.cjs
 ```
 
 Ovoz testlari Speech APIga til/matn yuborilishini tekshiradi. Haqiqiy karnay, Windowsdagi ovozlar, 80 mm printer va Info KeyOS ushbu avtomatik testlarga kirmaydi.
 
-## Tashqi ulanishlar va hali bajarilmagan qismlar
+## Admin sozlamalari va qolgan ishlar
 
-Lokal panel bildirishnomalari serverdan davriy tekshiriladi. Ular Telegram yoki OS push emas. **LMS/HEMIS API va Telegram hali ulanmagan**; UI ularni ulangan deb ko‘rsatmaydi. Tasdiqlangan akkaunt bog‘lash, bot javobi/baholash, yuborilmagan xabarlarni qayta jo‘natish, LMS ID deduplikatsiyasi va sinxronizatsiya tashqi API/bot shartnomalari va xavfsiz kiritilgan ruxsatlar bilan keyingi qabul bosqichida bajariladi.
+Admin paneldan integratsiya URL/kalitlarini saqlash va ulanishni tekshirish, mos formatdagi LMS talabalarini yuklash hamda uch tilda MP3/WAV chaqiruv yozuvlarini boshqarish mumkin. Tashqi ulanishlar dastlab sozlanmagan; hech biri tekshiruvsiz ulangan deb ko‘rsatilmaydi. Telegram tekshiruvi botni aniqlaydi, lekin talaba xabarlari/baholashni o‘zidan-o‘zi yoqmaydi. Haqiqiy HEMIS API tuzilmasi boshqacha bo‘lsa adapter kerak.
 
-Yakuniy ariza shablonlari, tasdiqlangan xizmat/rol/muddat matritsasi va huquqiy asoslar hali berilmagan. Hozirgi rollar oldindan belgilangan, katalog 5×5 nomlarini/tarjimalarini tahrirlash va xizmat yashirish mumkin; cheklanmagan rol konstruktorlari, shablon fayllari versiyalash va qurilma protokollari hali tayyor emas. Demo tarixida yoki blankalarda tasdiqlanmagan qonun moddasi avtomatik huquqiy asos sifatida ishlatilmaydi.
+Kabinetlar3til va yorug‘/to‘q mavzuda ishlaydi; enli kiosk3+2 kartali; Excel eksporti suratdagi jadval shaklida. Ariza/javobga fayl qo‘shiladi va vakolatli xodimlar yuklab oladi. [Batafsil admin qo‘llanmasi](docs/ADMIN-QOLLANMA.md).
+
+Yakuniy ariza shablonlari, tasdiqlangan xizmat/rol/muddat matritsasi va huquqiy asoslar hali berilmagan. Hozirgi rollar oldindan belgilangan. Cheklanmagan rol konstruktorlari, dinamik shablon dizayneri va qurilma protokollari qolgan. Tasdiqlangan Telegram akkaunt bog‘lash, javob/baho yetkazish va LMSdan ariza/holat/javob/baho almashinuvi hali bajarilmagan.
 
 Qabul dalillari va talablar qamrovi: [docs/ACCEPTANCE.md](docs/ACCEPTANCE.md).
 

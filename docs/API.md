@@ -27,3 +27,11 @@ UI routes /kiosk /tv /tablo public; /login /operator /manager /executor /head /d
 
 Logo: settings.section_logos = [null|string data PNG/JPEG URL] x5. POST /api/admin/logo {section:0..4,mime:"image/png"|"image/jpeg",data:base64}, max2MiB -> {settings}. Logo values in settings save must remain unchanged (use upload endpoint).
 Request update/resolve of another assignee's in-progress request rejected; return it first. Existing deadline always retained during assign/reassign. Queue state mutations advance request version for history. Ticket content is an immutable stored service-name snapshot.
+
+## Admin extensions
+
+- `GET /assets/i18n.js`: bundled UI localization; language/theme preferences stay in browser. Staff UI labels translate, request/user content is preserved.
+- `GET /api/integrations`: **admin only**, masked metadata. `POST /api/admin/integrations {kind,url,students_url,token?,clear_token?,enabled}` saves without network. `POST .../test {kind}` explicitly checks JSON API / Telegram getMe; `POST .../sync {}` imports normalized students; no message delivery implemented.
+- `GET /api/audio`: public call-clip metadata/modes. `GET /api/audio/plan?lang=uz&ticket=25&operator=3`: whole recorded call,5ordered clips, or explicit incomplete fallback. `POST /api/admin/audio/upload {lang,slot,label,mime,data:base64}`, `/delete {id}`, `/settings {lang,mode}` admin only. `/media/audio/<uuid>` serves public announcement audio. MP3/WAV max5MiB, total200MiB.
+- `GET /api/report.xlsx?lang=uz|ru|en` and same report filters: scoped real XLSX with paper-style12columns and merged headers. CSV retained for compatibility.
+- Request serialization includes `attachments:[{id,name,mime,size,uploader_id,uploader,created_at,url}]`. `POST /api/attachment/upload {id,version,key:UUID,name,data:base64}` appends privately, max10MiB/file,10files and50MiB/request. All visible authorized staff can upload while open. Identical retry key is idempotent; file mutation increments request version. `GET /api/attachment/<uuid>` validates current request visibility and forces download. Closed archives retain downloads but reject uploads. Files are stored in the database, never public static paths.

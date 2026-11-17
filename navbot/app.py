@@ -13,6 +13,10 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlsplit
 from uuid import UUID
 import auth
+import attachments
+import audio_store
+import excel
+import integrations
 import workflow as w
 
 ROOT = Path(__file__).resolve().parent
@@ -126,6 +130,18 @@ def mutate(db, path, data, user):
         w.kiosk_request(db, ticket, ticket['content_name'])
         return {k: ticket[k] for k in ('id', 'lang', 'section', 'service', 'created_at')} | {'content': ticket['content_name']}
     w.need(user, auth.ROLES)
+    if path == '/api/attachment/upload':
+        return attachments.upload(db, user, data)
+    if path == '/api/admin/integrations':
+        response = integrations.save(db, user, data)
+        w.audit(db, user, 'integration_save', {'kind': data.get('kind')})
+        return response
+    if path == '/api/admin/audio/upload':
+        return audio_store.upload(db, user, data)
+    if path == '/api/admin/audio/delete':
+        return audio_store.remove(db, user, data)
+    if path == '/api/admin/audio/settings':
+        return audio_store.set_mode(db, user, data)
     if path == '/api/student':
         return {'student': w.student(db, data.get('hemis_id')), 'source': 'local'}
     if path == '/api/request/create':
@@ -219,16 +235,21 @@ class Handler(BaseHTTPRequestHandler):
         # Do not write ID searches or request contents into access logs.
         logging.info('%s %s', self.command, urlsplit(self.path).path)
 
-    def send_body(self, body, mime, status=200, cookie=None):
+    def send_body(self, body, mime, status=200, cookie=None, filename=None):
         self.send_response(status)
         self.send_header('Content-Type', mime)
         self.send_header('Cache-Control', 'no-store')
         self.send_header('X-Content-Type-Options', 'nosniff')
         self.send_header('Referrer-Policy', 'same-origin')
         self.send_header('X-Frame-Options', 'DENY')
-        self.send_header('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'")
+        self.send_header('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self' blob:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'")
         if cookie is not None:
             self.send_header('Set-Cookie', cookie)
+        if filename is not None:
+            from urllib.parse import quote
+            self.send_header('Content-Disposition', "attachment; filename=download; filename*=UTF-8''" + quote(filename, safe=''))
+        elif mime == 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
+            self.send_header('Content-Disposition', 'attachment; filename="NavBoT-report.xlsx"')
         self.send_header('Content-Length', str(len(body)))
         self.end_headers()
         self.wfile.write(body)
@@ -249,8 +270,18 @@ class Handler(BaseHTTPRequestHandler):
         try:
             if url.path in ('/', '/kiosk', '/operator', '/manager', '/tv', '/tablo', '/login', '/executor', '/head', '/director', '/admin', '/profile'):
                 return self.send_body((ROOT / 'index.html').read_bytes(), 'text/html; charset=utf-8')
+            if url.path == '/assets/i18n.js':
+                return self.send_body((ROOT / 'i18n.js').read_bytes(), 'text/javascript; charset=utf-8')
             with closing(connection()) as db:
                 db.execute('BEGIN')
+                if url.path == '/api/audio':
+                    return self.reply(audio_store.metadata(db))
+                if url.path == '/api/audio/plan':
+                    q = parse_qs(url.query)
+                    return self.reply(audio_store.plan(db, q.get('lang', ['uz'])[0], int(q.get('ticket', ['0'])[0]), int(q.get('operator', ['0'])[0])))
+                if url.path.startswith('/media/audio/'):
+                    body, mime = audio_store.read(db, url.path.removeprefix('/media/audio/'))
+                    return self.send_body(body, mime)
                 if url.path == '/api/catalog':
                     return self.reply(settings(db)['catalog'])
                 if url.path == '/api/settings':
@@ -268,6 +299,9 @@ class Handler(BaseHTTPRequestHandler):
                 if url.path == '/api/me':
                     return self.reply({'user': user})
                 self.guard(user, url.path)
+                if url.path.startswith('/api/attachment/'):
+                    body, mime, name = attachments.download(db, user, url.path.removeprefix('/api/attachment/'))
+                    return self.send_body(body, mime, filename=name)
                 if url.path == '/api/users':
                     return self.reply({'users': auth.users(db)})
                 if url.path == '/api/requests':
@@ -278,17 +312,25 @@ class Handler(BaseHTTPRequestHandler):
                 if url.path == '/api/notifications':
                     return self.reply({'notifications': [dict(r) for r in db.execute('SELECT * FROM notifications WHERE user_id=? ORDER BY id DESC LIMIT 200', (user['id'],))]})
                 if url.path == '/api/integrations':
-                    return self.reply({'lms': {'connected': False}, 'telegram': {'connected': False}})
+                    w.need(user, ('admin',))
+                    return self.reply(integrations.metadata(db))
                 if url.path == '/api/audit':
                     w.need(user, ('admin',))
                     return self.reply({'events': [dict(r) for r in db.execute("SELECT a.id,COALESCE(u.full_name,'Kiosk') actor,a.action,a.detail,a.created_at FROM audit a LEFT JOIN users u ON u.id=a.actor_id ORDER BY a.id DESC LIMIT 1000")]})
-                if url.path in ('/api/report', '/api/report.csv'):
+                if url.path in ('/api/report', '/api/report.csv', '/api/report.xlsx'):
                     report = w.report(db, user, parse_qs(url.query))
+                    if url.path.endswith('.xlsx'):
+                        query = parse_qs(url.query)
+                        lang = query.get('lang', ['uz'])[0]
+                        if lang not in LANGUAGES:
+                            raise w.Problem('Tilni tekşiring')
+                        period = ' — '.join(v for v in (query.get('from', [''])[0], query.get('to', [''])[0]) if v)
+                        return self.send_body(excel.build(report, lang, period), 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
                     if url.path.endswith('.csv'):
                         return self.send_body(report_csv(report).encode('utf-8-sig'), 'text/csv; charset=utf-8')
                     return self.reply(report)
                 raise w.Problem('Topilmadi', 404)
-        except (w.Problem, auth.AuthError) as error:
+        except (w.Problem, auth.AuthError, integrations.IntegrationError) as error:
             self.reply({'error': str(error)}, error.status)
         except (ValueError, TypeError, KeyError) as error:
             self.reply({'error': 'Sörov parametrlarini tekşiring'}, 400)
@@ -308,8 +350,9 @@ class Handler(BaseHTTPRequestHandler):
         try:
             self.same_origin()
             length = int(self.headers.get('Content-Length', '0'))
-            if not 0 < length <= 4 * 1024 * 1024:
-                raise w.Problem('Sörov hajmi 4 MBdan oşmasligi kerak', 413)
+            limit = 16 * 1024 * 1024 if self.path == '/api/attachment/upload' else 8 * 1024 * 1024 if self.path == '/api/admin/audio/upload' else 4 * 1024 * 1024
+            if not 0 < length <= limit:
+                raise w.Problem('Sörov hajmi belgilangan limitdan katta', 413)
             data = json.loads(self.rfile.read(length), parse_constant=lambda _: (_ for _ in ()).throw(ValueError()))
             if not isinstance(data, dict):
                 raise w.Problem('JSON obyekt yuboring')
@@ -319,6 +362,22 @@ class Handler(BaseHTTPRequestHandler):
                     with db:
                         w.audit(db, user, 'login', {})
                 return self.reply({'user': user}, cookie=f'{auth.COOKIE_NAME}={token}; HttpOnly; SameSite=Strict; Path=/; Max-Age={auth.SESSION_SECONDS}')
+            if self.path in ('/api/admin/integrations/test', '/api/admin/integrations/sync'):
+                with closing(connection()) as db, db:
+                    user = self.user(db)
+                    self.guard(user, self.path)
+                    w.need(user, ('admin',))
+                    if self.path.endswith('/test'):
+                        response = integrations.test(db, user, data.get('kind'))
+                        w.audit(db, user, 'integration_test', {'kind': data.get('kind')})
+                    else:
+                        students = integrations.fetch_students(db, user)
+                        if students is None:
+                            response = {'ok': False, 'integrations': integrations.metadata(db)}
+                        else:
+                            counts = w.import_students(db, user, {'students': students})
+                            response = {'ok': True, **counts, 'integrations': integrations.mark_sync(db, user, counts['added'], counts['updated'])}
+                return self.reply(response)
             cookie = None
             with closing(connection()) as db, db:
                 db.execute('BEGIN IMMEDIATE')
@@ -336,8 +395,14 @@ class Handler(BaseHTTPRequestHandler):
                     cookie = f'{auth.COOKIE_NAME}=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0'
                 else:
                     response = mutate(db, self.path, data, user)
+            if self.path == '/api/admin/integrations':
+                with closing(connection()) as cleanup_db:
+                    try:
+                        integrations.cleanup(cleanup_db)
+                    except (integrations.IntegrationError, OSError, sqlite3.Error):
+                        logging.warning('Protected integration secret cleanup deferred')
             self.reply(response, cookie=cookie)
-        except (w.Problem, auth.AuthError) as error:
+        except (w.Problem, auth.AuthError, integrations.IntegrationError) as error:
             self.reply({'error': str(error)}, error.status)
         except (TypeError, KeyError, ValueError, AttributeError, UnicodeError):
             self.reply({'error': 'Sörov maydonlarini tekşiring'}, 400)
@@ -404,6 +469,9 @@ def initialize(demo=False):
                 db.execute(f'ALTER TABLE {table} ADD COLUMN {name} {spec}')
         auth.initialize(db, demo)
         w.initialize(db)
+        attachments.initialize(db)
+        audio_store.initialize(db)
+        integrations.initialize(db)
         with db:
             if demo:
                 db.executemany('INSERT INTO students(hemis_id,full_name,faculty,programme,course,student_group,education_form,status) VALUES (?,?,?,?,?,?,?,?) ON CONFLICT(hemis_id) DO NOTHING', [
