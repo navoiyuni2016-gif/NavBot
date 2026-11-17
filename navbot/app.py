@@ -6,6 +6,8 @@ import csv
 import io
 import json
 import logging
+import hashlib
+import re
 import sqlite3
 from contextlib import closing
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -246,7 +248,10 @@ def mutate(db, path, data, user):
 
 
 class Handler(BaseHTTPRequestHandler):
-    server_version = 'NavBoT/0.5-local'
+    server_version = 'NAVBOT'
+
+    def version_string(self):
+        return self.server_version
 
     def log_message(self, format, *args):
         # Do not write ID searches or request contents into access logs.
@@ -259,7 +264,19 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header('X-Content-Type-Options', 'nosniff')
         self.send_header('Referrer-Policy', 'same-origin')
         self.send_header('X-Frame-Options', 'DENY')
-        self.send_header('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self' blob:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'")
+        # Only the trusted static page's exact inline scripts are allowed. User
+        # text is JSON/escaped DOM content, never an HTML response template.
+        script_sources = ["'self'"]
+        if mime.split(';', 1)[0] == 'text/html':
+            for script in re.findall(rb'<script>(.*?)</script>', body, re.DOTALL):
+                # HTML normalizes CRLF/CR before executing script text.
+                script = script.replace(b'\r\n', b'\n').replace(b'\r', b'\n')
+                digest = base64.b64encode(hashlib.sha256(script).digest()).decode('ascii')
+                script_sources.append("'sha256-" + digest + "'")
+        self.send_header('Content-Security-Policy', "default-src 'self'; script-src " + ' '.join(script_sources) + "; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self' blob:; connect-src 'self'; object-src 'none'; frame-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'")
+        self.send_header('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
+        self.send_header('Cross-Origin-Opener-Policy', 'same-origin')
+        self.send_header('Cross-Origin-Resource-Policy', 'same-origin')
         if cookie is not None:
             self.send_header('Set-Cookie', cookie)
         if filename is not None:
