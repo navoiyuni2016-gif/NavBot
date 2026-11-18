@@ -25,7 +25,7 @@ const assert=require('node:assert/strict');
  assert.equal(await id.inputValue(),'100000000001');
  assert((await page.locator('#student-result').innerText()).includes('TEST-201'));
  await id.fill('999999999999'); await form.locator('button[type=submit]').click();
- await page.getByText('Talaba topilmadi. HEMIS IDni tekşiring.',{exact:true}).waitFor();
+ await page.getByText('Talaba topilmadi. Ism-familiya yoki HEMIS IDni tekşiring.',{exact:true}).waitFor();
  assert(!(await page.locator('#student-result').innerText()).includes('Sinov Talaba Bir'));
  for(const value of [null,12,"' OR 1=1 --",'１２３４５６']){
  const result=await page.request.post(base+'/api/student',{data:{hemis_id:value}});

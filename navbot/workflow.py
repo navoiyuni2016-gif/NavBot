@@ -2,6 +2,7 @@
 import json
 import routing
 import re
+import unicodedata
 from datetime import datetime, timezone
 from uuid import UUID
 
@@ -39,6 +40,23 @@ def validate_id(value):
 def student(db, hemis_id):
     row = db.execute('SELECT * FROM students WHERE hemis_id=?', (validate_id(hemis_id),)).fetchone()
     return dict(row) if row else None
+
+
+def search_students(db, query):
+    if not isinstance(query,str) or not 2<=len(query.strip())<=120:
+        raise Problem('Ism-familiya yoki HEMIS IDni kiriting (2–120 belgi)')
+    def normalized(value):
+        text=unicodedata.normalize('NFKC',value or '').casefold()
+        for source,target in (('ö','o'),('ğ','g'),('ş','sh'),('ç','ch')):
+            text=text.replace(source,target)
+        return ' '.join(''.join(c for c in text if c.isalnum() or c.isspace()).split())
+    tokens=normalized(query).split()
+    if not tokens or len(tokens)>8 or len(''.join(tokens))<2:
+        raise Problem('Ism-familiya yoki HEMIS IDni kiriting (2–120 belgi)')
+    db.create_function('student_search_text',1,normalized,deterministic=True)
+    where=' AND '.join("student_search_text(hemis_id || ' ' || full_name) LIKE ?" for _ in tokens)
+    rows=db.execute('SELECT * FROM students WHERE '+where+' ORDER BY CASE WHEN hemis_id=? THEN 0 ELSE 1 END,full_name,hemis_id LIMIT 21',tuple('%'+token+'%' for token in tokens)+(query.strip(),)).fetchall()
+    return {'students':[dict(r) for r in rows[:20]],'more':len(rows)>20}
 
 
 def audit(db, actor, action, detail):

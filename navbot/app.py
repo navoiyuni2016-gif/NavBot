@@ -160,6 +160,8 @@ def mutate(db, path, data, user):
         return audio_store.remove(db, user, data)
     if path == '/api/admin/audio/settings':
         return audio_store.set_mode(db, user, data)
+    if path == '/api/students/search':
+        return w.search_students(db, data.get('query'))
     if path == '/api/student':
         return {'student': w.student(db, data.get('hemis_id')), 'source': 'local'}
     if path == '/api/request/create':

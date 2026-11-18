@@ -58,6 +58,8 @@ Tizim sozlamalaridagi **Logotiplar va interfeys belgilari**dan joyini tanlang, P
 
 ## Talabalarni o‘zgartirmasdan Excel’dan qo‘shish
 
+Telefon murojaati va murojaat kartasida talabani ism-familiyasi, uning bir qismi yoki HEMIS ID bilan qidiring. `Qidirish` tugmasi yoki Enter natijalarni ochadi. Ro‘yxatdan kerakli talabani tanlang, keyin murojaatni saqlang. Aniq HEMIS ID topilsa, talaba kartasi darhol ochiladi. Natijalar 20 tadan ko‘p bo‘lsa, qidiruvni aniqlashtiring. Qidirish talabalar bazasini o‘zgartirmaydi.
+
 Talabalar bazasidagi Excel shaklidan asl faylni tanlang. HEMIS ID bo‘yicha mavjud yozuv o‘zgartirilmaydi. Ism va barcha yettita asl ustun qiymatlari saqlanadi. Takroriy ID yoki noto‘g‘ri qator bo‘lsa butun import bekor qilinadi. Faylda bo‘lmagan guruh, yo‘nalish va tasdiqlangan faol holat taxmin qilinmaydi. Ishchi bazaning zaxirasini saqlang.
 
 
