@@ -152,7 +152,7 @@ Muddat (Toşkent)|Срок (Ташкент)|Deadline (Tashkent)
 Fakultet|Факультет|Faculty
 Yönaliş|Направление|Programme
 Bosqiç|Курс|Year
-Ta’lim şekli|Форма обучения|Education form
+Ta’lim şakli|Форма обучения|Education form
 Guruh|Группа|Group
 Holat|Статус|Status
 HEMIS ID böyiça qidiriş|Поиск по HEMIS ID|Search by HEMIS ID
