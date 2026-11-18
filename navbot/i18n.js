@@ -2,6 +2,8 @@
 'use strict';
 window.NavI18n=(()=>{
 const rows=`
+Boshqariş|Управление|Manage
+Yönaliş|Направление|Programme
 Har sahifada 50 ta|По 50 на странице|50 per page
 Talabalar sahifalari|Страницы студентов|Student pages
 Oldingi|Предыдущая|Previous

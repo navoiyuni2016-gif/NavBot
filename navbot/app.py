@@ -149,6 +149,8 @@ def mutate(db, path, data, user):
         w.kiosk_request(db, ticket, ticket['content_name'])
         return {k: ticket[k] for k in ('id', 'lang', 'section', 'service', 'created_at','prefix','queue_seq','target_operator')} | {'content': ticket['content_name'],'code':routing.code(ticket)}
     w.need(user, auth.ROLES)
+    if path == '/api/admin/students/status':
+        return student_registry.set_status(db, user, data)
     if path == '/api/admin/students/preview':
         return student_registry.preview(db, user, data)
     if path == '/api/admin/user/action':

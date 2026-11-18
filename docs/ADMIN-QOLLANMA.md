@@ -60,7 +60,7 @@ Tizim sozlamalaridagi **Logotiplar va interfeys belgilari**dan joyini tanlang, P
 
 Telefon murojaati va murojaat kartasida talabani ism-familiyasi, uning bir qismi yoki HEMIS ID bilan qidiring. `Qidirish` tugmasi yoki Enter natijalarni ochadi. Ro‘yxatdan kerakli talabani tanlang, keyin murojaatni saqlang. Aniq HEMIS ID topilsa, talaba kartasi darhol ochiladi. Natijalar 20 tadan ko‘p bo‘lsa, qidiruvni aniqlashtiring. Qidirish talabalar bazasini o‘zgartirmaydi.
 
-Talabalar bazasidagi Excel shaklidan asl faylni tanlang. HEMIS ID bo‘yicha mavjud yozuv o‘zgartirilmaydi. Ism va barcha yettita asl ustun qiymatlari saqlanadi. Takroriy ID yoki noto‘g‘ri qator bo‘lsa butun import bekor qilinadi. Faylda bo‘lmagan guruh, yo‘nalish va tasdiqlangan faol holat taxmin qilinmaydi. Ishchi bazaning zaxirasini saqlang.
+Talabalar bazasidagi Excel shaklidan asl faylni tanlang. HEMIS ID bo‘yicha mavjud yozuv o‘zgartirilmaydi. Ism va barcha yettita asl ustun qiymatlari saqlanadi. Takroriy ID yoki noto‘g‘ri qator bo‘lsa butun import bekor qilinadi. Faylda bo‘lmagan guruh va yo‘nalish taxmin qilinmaydi. Yangi Excel yozuvlari dastlab «Faol» holatida yaratiladi; bu universitetdagi o‘qish holatini tashqi tizimdan tekshirish natijasi emas. Ishchi bazaning zaxirasini saqlang.
 
 
 ## Birinchi admin paroli mos kelmasa
@@ -139,3 +139,9 @@ Talabalar bazasida fakultet va ta’lim yo‘nalishini tanlang, ism/HEMIS ID/gur
 Superadmin bitta qatorni, «Filtrdagi talabalarni o‘chirish» orqali barcha mos yozuvlarni yoki «Barcha talabalarni o‘chirish» orqali butun joriy ro‘yxatni tozalashi mumkin. «Filtrdagi» faqat ko‘rinayotgan 50 qatorni emas, barcha mos talabalarni qamraydi. Avval zaxira nusxa oling. Tasdiq oynasida sonni va superadmin parolini kiriting. Bekor qilish hech narsani o‘chirmaydi. Tayyorlangan ro‘yxat 15 daqiqa amal qiladi; shu paytdan keyin yangi qo‘shilgan talabalar unga qo‘shilmaydi. Talaba yozuvlari shu orada o‘zgarsa amal to‘liq rad etiladi.
 
 Eski murojaatlarning talaba ma’lumotlari o‘chirishdan oldin murojaat ichida nusxa sifatida saqlanadi. Murojaatlar, tarix, xodimlar, navbatlar, audio va sozlamalar o‘chmaydi. Qayta yuklangan talaba yangi qidiruvlarda chiqadi; oldingi murojaatda saqlangan ma’lumot o‘zicha qoladi. Murojaatni tahrirlab talabani qayta bog‘lash yangi ma’lumotga o‘tkazadi. Talabaning murojaati ham o‘chirilsa, saqlangan nusxa ham tozalanadi.
+
+## Talabaning faol/nofaol holati
+
+Talabalar jadvalida fakultet va yo‘nalish alohida ustunlarda. Keng ekranda filtrlar, qidiruv va o‘chirish tugmalari bitta qatorda; kichik ekranlarda mos ravishda joylashadi. «Boshqarish» ustunida superadmin «Nofaol qilish», «Faollashtirish» yoki «O‘chirish»ni tanlaydi. Faol/nofaol qilish yozuvni o‘chirmaydi va bu bo‘limda ishlash vakolatlarini o‘zgartirmaydi. Qidiruvda nofaol talaba ham holati bilan ko‘rinadi.
+
+Ushbu yangilanish birinchi marta o‘rnatilganda mavjud talabalar «Faol»ga o‘tkaziladi. Bu bir martalik amal: keyinchalik qo‘lda qo‘yilgan «Nofaol» holat qayta ishga tushganda saqlanadi. Excel orqali yangi qo‘shilgan talabalar «Faol»dan boshlanadi; mavjud HEMIS ID holati o‘zgartirilmaydi. JSON importida aniq berilgan holat saqlanadi. Holat amallari auditga yoziladi.

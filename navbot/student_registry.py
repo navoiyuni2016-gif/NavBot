@@ -8,6 +8,12 @@ import workflow as w
 
 def initialize(db):
     db.execute('CREATE TABLE IF NOT EXISTS student_delete_previews(token_hash TEXT PRIMARY KEY,user_id INTEGER NOT NULL,targets TEXT NOT NULL,expires_at INTEGER NOT NULL)')
+    db.execute('CREATE TABLE IF NOT EXISTS student_registry_migrations(name TEXT PRIMARY KEY)')
+    with db:
+        added=db.execute("INSERT OR IGNORE INTO student_registry_migrations VALUES ('initial_active_status_v1')").rowcount
+        if added:
+            count=db.execute("UPDATE students SET status='active' WHERE status!='active'").rowcount
+            w.audit(db,None,'students_initial_active',{'count':count})
 
 
 def fingerprint(student):
@@ -56,3 +62,17 @@ def remove(db,user,data):
     db.execute('DELETE FROM student_delete_previews WHERE token_hash=?',(preview['token_hash'],))
     w.audit(db,user,'students_delete',{'count':len(rows),'hemis_ids':[r['hemis_id'] for r in rows],'preserved_requests':preserved})
     return {'deleted':len(rows),'preserved_requests':preserved}
+
+
+def set_status(db,user,data):
+    w.need(user,('admin',))
+    sid=w.validate_id(data.get('hemis_id'))
+    status=data.get('status')
+    if status not in ('active','inactive'):
+        raise w.Problem('Faol yoki nofaol holatni tanlang')
+    row=db.execute('SELECT status FROM students WHERE hemis_id=?',(sid,)).fetchone()
+    if row is None:
+        raise w.Problem('Talaba topilmadi',404)
+    db.execute('UPDATE students SET status=? WHERE hemis_id=?',(status,sid))
+    w.audit(db,user,'student_status',{'hemis_id':sid,'before':row['status'],'after':status})
+    return {'hemis_id':sid,'status':status}

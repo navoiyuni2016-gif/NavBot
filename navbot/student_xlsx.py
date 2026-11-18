@@ -63,7 +63,7 @@ def insert(db, user, raw):
     rows = parse(raw)
     added = 0
     for row in rows:
-        cursor=db.execute("INSERT INTO students(hemis_id,full_name,faculty,course,education_form,gender,education_type,source_json,programme,student_group,status) VALUES (?,?,?,?,?,?,?,?,'','','unknown') ON CONFLICT(hemis_id) DO NOTHING", row)
+        cursor=db.execute("INSERT INTO students(hemis_id,full_name,faculty,course,education_form,gender,education_type,source_json,programme,student_group,status) VALUES (?,?,?,?,?,?,?,?,'','','active') ON CONFLICT(hemis_id) DO NOTHING", row)
         added += cursor.rowcount
     w.audit(db,user,'students_import',{'added':added,'updated':0,'skipped':len(rows)-added,'source':'xlsx'})
     return {'added':added,'updated':0,'skipped':len(rows)-added,'total':len(rows)}

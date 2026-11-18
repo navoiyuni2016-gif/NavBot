@@ -32,7 +32,7 @@ class StudentXlsxTests(unittest.TestCase):
         stored=dict(self.db.execute('SELECT * FROM students').fetchone())
         self.assertEqual(list(json.loads(stored['source_json']).values()),self.row)
         self.assertEqual(stored['programme'],'');self.assertEqual(stored['student_group'],'')
-        self.assertEqual(stored['course'],2);self.assertEqual(stored['status'],'unknown')
+        self.assertEqual(stored['course'],2);self.assertEqual(stored['status'],'active')
         changed=self.row.copy();changed[1]='Other value'
         result=student_xlsx.insert(self.db,self.user,workbook([changed]));self.assertEqual(result['skipped'],1)
         self.assertEqual(dict(self.db.execute('SELECT * FROM students').fetchone()),stored)
