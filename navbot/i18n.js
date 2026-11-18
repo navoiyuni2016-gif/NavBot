@@ -2,6 +2,12 @@
 'use strict';
 window.NavI18n=(()=>{
 const rows=`
+Ruxsat etilgan rollar|Разрешённые роли|Allowed roles
+Rolni almaştiriş|Переключение роли|Switch role
+Faol rol|Активная роль|Active role
+Rolga ötiş|Переключиться|Switch role
+Bo‘lim boshlig‘i faqat belgilangan rollarga öta oladi. Superadmin barcha rollarga ega.|Начальник отдела может выбирать только назначенные роли. Суперадмин имеет все роли.|Department heads can only switch to assigned roles. Superadmins have all roles.
+Tanlangan rolning menyusi va vakolatlari qöllanadi. Hisob egasi özgarmaydi.|Применяются меню и права выбранной роли. Владелец учётной записи не меняется.|The selected role’s menu and permissions apply. The account owner stays the same.
 Mutaxassislik şifri|Код специальности|Specialty code
 Yangi talabalar qöşiladi. 8 ustunli faylda mavjud talabaning faqat böş mutaxassislik şifri va guruhi töldiriladi.|Добавляются новые студенты. В файле с 8 столбцами у существующих студентов заполняются только пустые код специальности и группа.|Adds new students. For 8-column files, only empty specialty code and group fields of existing students are filled.
 Qöşildi: {added}. Mavjud: {skipped}. Tö‘ldirildi: {updated}.|Добавлено: {added}. Уже есть: {skipped}. Дополнено: {updated}.|Added: {added}. Existing: {skipped}. Enriched: {updated}.

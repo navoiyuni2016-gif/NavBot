@@ -476,6 +476,11 @@ class Handler(BaseHTTPRequestHandler):
                     auth.logout(db, self.headers.get('Cookie', ''))
                     response = {'ok': True}
                     cookie = f'{auth.COOKIE_NAME}=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0'
+                elif self.path == '/api/profile/role':
+                    token, switched = auth.switch_role(db, self.headers.get('Cookie',''), data)
+                    w.audit(db, user, 'role_switch', {'from':user['role'],'to':switched['role'],'context':switched['active_role']})
+                    response={'user':switched}
+                    cookie=f'{auth.COOKIE_NAME}={token}; HttpOnly; SameSite=Strict; Path=/; Max-Age={auth.SESSION_SECONDS}'
                 elif self.path == '/api/password':
                     auth.change_password(db, user, data.get('current_password'), data.get('new_password'))
                     w.audit(db, user, 'password_change', {})

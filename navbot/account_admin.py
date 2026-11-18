@@ -4,7 +4,7 @@ import workflow as w
 
 
 def users(db):
-    return [dict(row) | {'active': row['state'] is None} for row in db.execute(
+    return [dict(row) | {'active': row['state'] is None,'allowed_roles':auth.allowed_roles(db,row)} for row in db.execute(
         f"SELECT {','.join('u.' + f for f in auth.FIELDS.split(','))},s.state FROM users u LEFT JOIN user_account_states s ON s.user_id=u.id WHERE s.state IS NULL OR s.state='inactive' ORDER BY u.full_name,u.id")]
 
 
@@ -35,6 +35,8 @@ def change(db, actor, data):
     elif action == 'activate':
         db.execute('DELETE FROM user_account_states WHERE user_id=?', (user_id,))
     else:
+        if 'allowed_roles' not in data and data.get('role')==target['role'] and data.get('department')==target['department']:
+            data={**data,'allowed_roles':target['allowed_roles']}
         username,name,role,department,operator,employee_number = auth.account_fields(data)
         if actor['id']==user_id and role!=target['role']:
             raise w.Problem('Öz rolingizni özgartiriş mumkin emas', 409)
@@ -45,6 +47,7 @@ def change(db, actor, data):
             db.execute('UPDATE users SET username=?,full_name=?,role=?,department=?,operator=?,employee_number=? WHERE id=?', (username,name,role,department,operator,employee_number,user_id))
         except sqlite3.IntegrityError as error:
             raise w.Problem('Login, operator yoki xodim raqami allaqachon mavjud', 409) from error
+        auth.save_roles(db,user_id,auth.validate_roles(data))
     if action!='activate':
         db.execute('DELETE FROM sessions WHERE user_id=?', (user_id,))
     w.audit(db, actor, 'user_'+action, {'user_id':user_id,'username':target['username']})

@@ -19,6 +19,8 @@ ITERATIONS = 260_000
 ROLES = ('admin', 'manager', 'executor', 'head', 'director')
 FIELDS = 'id,username,full_name,role,department,operator,must_change_password,employee_number'
 DATABASE_DEPARTMENT = 'Ma’lumotlar bazasi menejeri'
+ROLE_DEPARTMENTS = {'executor':'O‘quv bo‘limi','executor_international':'Xalqaro aloqalar bo‘limi','executor_hr':'Xodimlar bo‘limi','executor_database':DATABASE_DEPARTMENT}
+ROLE_KEYS = ('admin','manager','head','director',*ROLE_DEPARTMENTS)
 DEMO_PASSWORD = 'Navbot-Test-2026!'
 
 
@@ -39,6 +41,7 @@ def _user(db, user_id):
     row = _one(db, f'SELECT {FIELDS} FROM users WHERE id=? AND id NOT IN (SELECT user_id FROM user_account_states)', (user_id,))
     if row:
         row['must_change_password'] = bool(row['must_change_password'])
+        row['allowed_roles'] = allowed_roles(db,row)
     return row
 
 
@@ -83,6 +86,7 @@ def initialize(db, demo=False):
             user_id INTEGER PRIMARY KEY REFERENCES users(id),
             state TEXT NOT NULL CHECK(state IN ('inactive','deleted'))
         );
+        CREATE TABLE IF NOT EXISTS user_role_grants(user_id INTEGER NOT NULL REFERENCES users(id),role_key TEXT NOT NULL,PRIMARY KEY(user_id,role_key));
         CREATE TABLE IF NOT EXISTS sessions (
             token_hash TEXT PRIMARY KEY,
             user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -95,6 +99,8 @@ def initialize(db, demo=False):
             window_start INTEGER NOT NULL
         );
     ''')
+    if 'active_role' not in {row[1] for row in db.execute('PRAGMA table_info(sessions)')}:
+        db.execute('ALTER TABLE sessions ADD COLUMN active_role TEXT')
     if 'employee_number' not in {row[1] for row in db.execute('PRAGMA table_info(users)')}:
         db.execute('ALTER TABLE users ADD COLUMN employee_number TEXT')
     db.execute('CREATE UNIQUE INDEX IF NOT EXISTS users_employee_number ON users(employee_number) WHERE employee_number IS NOT NULL')
@@ -127,6 +133,41 @@ def users(db):
     return result
 
 
+def role_key(user):
+    if user['role']=='executor':
+        return next((key for key,department in ROLE_DEPARTMENTS.items() if department==user['department']),'executor')
+    return user['role']
+
+
+def allowed_roles(db,user):
+    if user['role']=='admin':
+        return list(ROLE_KEYS)
+    base=role_key(user)
+    if user['role']!='head':
+        return [base]
+    grants=[r[0] for r in db.execute('SELECT role_key FROM user_role_grants WHERE user_id=?',(user['id'],))]
+    return [key for key in ROLE_KEYS if key!='admin' and (key==base or key in grants)]
+
+
+def validate_roles(data):
+    base=data.get('role')
+    department=data.get('department')
+    base_key=next((key for key,value in ROLE_DEPARTMENTS.items() if value==department),'executor') if base=='executor' else base
+    roles=data.get('allowed_roles',[base_key])
+    if not isinstance(roles,list) or not all(isinstance(key,str) and key in ROLE_KEYS for key in roles) or len(set(roles))!=len(roles):
+        raise AuthError('Ruxsat etilgan rollarni tekşiring')
+    if base=='admin':
+        return list(ROLE_KEYS)
+    if 'admin' in roles or base!='head' and any(key!=base_key for key in roles):
+        raise AuthError('Bu hisobga qöşimça rol beriş mumkin emas',403)
+    return list(dict.fromkeys([base_key,*roles]))
+
+
+def save_roles(db,user_id,roles):
+    db.execute('DELETE FROM user_role_grants WHERE user_id=?',(user_id,))
+    db.executemany('INSERT INTO user_role_grants VALUES (?,?)',[(user_id,key) for key in roles])
+
+
 def account_fields(data):
     if not isinstance(data, dict):
         raise AuthError('Noto‘g‘ri foydalanuvchi')
@@ -141,13 +182,14 @@ def account_fields(data):
         raise AuthError('F.I.Sh. kiritilishi kerak (150 belgigacha)')
     if not isinstance(department, str) or not 1 <= len(department.strip()) <= 150:
         raise AuthError('Bo‘lim kiritilishi kerak (150 belgigacha)')
+    roles = validate_roles(data)
     operator = data.get('operator')
     if operator in ('', None):
         operator = None
-    if role == 'manager' and (type(operator) is not int or not 1 <= operator <= 30):
+    if (role == 'manager' or role=='head' and 'manager' in roles) and (type(operator) is not int or not 1 <= operator <= 30):
         raise AuthError('Menejer uchun 1–30 oralig‘ida operator raqami kerak')
-    if role != 'manager' and operator is not None:
-        raise AuthError('Operator raqami faqat menejerga beriladi')
+    if operator is not None and (type(operator) is not int or not 1<=operator<=30 or role not in ('admin','manager') and not (role=='head' and 'manager' in roles)):
+        raise AuthError('Operator raqami faqat menejer vakolati uçun beriladi')
     employee_number = data.get('employee_number')
     if employee_number == '':
         employee_number = None
@@ -170,6 +212,7 @@ def create_user(db, data):
             VALUES (?,?,?,?,?,?,1,?)''', (username.lower(), name.strip(), role, department.strip(), operator, _hash(password), employee_number)).lastrowid
     except sqlite3.IntegrityError as error:
         raise AuthError('Login, operator yoki xodim raqami allaqachon mavjud', 409) from error
+    save_roles(db,user_id,validate_roles(data))
     return _user(db, user_id)
 
 
@@ -191,9 +234,21 @@ def current(db, cookie_header):
     token = _token(cookie_header)
     if not token:
         return None
-    session = _one(db, 'SELECT user_id FROM sessions WHERE token_hash=? AND expires_at>?',
+    session = _one(db, 'SELECT user_id,active_role FROM sessions WHERE token_hash=? AND expires_at>?',
                    (hashlib.sha256(token.encode()).hexdigest(), int(time.time())))
-    return _user(db, session['user_id']) if session else None
+    if not session:
+        return None
+    user=_user(db,session['user_id'])
+    if not user:
+        return None
+    user['base_role']=user['role']
+    base_key=role_key(user)
+    key=session['active_role'] if session['active_role'] in user['allowed_roles'] else base_key
+    user['active_role']=key
+    user['role']='executor' if key in ROLE_DEPARTMENTS else key
+    if key in ROLE_DEPARTMENTS and (user['base_role']!='executor' or key!=base_key):
+        user['department']=ROLE_DEPARTMENTS[key]
+    return user
 
 
 def login(db, username, password):
@@ -231,7 +286,7 @@ def login(db, username, password):
     db.execute('INSERT INTO sessions(token_hash,user_id,expires_at) VALUES (?,?,?)',
                (hashlib.sha256(token.encode()).hexdigest(), row['id'], now + SESSION_SECONDS))
     db.commit()
-    return token, _user(db, row['id'])
+    return token, current(db,COOKIE_NAME+'='+token)
 
 
 def logout(db, cookie_header):
@@ -262,3 +317,31 @@ def reset_password(db, user_id, password):
     db.execute('UPDATE users SET password_hash=?,must_change_password=1 WHERE id=?', (_hash(password), user_id))
     db.execute('DELETE FROM sessions WHERE user_id=?', (user_id,))
     return _user(db, user_id)
+
+
+def switch_role(db,cookie_header,data):
+    user=current(db,cookie_header)
+    if not user:
+        raise AuthError('Tizimga kiring',401)
+    key=data.get('role')
+    if not isinstance(key,str) or key not in user['allowed_roles']:
+        raise AuthError('Bu rolga ötiş uçun vakolat yöq',403)
+    if key=='manager':
+        operator=user['operator']
+        if operator is None:
+            if user['base_role']!='admin':
+                raise AuthError('Operator raqamini superadmin belgilasin',409)
+            operator=data.get('operator')
+            if type(operator) is not int or not 1<=operator<=30:
+                raise AuthError('Menejer uçun operator raqamini kiriting')
+            try:
+                db.execute('UPDATE users SET operator=? WHERE id=?',(operator,user['id']))
+            except sqlite3.IntegrityError as error:
+                raise AuthError('Bu operator raqami band',409) from error
+    old_token=_token(cookie_header)
+    token_hash=hashlib.sha256(old_token.encode()).hexdigest()
+    session=_one(db,'SELECT expires_at FROM sessions WHERE token_hash=?',(token_hash,))
+    new_token=secrets.token_hex(32)
+    db.execute('DELETE FROM sessions WHERE token_hash=?',(token_hash,))
+    db.execute('INSERT INTO sessions(token_hash,user_id,expires_at,active_role) VALUES (?,?,?,?)',(hashlib.sha256(new_token.encode()).hexdigest(),user['id'],session['expires_at'],key))
+    return new_token,current(db,COOKIE_NAME+'='+new_token)

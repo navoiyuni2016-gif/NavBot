@@ -153,3 +153,11 @@ Quyidagi aniq ustunlar tartibi ham qabul qilinadi: `Talaba ID`, `To‘liq ismi`,
 Yangi talabalar barcha asl 8 katak va manba nusxasi bilan saqlanadi. Mavjud ID uchun faqat bo‘sh mutaxassislik shifri va guruh to‘ldiriladi; mavjud ism, fakultet, kurs, holat va to‘ldirilgan qiymatlar almashtirilmaydi. Import natijasidagi «To‘ldirildi» shu yozuvlar sonidir. Oldingi 7 ustunli shakl ham qo‘llab-quvvatlanadi.
 
 Qidiruv natijasidan tanlangan talaba kartasida faqat Excel shaklidagi ma’lumotlar ko‘rinadi: ism-familiya va ID, kurs, fakultet, guruh, mutaxassislik shifri, ta’lim turi va shakli. Telefon murojaati va mavjud murojaat kartasida bir xil ko‘rinish ishlatiladi. Jins va holat bu kartada chiqarilmaydi; bazadagi ma’lumotlar o‘zgartirilmaydi.
+
+## Bir hisobda bir nechta rol va profil orqali almashish
+
+Asosiy hisob roli saqlanadi. Superadmin «Mening profilim → Rolni almashtirish»da barcha rollar va bo‘limlar orasida o‘tadi. Bo‘lim boshlig‘i uchun superadmin xodimni yaratish/tahrirlashdagi «Ruxsat etilgan rollar»dan bir nechtasini belgilaydi. Bo‘lim boshlig‘i profilida faqat shu tanlovlar va asosiy bo‘lim boshlig‘i roli bor; superadmin roli hech qachon berilmaydi. Boshqa asosiy rollarga qo‘shimcha rollar berilmaydi.
+
+Menejer vakolati berilgan bo‘lim boshlig‘iga superadmin band bo‘lmagan 1–30 operator raqamini belgilashi kerak. Superadmin birinchi marta menejer roliga o‘tayotganda profilidan o‘ziga bo‘sh operator raqamini tanlaydi. Boshqa xodimga tegishli raqamni olish mumkin emas. Alohida xodim raqami operator raqami o‘rnida ishlatilmaydi.
+
+Rol almashganda tanlangan menyu va server vakolatlari ishlaydi, hisob egasining IDsi va rasmi saqlanadi; boshqa xodim akkauntiga kirilmaydi. Ijrochi bo‘limi tanlansa shu bo‘lim konteksti qo‘llanadi, bo‘lim boshlig‘i roliga qaytilganda asosiy bo‘lim tiklanadi. Faol rol joriy sessiyaga tegishli; yangidan login qilganda asosiy rol ochiladi. Eski sessiya kaliti almashadi, auditga yoziladi. Ruxsatlar o‘zgartirilganda xodimning barcha eski sessiyalari bekor qilinadi. Asosiy rolni o‘zi tahrirlash taqiqi saqlanadi; profil orqali faqat ruxsat etilgan faol rol almashtiriladi.
