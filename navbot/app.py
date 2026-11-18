@@ -19,6 +19,7 @@ import routing
 import branding
 import profile_photo
 import account_admin
+import student_registry
 import student_xlsx
 import request_delete
 import attachments
@@ -148,6 +149,8 @@ def mutate(db, path, data, user):
         w.kiosk_request(db, ticket, ticket['content_name'])
         return {k: ticket[k] for k in ('id', 'lang', 'section', 'service', 'created_at','prefix','queue_seq','target_operator')} | {'content': ticket['content_name'],'code':routing.code(ticket)}
     w.need(user, auth.ROLES)
+    if path == '/api/admin/students/preview':
+        return student_registry.preview(db, user, data)
     if path == '/api/admin/user/action':
         return account_admin.change(db, user, data)
     if path == '/api/profile/photo':
@@ -429,7 +432,7 @@ class Handler(BaseHTTPRequestHandler):
                     with db:
                         w.audit(db, user, 'login', {})
                 return self.reply({'user': user}, cookie=f'{auth.COOKIE_NAME}={token}; HttpOnly; SameSite=Strict; Path=/; Max-Age={auth.SESSION_SECONDS}')
-            if self.path == '/api/admin/requests/delete':
+            if self.path in ('/api/admin/requests/delete','/api/admin/students/delete'):
                 with closing(connection()) as db:
                     user = self.user(db)
                     self.guard(user, self.path)
@@ -443,7 +446,7 @@ class Handler(BaseHTTPRequestHandler):
                         db.execute('BEGIN IMMEDIATE')
                         user = self.user(db)
                         self.guard(user, self.path)
-                        response = request_delete.remove(db, user, data)
+                        response = (student_registry.remove if self.path=='/api/admin/students/delete' else request_delete.remove)(db, user, data)
                 return self.reply(response)
             if self.path in ('/api/admin/integrations/test', '/api/admin/integrations/sync'):
                 with closing(connection()) as db, db:
@@ -555,6 +558,7 @@ def initialize(demo=False):
         attachments.initialize(db)
         branding.initialize(db)
         profile_photo.initialize(db)
+        student_registry.initialize(db)
         audio_store.initialize(db)
         integrations.initialize(db)
         with db:

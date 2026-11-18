@@ -2,6 +2,17 @@
 'use strict';
 window.NavI18n=(()=>{
 const rows=`
+Har sahifada 50 ta|По 50 на странице|50 per page
+Talabalar sahifalari|Страницы студентов|Student pages
+Oldingi|Предыдущая|Previous
+Keyingi|Следующая|Next
+Filtrdagi talabalarni öçiriş|Удалить студентов по фильтру|Delete filtered students
+Barcha talabalarni öçiriş|Удалить всех студентов|Delete all students
+Talabalarni öçirişni tasdiqlaş|Подтвердите удаление студентов|Confirm student deletion
+Öçiriladigan talabalar: {count}|Студентов к удалению: {count}|Students to delete: {count}
+Tasdiq uçun talabalar sonini kiriting|Для подтверждения введите число студентов|Enter the student count to confirm
+Öçirildi: {count} ta talaba|Удалено студентов: {count}|Deleted {count} students
+Eski murojaatlardagi talaba ma’lumotlari saqlanadi. Xodimlar, navbatlar, audio va sozlamalar öçirilmaydi. Davom etişdan oldin zaxira nusxa oling.|Данные студентов в прежних обращениях сохранятся. Сотрудники, очередь, аудио и настройки не удаляются. Перед продолжением сделайте резервную копию.|Student details in previous requests are retained. Staff, queues, audio and settings are retained. Make a backup before continuing.
 O‘quv bo‘limi|Учебный отдел|Academic affairs office
 Xalqaro aloqalar bo‘limi|Отдел международных связей|International relations office
 Xodimlar bo‘limi|Отдел кадров|Human resources office

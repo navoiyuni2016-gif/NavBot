@@ -93,7 +93,7 @@ def serialize(db, row):
     result['queue_prefix']=ticket['prefix'] if ticket else None
     result['queue_seq']=ticket['queue_seq'] if ticket else None
     result['target_operator']=ticket['target_operator'] if ticket else None
-    result['student'] = student(db, row['student_id']) if row['student_id'] else None
+    result['student'] = json.loads(row['student_snapshot']) if row['student_snapshot'] else student(db, row['student_id']) if row['student_id'] else None
     for key in ('manager', 'assignee'):
         who = db.execute('SELECT full_name FROM users WHERE id=?', (row[key + '_id'],)).fetchone()
         result[key + '_name'] = who['full_name'] if who else None
@@ -169,7 +169,7 @@ def request_action(db, user, data):
         sid = text(data, 'hemis_id', 20, True)
         if not student(db, sid):
             raise Problem('Talaba topilmadi', 404)
-        values.update(student_id=sid, content=text(data, 'content', required=True), note=text(data, 'note'))
+        values.update(student_id=sid, student_snapshot=None, content=text(data, 'content', required=True), note=text(data, 'note'))
         detail = {'student_id': sid, 'content': values['content'], 'note': values['note']}
     elif action == 'assign':
         if not row['student_id']:
@@ -384,5 +384,7 @@ def initialize(db):
         CREATE INDEX IF NOT EXISTS request_manager ON requests(manager_id,status);
         CREATE INDEX IF NOT EXISTS notification_user ON notifications(user_id,read);
     ''')
+    if 'student_snapshot' not in {row['name'] for row in db.execute('PRAGMA table_info(requests)')}:
+        db.execute('ALTER TABLE requests ADD COLUMN student_snapshot TEXT')
     if 'deleted_at' not in {row['name'] for row in db.execute('PRAGMA table_info(requests)')}:
         db.execute('ALTER TABLE requests ADD COLUMN deleted_at TEXT')

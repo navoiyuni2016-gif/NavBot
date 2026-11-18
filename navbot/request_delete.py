@@ -23,7 +23,7 @@ def remove(db, user, data):
         for table in ('attachments','notifications','history'):
             db.execute(f'DELETE FROM {table} WHERE request_id=?',(row['id'],))
         # Keep only identity/counter tombstones; erase request payload and staff/student links.
-        db.execute("UPDATE requests SET deleted_at=?,student_id=NULL,content='',note='',manager_id=NULL,assignee_id=NULL,department='',deadline=NULL,internal_basis='',legal_basis='',answer='',result='',unresolved_reason='',answered_at=NULL,closed_at=NULL,status='closed',updated_at=?,version=version+1 WHERE id=?",(stamp,stamp,row['id']))
+        db.execute("UPDATE requests SET deleted_at=?,student_id=NULL,student_snapshot=NULL,content='',note='',manager_id=NULL,assignee_id=NULL,department='',deadline=NULL,internal_basis='',legal_basis='',answer='',result='',unresolved_reason='',answered_at=NULL,closed_at=NULL,status='closed',updated_at=?,version=version+1 WHERE id=?",(stamp,stamp,row['id']))
         if row['ticket_id']:
             db.execute("UPDATE tickets SET status='done',operator=NULL,called=NULL WHERE id=?",(row['ticket_id'],))
     w.audit(db,user,'requests_delete',{'request_ids':sorted(seen),'count':len(rows),'reason':reason})

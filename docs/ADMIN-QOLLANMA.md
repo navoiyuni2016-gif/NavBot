@@ -131,3 +131,11 @@ O‘z hisobini o‘chirish/nofaol qilish yoki o‘z rolini almashtirish mumkin e
 Yangi xodim yaratish va tahrirlashda «Rol» ro‘yxatidan O‘quv bo‘limi, Xalqaro aloqalar bo‘limi, Xodimlar bo‘limi yoki Ma’lumotlar bazasi menejerini tanlash mumkin. Barchasi ichki `executor` vakolatidan foydalanadi: o‘ziga biriktirilgan ishlarni ko‘radi, qaytaradi yoki javobni tasdiqqa yuboradi. Administrator yoki menejer vakolati qo‘shilmaydi. Bo‘lim nomi tanlovga mos avtomatik qo‘yiladi; mavjud foydalanuvchilar avtomatik qayta taqsimlanmaydi.
 
 «Operator raqami» faqat menejer uchun ko‘rinadi va majburiy. Ma’lumotlar bazasi menejeri uchun esa alohida, ixtiyoriy «Xodim raqami» bor: 1–20 ta raqam, masalan `007`. Bu navbat/oyna raqami emas va operatorni boshqarish huquqini bermaydi. Boshlang‘ich nollar saqlanadi; bir raqam ikki hisobga berilmaydi. Raqamni profil va xodimlar ro‘yxatida ko‘rish, tahrirlash mumkin.
+
+## Talabalar filtrlari, sahifalar va bazani tozalash
+
+Talabalar bazasida fakultet va ta’lim yo‘nalishini tanlang, ism/HEMIS ID/guruh bo‘yicha qidiring. Filtrlar birgalikda ishlaydi; har sahifada ko‘pi bilan 50 talaba chiqadi. Filtr yoki qidiruv o‘zgarsa birinchi sahifaga qaytiladi. Bo‘lim boshlig‘i va direktor faqat ko‘radi; o‘chirish superadminga tegishli.
+
+Superadmin bitta qatorni, «Filtrdagi talabalarni o‘chirish» orqali barcha mos yozuvlarni yoki «Barcha talabalarni o‘chirish» orqali butun joriy ro‘yxatni tozalashi mumkin. «Filtrdagi» faqat ko‘rinayotgan 50 qatorni emas, barcha mos talabalarni qamraydi. Avval zaxira nusxa oling. Tasdiq oynasida sonni va superadmin parolini kiriting. Bekor qilish hech narsani o‘chirmaydi. Tayyorlangan ro‘yxat 15 daqiqa amal qiladi; shu paytdan keyin yangi qo‘shilgan talabalar unga qo‘shilmaydi. Talaba yozuvlari shu orada o‘zgarsa amal to‘liq rad etiladi.
+
+Eski murojaatlarning talaba ma’lumotlari o‘chirishdan oldin murojaat ichida nusxa sifatida saqlanadi. Murojaatlar, tarix, xodimlar, navbatlar, audio va sozlamalar o‘chmaydi. Qayta yuklangan talaba yangi qidiruvlarda chiqadi; oldingi murojaatda saqlangan ma’lumot o‘zicha qoladi. Murojaatni tahrirlab talabani qayta bog‘lash yangi ma’lumotga o‘tkazadi. Talabaning murojaati ham o‘chirilsa, saqlangan nusxa ham tozalanadi.
