@@ -101,3 +101,9 @@ requests jami raqam qaydlarini, active_requests joriy murojaatlarni,
 deleted_request_reservations esa olib tashlangan yozuvlarning raqam qaydlarini
 ko‘rsatadi. Ishchi o‘chirish amali qaytarilmaydi; zaruratda zaxiradan tiklash
 alohida, administrator nazoratidagi jarayon hisoblanadi.
+
+## Profil rasmi va logotipni o‘chirish
+
+Har bir xodim `Mening profilim` bo‘limida PNG/JPEG (2 MBgacha) rasm tanlab, `Rasmni saqlash` orqali o‘z profil rasmini yangilaydi. Rasm profil kartasi va yuqoridagi hisob tugmasida ko‘rinadi. `Rasmni o‘chirish` bosh harf ko‘rinishini qaytaradi. Boshqa xodim profil rasmini o‘zgartirish vakolati berilmaydi.
+
+Administrator `Tizim sozlamalari → Bo‘lim logotipi` ichida bo‘limni tanlab, `Logotipni o‘chirish`ni bosadi. Faqat shu bo‘lim logotipi o‘chadi va kioskda standart belgi qaytadi.

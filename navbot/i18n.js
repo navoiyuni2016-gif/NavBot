@@ -2,6 +2,13 @@
 'use strict';
 window.NavI18n=(()=>{
 const rows=`
+Rasm faylini tanlang|Выберите файл изображения|Choose an image file
+Rasm öçirildi|Изображение удалено|Image deleted
+Profil rasmi|Фото профиля|Profile photo
+Rasmni saqlaş|Сохранить фото|Save photo
+Rasmni öçiriş|Удалить фото|Delete photo
+Logotipni öçiriş|Удалить логотип|Delete logo
+PNG yoki JPEG, eng köpi 2 MB.|PNG или JPEG, не более 2 МБ.|PNG or JPEG, up to 2 MB.
 Ma’lumot va xizmat ko‘rsatish tizimi|Информационно-сервисная система|Information and service system
 Registrator ofisi|Офис регистратора|Registrar’s Office
 Murojaatlar|Обращения|Requests

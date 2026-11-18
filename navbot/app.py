@@ -17,6 +17,7 @@ from uuid import UUID
 import auth
 import routing
 import branding
+import profile_photo
 import student_xlsx
 import request_delete
 import attachments
@@ -146,6 +147,8 @@ def mutate(db, path, data, user):
         w.kiosk_request(db, ticket, ticket['content_name'])
         return {k: ticket[k] for k in ('id', 'lang', 'section', 'service', 'created_at','prefix','queue_seq','target_operator')} | {'content': ticket['content_name'],'code':routing.code(ticket)}
     w.need(user, auth.ROLES)
+    if path == '/api/profile/photo':
+        return profile_photo.update(db, user, data)
     if path == '/api/attachment/upload':
         return attachments.upload(db, user, data)
     if path == '/api/admin/integrations':
@@ -177,6 +180,13 @@ def mutate(db, path, data, user):
     if path == '/api/admin/logo':
         w.need(user, ('admin',))
         section, mime = data.get('section'), data.get('mime')
+        if data.get('remove') is True:
+            if type(section) is not int or not 0 <= section < 5:
+                raise w.Problem('Bölim va PNG/JPG formatini tekşiring')
+            config['section_logos'][section] = None
+            db.execute('INSERT INTO settings(id,value) VALUES (1,?) ON CONFLICT(id) DO UPDATE SET value=excluded.value', (json.dumps(config, ensure_ascii=False),))
+            w.audit(db, user, 'section_logo_delete', {'section': section})
+            return {'settings': config}
         if type(section) is not int or not 0 <= section < 5 or mime not in ('image/png', 'image/jpeg'):
             raise w.Problem('Bölim va PNG/JPG formatini tekşiring')
         try:
@@ -297,7 +307,10 @@ class Handler(BaseHTTPRequestHandler):
         self.send_body(json.dumps(value, ensure_ascii=False, allow_nan=False).encode('utf-8'), 'application/json; charset=utf-8', status, cookie)
 
     def user(self, db):
-        return auth.current(db, self.headers.get('Cookie', ''))
+        user = auth.current(db, self.headers.get('Cookie', ''))
+        if user:
+            user['avatar_url'] = profile_photo.url(db, user)
+        return user
 
     def guard(self, user, path):
         w.need(user, auth.ROLES)
@@ -343,6 +356,9 @@ class Handler(BaseHTTPRequestHandler):
                 if url.path == '/api/me':
                     return self.reply({'user': user})
                 self.guard(user, url.path)
+                if url.path.startswith('/api/profile/photo/'):
+                    body, mime = profile_photo.read(db, user, url.path.removeprefix('/api/profile/photo/'))
+                    return self.send_body(body, mime)
                 if url.path.startswith('/api/attachment/'):
                     body, mime, name = attachments.download(db, user, url.path.removeprefix('/api/attachment/'))
                     return self.send_body(body, mime, filename=name)
@@ -531,6 +547,7 @@ def initialize(demo=False):
         w.initialize(db)
         attachments.initialize(db)
         branding.initialize(db)
+        profile_photo.initialize(db)
         audio_store.initialize(db)
         integrations.initialize(db)
         with db:
