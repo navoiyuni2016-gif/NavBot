@@ -2,6 +2,9 @@
 'use strict';
 window.NavI18n=(()=>{
 const rows=`
+Mutaxassislik şifri|Код специальности|Specialty code
+Yangi talabalar qöşiladi. 8 ustunli faylda mavjud talabaning faqat böş mutaxassislik şifri va guruhi töldiriladi.|Добавляются новые студенты. В файле с 8 столбцами у существующих студентов заполняются только пустые код специальности и группа.|Adds new students. For 8-column files, only empty specialty code and group fields of existing students are filled.
+Qöşildi: {added}. Mavjud: {skipped}. Tö‘ldirildi: {updated}.|Добавлено: {added}. Уже есть: {skipped}. Дополнено: {updated}.|Added: {added}. Existing: {skipped}. Enriched: {updated}.
 Boshqariş|Управление|Manage
 Yönaliş|Направление|Programme
 Har sahifada 50 ta|По 50 на странице|50 per page

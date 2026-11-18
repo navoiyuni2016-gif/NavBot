@@ -1,4 +1,4 @@
-"""Read the university's seven-column XLSX without changing source text."""
+"""Read supported university XLSX layouts without changing source text."""
 import base64
 import io
 import json
@@ -8,6 +8,7 @@ from xml.etree import ElementTree as ET
 import workflow as w
 
 HEADERS = ['Talaba ID', 'To‘liq ismi', 'Jins', 'Kurs', 'Fakultet', 'Ta’lim turi', 'Ta’lim shakli']
+CODE_HEADERS = ['Talaba ID', 'To‘liq ismi', 'Kurs', 'Fakultet', 'Guruh', 'Mutaxassislik', 'Ta’lim turi', 'Ta’lim shakli']
 NS = {'s':'http://schemas.openxmlformats.org/spreadsheetml/2006/main'}
 
 
@@ -23,13 +24,13 @@ def parse(raw):
                 strings = [''.join(t.text or '' for t in si.iterfind('.//s:t', NS)) for si in ET.fromstring(z.read('xl/sharedStrings.xml')).findall('s:si', NS)]
             rows = []
             for row in ET.fromstring(z.read('xl/worksheets/sheet1.xml')).findall('s:sheetData/s:row', NS):
-                values = [''] * 7
+                values = [''] * 8
                 for cell in row.findall('s:c', NS):
                     if cell.find('s:f', NS) is not None:
                         raise ValueError()
                     col = re.fullmatch(r'([A-Z]+)[0-9]+', cell.attrib['r'])[1]
-                    if col not in 'ABCDEFG' or len(col) != 1:
-                        if cell.find('s:v', NS) is not None:
+                    if col not in 'ABCDEFGH' or len(col) != 1:
+                        if cell.find('s:v', NS) is not None or cell.find('s:is', NS) is not None:
                             raise ValueError()
                         continue
                     v = cell.find('s:v', NS)
@@ -41,18 +42,31 @@ def parse(raw):
                     values[ord(col)-65] = text
                 if any(values):
                     rows.append(values)
-        if not rows or rows[0] != HEADERS or not 1 <= len(rows)-1 <= 10000:
+        if not rows or not 1 <= len(rows)-1 <= 10000:
+            raise ValueError()
+        headers = rows[0][:7] if rows[0][7] == '' else rows[0]
+        if headers not in (HEADERS, CODE_HEADERS):
             raise ValueError()
         result, seen = [], set()
         for values in rows[1:]:
-            sid, name, gender, course, faculty, education_type, form = values
-            # Keep all original fields, including the displayed course, in source_json.
+            if headers == CODE_HEADERS:
+                sid, name, course, faculty, group, code, education_type, form = values
+                gender = ''
+                if not re.fullmatch(r'[0-9]{8}', code):
+                    raise ValueError()
+            else:
+                if values[7]:
+                    raise ValueError()
+                values = values[:7]
+                sid, name, gender, course, faculty, education_type, form = values
+                group, code = '', ''
+            # Preserve every original field, including specialty code and group.
             w.validate_id(sid)
             match = re.fullmatch(r'([1-8])(?:-kurs)?', course)
             if sid in seen or not match or not all(values) or any(len(v)>250 for v in values):
                 raise ValueError()
             seen.add(sid)
-            result.append((sid,name,faculty,int(match[1]),form,gender,education_type,json.dumps(dict(zip(HEADERS,values)),ensure_ascii=False)))
+            result.append((sid,name,faculty,int(match[1]),form,gender,education_type,json.dumps(dict(zip(headers,values)),ensure_ascii=False),code,group))
         return result
     except (BadZipFile, KeyError, IndexError, TypeError, ValueError, ET.ParseError):
         raise w.Problem('Excel ustunlari yoki talaba yozuvlarini tekşiring; import bekor qilindi')
@@ -61,12 +75,14 @@ def parse(raw):
 def insert(db, user, raw):
     w.need(user, ('admin',))
     rows = parse(raw)
-    added = 0
+    added = updated = 0
     for row in rows:
-        cursor=db.execute("INSERT INTO students(hemis_id,full_name,faculty,course,education_form,gender,education_type,source_json,programme,student_group,status) VALUES (?,?,?,?,?,?,?,?,'','','active') ON CONFLICT(hemis_id) DO NOTHING", row)
+        cursor=db.execute("INSERT INTO students(hemis_id,full_name,faculty,course,education_form,gender,education_type,source_json,programme,student_group,status) VALUES (?,?,?,?,?,?,?,?,?,?,'active') ON CONFLICT(hemis_id) DO NOTHING", row)
         added += cursor.rowcount
-    w.audit(db,user,'students_import',{'added':added,'updated':0,'skipped':len(rows)-added,'source':'xlsx'})
-    return {'added':added,'updated':0,'skipped':len(rows)-added,'total':len(rows)}
+        if not cursor.rowcount and row[8]:
+            updated += db.execute("UPDATE students SET programme=CASE WHEN programme='' THEN ? ELSE programme END,student_group=CASE WHEN student_group='' THEN ? ELSE student_group END WHERE hemis_id=? AND (programme='' OR student_group='')",(row[8],row[9],row[0])).rowcount
+    w.audit(db,user,'students_import',{'added':added,'updated':updated,'skipped':len(rows)-added-updated,'source':'xlsx'})
+    return {'added':added,'updated':updated,'skipped':len(rows)-added-updated,'total':len(rows)}
 
 
 def upload(db,user,data):

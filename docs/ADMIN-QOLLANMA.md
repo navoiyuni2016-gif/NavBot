@@ -145,3 +145,11 @@ Eski murojaatlarning talaba ma’lumotlari o‘chirishdan oldin murojaat ichida 
 Talabalar jadvalida fakultet va yo‘nalish alohida ustunlarda. Keng ekranda filtrlar, qidiruv va o‘chirish tugmalari bitta qatorda; kichik ekranlarda mos ravishda joylashadi. «Boshqarish» ustunida superadmin «Nofaol qilish», «Faollashtirish» yoki «O‘chirish»ni tanlaydi. Faol/nofaol qilish yozuvni o‘chirmaydi va bu bo‘limda ishlash vakolatlarini o‘zgartirmaydi. Qidiruvda nofaol talaba ham holati bilan ko‘rinadi.
 
 Ushbu yangilanish birinchi marta o‘rnatilganda mavjud talabalar «Faol»ga o‘tkaziladi. Bu bir martalik amal: keyinchalik qo‘lda qo‘yilgan «Nofaol» holat qayta ishga tushganda saqlanadi. Excel orqali yangi qo‘shilgan talabalar «Faol»dan boshlanadi; mavjud HEMIS ID holati o‘zgartirilmaydi. JSON importida aniq berilgan holat saqlanadi. Holat amallari auditga yoziladi.
+
+## Mutaxassislik shifri bilan 8 ustunli Excel
+
+Quyidagi aniq ustunlar tartibi ham qabul qilinadi: `Talaba ID`, `To‘liq ismi`, `Kurs`, `Fakultet`, `Guruh`, `Mutaxassislik`, `Ta’lim turi`, `Ta’lim shakli`. «Mutaxassislik» 8 xonali shifr bo‘lishi kerak, boshlang‘ich nollar saqlanadi. Jadval, filtr va talaba kartasida u «Mutaxassislik shifri» nomida chiqadi; fakultet alohida qoladi. Faylda jins ustuni bo‘lmasa, jins taxmin qilinmaydi.
+
+Yangi talabalar barcha asl 8 katak va manba nusxasi bilan saqlanadi. Mavjud ID uchun faqat bo‘sh mutaxassislik shifri va guruh to‘ldiriladi; mavjud ism, fakultet, kurs, holat va to‘ldirilgan qiymatlar almashtirilmaydi. Import natijasidagi «To‘ldirildi» shu yozuvlar sonidir. Oldingi 7 ustunli shakl ham qo‘llab-quvvatlanadi.
+
+Qidiruv natijasidan tanlangan talaba kartasida faqat Excel shaklidagi ma’lumotlar ko‘rinadi: ism-familiya va ID, kurs, fakultet, guruh, mutaxassislik shifri, ta’lim turi va shakli. Telefon murojaati va mavjud murojaat kartasida bir xil ko‘rinish ishlatiladi. Jins va holat bu kartada chiqarilmaydi; bazadagi ma’lumotlar o‘zgartirilmaydi.
