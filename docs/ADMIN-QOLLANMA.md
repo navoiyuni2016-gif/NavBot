@@ -70,8 +70,8 @@ Excel hisobotining yuqorisida universitetning to‘liq nomi, alohida ofis/hisobo
 ## Til va ko‘rinish menyulari
 
 Yuqorida joriy til yozilgan bitta ochiladigan tugma bor. Uni bosib o‘zbekcha,
-ruscha yoki inglizchani tanlang. Yonidagi bitta quyosh/oy menyusidan yorug‘ yoki
-to‘q ko‘rinishni tanlang. Tanlov keyingi kirishda ham saqlanadi. Escape yoki
+ruscha yoki inglizchani tanlang. Yonidagi bitta quyosh/oy tugmasini har bosganda yorug‘ va
+to‘q ko‘rinish almashadi; bu tugma menyu ochmaydi. Tanlov keyingi kirishda ham saqlanadi. Escape yoki
 menyudan tashqariga bosish menyuni yopadi.
 
 ## Murojaatlarni o‘chirish va sinov navbatlarini tozalash
