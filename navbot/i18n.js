@@ -2,6 +2,7 @@
 'use strict';
 window.NavI18n=(()=>{
 const rows=`
+Ma’lumot va xizmat ko‘rsatish tizimi|Информационно-сервисная система|Information and service system
 Registrator ofisi|Офис регистратора|Registrar’s Office
 Murojaatlar|Обращения|Requests
 Yangi murojaat|Новое обращение|New request
