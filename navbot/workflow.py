@@ -3,6 +3,9 @@ import json
 import routing
 import re
 import unicodedata
+from contextvars import ContextVar
+
+REQUEST_CONTEXT = ContextVar('navbot_request_context', default=None)
 from datetime import datetime, timezone
 from uuid import UUID
 
@@ -60,8 +63,13 @@ def search_students(db, query):
 
 
 def audit(db, actor, action, detail):
-    db.execute('INSERT INTO audit(actor_id,action,detail,created_at) VALUES (?,?,?,?)',
-               (actor['id'] if actor else None, action, json.dumps(detail, ensure_ascii=False), now()))
+    context=REQUEST_CONTEXT.get()
+    if context is None:
+        db.execute('INSERT INTO audit(actor_id,action,detail,created_at) VALUES (?,?,?,?)',
+                   (actor['id'] if actor else None,action,json.dumps(detail,ensure_ascii=False),now()))
+        return
+    import security_monitor
+    security_monitor.write(db,context,actor,action,detail,context.get('category','business'))
 
 
 def record(db, request_id, actor, action, detail):

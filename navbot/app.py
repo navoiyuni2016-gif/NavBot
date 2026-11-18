@@ -13,13 +13,14 @@ from contextlib import closing
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlsplit
-from uuid import UUID
+from uuid import UUID, uuid4
 import auth
 import routing
 import branding
 import profile_photo
 import account_admin
 import student_registry
+import security_monitor
 import student_xlsx
 import request_delete
 import attachments
@@ -149,6 +150,8 @@ def mutate(db, path, data, user):
         w.kiosk_request(db, ticket, ticket['content_name'])
         return {k: ticket[k] for k in ('id', 'lang', 'section', 'service', 'created_at','prefix','queue_seq','target_operator')} | {'content': ticket['content_name'],'code':routing.code(ticket)}
     w.need(user, auth.ROLES)
+    if path == '/api/security/unblock':
+        return security_monitor.unblock(db,user,data,w.REQUEST_CONTEXT.get())
     if path == '/api/admin/students/status':
         return student_registry.set_status(db, user, data)
     if path == '/api/admin/students/preview':
@@ -273,6 +276,43 @@ def mutate(db, path, data, user):
 class Handler(BaseHTTPRequestHandler):
     server_version = 'NAVBOT'
 
+    def send_response(self, code, message=None):
+        self._response_status=code
+        return super().send_response(code,message)
+
+    def _audited(self, operation):
+        self._audit_user=None
+        self._response_status=500
+        self._audit_context={'ip':security_monitor.client_ip(self.client_address[0],self.headers),'path':security_monitor.clean(urlsplit(self.path).path,500),'method':self.command,'request_ref':uuid4().hex,'user_agent':security_monitor.clean(self.headers.get('User-Agent',''))}
+        context_token=w.REQUEST_CONTEXT.set(self._audit_context)
+        try:
+            with closing(connection()) as db:
+                self._audit_user=self.user(db)
+                denied=security_monitor.gate(db,self._audit_context,self._audit_user)
+            if denied:
+                return self.reply({'error':'IP vaqtincha bloklangan' if denied==429 else 'Sörov rad etildi'},denied)
+            return operation()
+        finally:
+            try:
+                with closing(connection()) as db,db:
+                    db.execute('BEGIN IMMEDIATE')
+                    security_monitor.record(db,self._audit_context,self._audit_user,self._response_status)
+            except sqlite3.Error:
+                logging.warning('Security audit persistence failed; check database and disk')
+            finally:
+                w.REQUEST_CONTEXT.reset(context_token)
+
+    def do_GET(self):
+        return self._audited(self._do_GET)
+
+    def do_POST(self):
+        return self._audited(self._do_POST)
+
+    def do_HEAD(self):
+        return self._audited(lambda:self.reply({'error':'Usul qöllanmaydi'},405))
+
+    do_PUT=do_PATCH=do_DELETE=do_OPTIONS=do_HEAD
+
     def version_string(self):
         return self.server_version
 
@@ -281,6 +321,11 @@ class Handler(BaseHTTPRequestHandler):
         logging.info('%s %s', self.command, urlsplit(self.path).path)
 
     def send_body(self, body, mime, status=200, cookie=None, filename=None):
+        if hasattr(self,'_audit_context'):
+            self._audit_context['response_bytes']=len(body)
+            if filename:self._audit_context['filename']=security_monitor.clean(filename)
+            elif mime=='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':self._audit_context['filename']='NavBoT-report.xlsx'
+            elif mime.startswith('text/csv'):self._audit_context['filename']='NavBoT-report.csv'
         self.send_response(status)
         self.send_header('Content-Type', mime)
         self.send_header('Cache-Control', 'no-store')
@@ -316,6 +361,7 @@ class Handler(BaseHTTPRequestHandler):
 
     def user(self, db):
         user = auth.current(db, self.headers.get('Cookie', ''))
+        if hasattr(self,'_audit_context'):self._audit_user=user
         if user:
             user['avatar_url'] = profile_photo.url(db, user)
         return user
@@ -325,7 +371,7 @@ class Handler(BaseHTTPRequestHandler):
         if user['must_change_password'] and path not in ('/api/me', '/api/password', '/api/logout'):
             raise w.Problem('Vaqtinçalik parolni profil orqali özgartiring', 403)
 
-    def do_GET(self):
+    def _do_GET(self):
         url = urlsplit(self.path)
         try:
             if url.path in ('/', '/kiosk', '/operator', '/manager', '/tv', '/tablo', '/login', '/executor', '/head', '/director', '/admin', '/profile'):
@@ -386,6 +432,8 @@ class Handler(BaseHTTPRequestHandler):
                 if url.path == '/api/integrations':
                     w.need(user, ('admin',))
                     return self.reply(integrations.metadata(db))
+                if url.path == '/api/security/audit':
+                    return self.reply(security_monitor.page(db,user,parse_qs(url.query)))
                 if url.path == '/api/audit':
                     w.need(user, ('admin',))
                     return self.reply({'events': [dict(r) for r in db.execute("SELECT a.id,COALESCE(u.full_name,'Kiosk') actor,a.action,a.detail,a.created_at FROM audit a LEFT JOIN users u ON u.id=a.actor_id ORDER BY a.id DESC LIMIT 1000")]})
@@ -418,7 +466,7 @@ class Handler(BaseHTTPRequestHandler):
         if self.headers.get('Content-Type', '').split(';')[0].strip().lower() != 'application/json':
             raise w.Problem('JSON sörov zarur', 415)
 
-    def do_POST(self):
+    def _do_POST(self):
         try:
             self.same_origin()
             length = int(self.headers.get('Content-Length', '0'))
@@ -428,9 +476,19 @@ class Handler(BaseHTTPRequestHandler):
             data = json.loads(self.rfile.read(length), parse_constant=lambda _: (_ for _ in ()).throw(ValueError()))
             if not isinstance(data, dict):
                 raise w.Problem('JSON obyekt yuboring')
+            self._audit_context['request_bytes']=length
+            self._audit_context['metadata']=security_monitor.metadata(data)
+            upload_path='upload' in self.path or 'import' in self.path or self.path in ('/api/profile/photo','/api/admin/branding','/api/admin/logo')
+            if upload_path and data.get('remove') is not True:
+                filename=data.get('filename') or data.get('name')
+                if isinstance(filename,str):self._audit_context['filename']=security_monitor.clean(filename)
+                self._audit_context['category']='upload'
             if self.path == '/api/login':
+                self._audit_context['category']='login'
+                if isinstance(data.get('username'),str):self._audit_context['username']=security_monitor.clean(data['username'],64)
                 with closing(connection()) as db:
                     token, user = auth.login(db, data.get('username'), data.get('password'))
+                    self._audit_user=user
                     with db:
                         w.audit(db, user, 'login', {})
                 return self.reply({'user': user}, cookie=f'{auth.COOKIE_NAME}={token}; HttpOnly; SameSite=Strict; Path=/; Max-Age={auth.SESSION_SECONDS}')
@@ -562,6 +620,7 @@ def initialize(demo=False):
                 db.execute(f'ALTER TABLE {table} ADD COLUMN {name} {spec}')
         auth.initialize(db, demo)
         w.initialize(db)
+        security_monitor.initialize(db)
         attachments.initialize(db)
         branding.initialize(db)
         profile_photo.initialize(db)

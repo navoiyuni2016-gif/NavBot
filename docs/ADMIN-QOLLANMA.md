@@ -161,3 +161,11 @@ Asosiy hisob roli saqlanadi. Superadmin «Mening profilim → Rolni almashtirish
 Menejer vakolati berilgan bo‘lim boshlig‘iga superadmin band bo‘lmagan 1–30 operator raqamini belgilashi kerak. Superadmin birinchi marta menejer roliga o‘tayotganda profilidan o‘ziga bo‘sh operator raqamini tanlaydi. Boshqa xodimga tegishli raqamni olish mumkin emas. Alohida xodim raqami operator raqami o‘rnida ishlatilmaydi.
 
 Rol almashganda tanlangan menyu va server vakolatlari ishlaydi, hisob egasining IDsi va rasmi saqlanadi; boshqa xodim akkauntiga kirilmaydi. Ijrochi bo‘limi tanlansa shu bo‘lim konteksti qo‘llanadi, bo‘lim boshlig‘i roliga qaytilganda asosiy bo‘lim tiklanadi. Faol rol joriy sessiyaga tegishli; yangidan login qilganda asosiy rol ochiladi. Eski sessiya kaliti almashadi, auditga yoziladi. Ruxsatlar o‘zgartirilganda xodimning barcha eski sessiyalari bekor qilinadi. Asosiy rolni o‘zi tahrirlash taqiqi saqlanadi; profil orqali faqat ruxsat etilgan faol rol almashtiriladi.
+
+## Kengaytirilgan audit va xavfsizlik ogohlantirishlari
+
+Superadmin «Audit jurnali»da sana oralig‘i, xodim/login, IP, amal, natija, hodisa turi va xavf bo‘yicha filtrlaydi. Har sahifada50 yozuv. Alohida ustunlarda IP, HTTP usuli/manzili, natija, xavf, fayl nomi va hajm, takrorlar soni chiqadi. Eski yozuvlarda avval qayd etilmagan IPni tiklab bo‘lmaydi; yangi yozuvlardan boshlab saqlanadi.
+
+10 daqiqada bir IPdan10 ta muvaffaqiyatsiz kirish yoki5 daqiqada3 ta maxfiy manzilni qidirish urinishida15 daqiqalik blok qo‘yiladi. Blok va yangi login IP haqidagi xabar superadminning bildirishnomasi va ochiq sahifadagi bannerda chiqadi. Auditdagi «Blokdan chiqarish» tekshirilgan IPni qayta ochadi. Bir IPni bir nechta xodim ishlatishi mumkinligini hisobga oling.
+
+«Brauzer xabarlari» HTTPS va brauzer ruxsatini talab qiladi. Hozirgi lokal HTTPda tizim ichidagi xabar ishlaydi. Brauzer yopiq paytdagi fon Web Push hali ulanmagan. Qoidalar barcha hujumni aniqlash kafolati emas; Nginx, UFW va SSH qatlamlari o‘z jurnallarini yuritadi. Tafsilotlar: [Audit himoyasi](../deploy/AUDIT-SECURITY.md).

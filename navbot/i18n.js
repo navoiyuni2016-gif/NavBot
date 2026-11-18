@@ -2,6 +2,56 @@
 'use strict';
 window.NavI18n=(()=>{
 const rows=`
+Xodimlar faolligi, kiriş urinishlari va xavfsizlik hodisalari.|Активность сотрудников, попытки входа и события безопасности.|Staff activity, sign-in attempts and security events.
+Xodim / login|Сотрудник / логин|Staff / username
+IP manzil|IP-адрес|IP address
+Xavf darajasi|Уровень риска|Risk level
+Hodisa turi|Тип события|Event type
+Muvaffaqiyatli|Успешно|Successful
+Rad etilgan / xato|Отказ / ошибка|Rejected / failed
+Filtrlaş|Применить фильтр|Apply filters
+Filtrni tozalaş|Сбросить фильтр|Clear filters
+Brauzer xabarlari|Уведомления браузера|Browser notifications
+Oddiy|Обычный|Normal
+Ogohlantiriş|Предупреждение|Warning
+Şubhali|Подозрительный|Suspicious
+Jiddiy|Критический|Critical
+Iş amali|Рабочая операция|Business action
+Faollik|Активность|Activity
+Avtomatik sörovlar|Автоматические запросы|Automatic requests
+Kiriş|Вход|Sign-in
+Yuklaş|Загрузка|Upload
+Yuklab oliş|Скачивание|Download
+Xavfsizlik|Безопасность|Security
+Bloklangan|Заблокировано|Blocked
+Tekşiruv|Проверка|Validation
+Vaqtincha bloklangan IP manzillar|Временно заблокированные IP-адреса|Temporarily blocked IP addresses
+Blokdan çiqariş|Разблокировать|Unblock
+IP blokdan çiqarildi|IP разблокирован|IP unblocked
+Usul / manzil|Метод / адрес|Method / path
+Fayl / hajm|Файл / размер|File / size
+Sörovlar soni|Число запросов|Request count
+Audit sahifalari|Страницы аудита|Audit pages
+Auditni oçiş|Открыть аудит|Open audit
+Sörov: {size} KB|Запрос: {size} КБ|Request: {size} KB
+Javob: {size} KB|Ответ: {size} КБ|Response: {size} KB
+Brauzer xabarlari uçun HTTPS kerak|Для уведомлений браузера нужен HTTPS|Browser notifications require HTTPS
+Brauzer xabarlari yoqildi|Уведомления браузера включены|Browser notifications enabled
+Brauzer xabarlari rad etildi|Уведомления браузера отклонены|Browser notifications denied
+Brauzer xabarlari qöllanmaydi|Уведомления браузера не поддерживаются|Browser notifications are not supported
+Parol, sessiya kaliti va fayl mazmuni yozilmaydi. Takroriy avtomatik sörovlar daqiqalik hisoblagichda jamlanadi.|Пароли, ключи сеансов и содержимое файлов не записываются. Повторные автоматические запросы учитываются поминутно.|Passwords, session keys and file contents are not logged. Repeated automatic requests are counted per minute.
+Muvaffaqiyatsiz kiriş|Неудачный вход|Failed sign-in
+Vakolat rad etildi|Доступ запрещён|Permission denied
+Maxfiy manzilni qidiriş|Поиск закрытых адресов|Sensitive path probe
+IP bloklandi|IP заблокирован|IP blocked
+Bloklangan IP sörovi|Запрос заблокированного IP|Blocked IP request
+Yangi IPdan kiriş|Вход с нового IP|Sign-in from a new IP
+Sörov rad etildi|Запрос отклонён|Request rejected
+Server xatosi|Ошибка сервера|Server error
+Fayl yuklandi|Файл загружен|File uploaded
+Fayl yuklab olindi|Файл скачан|File downloaded
+Tizimdan foydalaniş|Использование системы|System activity
+Rol almaştirildi|Роль переключена|Role switched
 Ruxsat etilgan rollar|Разрешённые роли|Allowed roles
 Rolni almaştiriş|Переключение роли|Switch role
 Faol rol|Активная роль|Active role
