@@ -2,6 +2,17 @@
 'use strict';
 window.NavI18n=(()=>{
 const rows=`
+Faol murojaatlar|Активные обращения|Active requests
+Dashboard|Обзор|Dashboard
+Butun tizim böyiça umumiy körsatiçlar|Общие показатели системы|System overview
+Vakolatingiz doirasidagi murojaatlar|Обращения в пределах ваших полномочий|Requests within your access
+Bugungi murojaatlar|Обращения сегодня|Requests today
+Oxirgi 7 kun|Последние 7 дней|Last 7 days
+Sönggi murojaatlar|Последние обращения|Recent requests
+Murojaatlar holati|Статусы обращений|Request statuses
+Murojaat kanallari|Каналы обращений|Request channels
+Barça murojaatlar|Все обращения|All requests
+Toşkent vaqti|Ташкентское время|Tashkent time
 Rasm faylini tanlang|Выберите файл изображения|Choose an image file
 Rasm öçirildi|Изображение удалено|Image deleted
 Profil rasmi|Фото профиля|Profile photo

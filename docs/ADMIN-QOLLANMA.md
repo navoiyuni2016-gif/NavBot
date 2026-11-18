@@ -107,3 +107,7 @@ alohida, administrator nazoratidagi jarayon hisoblanadi.
 Har bir xodim `Mening profilim` bo‘limida PNG/JPEG (2 MBgacha) rasm tanlab, `Rasmni saqlash` orqali o‘z profil rasmini yangilaydi. Rasm profil kartasi va yuqoridagi hisob tugmasida ko‘rinadi. `Rasmni o‘chirish` bosh harf ko‘rinishini qaytaradi. Boshqa xodim profil rasmini o‘zgartirish vakolati berilmaydi.
 
 Administrator `Tizim sozlamalari → Bo‘lim logotipi` ichida bo‘limni tanlab, `Logotipni o‘chirish`ni bosadi. Faqat shu bo‘lim logotipi o‘chadi va kioskda standart belgi qaytadi.
+
+## Boshlang‘ich Dashboard
+
+Tizimga kirganda Dashboard ochiladi (vaqtinchalik parolni almashtirish talabi bundan oldin turadi). Superadmin va direktor barcha murojaatlarni, boshqa xodimlar esa o‘z vakolatlari doirasidagi murojaatlarni ko‘radi. Jami, faol (yopilmagan), yakunlangan va muddati o‘tgan murojaatlar; Toshkent sanasi bo‘yicha bugungi son va oxirgi 7 kun dinamikasi; holatlar, kanallar va so‘nggi beshta murojaat ko‘rsatiladi. Raqamlar mavjud murojaatlar ro‘yxatidan olinadi; o‘chirilgan yozuvlar kiritilmaydi. Yangilanish avtomatik. Murojaat qatorini bosish kartasini ochadi. Hisobot va yangi murojaat tugmalari tegishli vakolatlarda chiqadi.
