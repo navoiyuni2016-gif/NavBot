@@ -2,6 +2,8 @@
 'use strict';
 window.NavI18n=(()=>{
 const rows=`
+Parolni körsatiş|Показать пароль|Show password
+Parolni yashiriş|Скрыть пароль|Hide password
 Xodimlar röyxati|Список сотрудников|Staff directory
 Tahrirlaş|Редактировать|Edit
 Nofaol qiliş|Деактивировать|Deactivate
