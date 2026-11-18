@@ -125,3 +125,9 @@ Superadmin «Xodimlar va loginlar → Xodimlar ro‘yxati»da har bir hisobning 
 «O‘chirish»da hisob loginini kiritib tasdiqlash kerak. Yakunlanmagan murojaatlar bo‘lsa o‘chirish rad etiladi. Hisob ishlatiladigan ro‘yxatlardan chiqariladi, profil rasmi o‘chadi, operator raqami bo‘shaydi; tarixdagi xodim havolalari va murojaatlar saqlanadi. Eski login boshqa hisobga berilmaydi. O‘chirilgan hisobni faollashtirish mumkin emas — vaqtincha yopish uchun «Nofaol qilish»ni tanlang.
 
 O‘z hisobini o‘chirish/nofaol qilish yoki o‘z rolini almashtirish mumkin emas. Oxirgi faol superadmin himoyalangan. Amallar auditga yoziladi.
+
+## Bo‘lim xodimlari va alohida xodim raqami
+
+Yangi xodim yaratish va tahrirlashda «Rol» ro‘yxatidan O‘quv bo‘limi, Xalqaro aloqalar bo‘limi, Xodimlar bo‘limi yoki Ma’lumotlar bazasi menejerini tanlash mumkin. Barchasi ichki `executor` vakolatidan foydalanadi: o‘ziga biriktirilgan ishlarni ko‘radi, qaytaradi yoki javobni tasdiqqa yuboradi. Administrator yoki menejer vakolati qo‘shilmaydi. Bo‘lim nomi tanlovga mos avtomatik qo‘yiladi; mavjud foydalanuvchilar avtomatik qayta taqsimlanmaydi.
+
+«Operator raqami» faqat menejer uchun ko‘rinadi va majburiy. Ma’lumotlar bazasi menejeri uchun esa alohida, ixtiyoriy «Xodim raqami» bor: 1–20 ta raqam, masalan `007`. Bu navbat/oyna raqami emas va operatorni boshqarish huquqini bermaydi. Boshlang‘ich nollar saqlanadi; bir raqam ikki hisobga berilmaydi. Raqamni profil va xodimlar ro‘yxatida ko‘rish, tahrirlash mumkin.

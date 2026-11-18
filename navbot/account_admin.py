@@ -35,16 +35,16 @@ def change(db, actor, data):
     elif action == 'activate':
         db.execute('DELETE FROM user_account_states WHERE user_id=?', (user_id,))
     else:
-        username,name,role,department,operator = auth.account_fields(data)
+        username,name,role,department,operator,employee_number = auth.account_fields(data)
         if actor['id']==user_id and role!=target['role']:
             raise w.Problem('Öz rolingizni özgartiriş mumkin emas', 409)
         if active_work and (role,department,operator)!=(target['role'],target['department'],target['operator']):
             raise w.Problem('Yakunlanmagan murojaatlar bor: rol, bölim yoki oynani özgartirişdan oldin ularni yakunlang', 409)
         import sqlite3
         try:
-            db.execute('UPDATE users SET username=?,full_name=?,role=?,department=?,operator=? WHERE id=?', (username,name,role,department,operator,user_id))
+            db.execute('UPDATE users SET username=?,full_name=?,role=?,department=?,operator=?,employee_number=? WHERE id=?', (username,name,role,department,operator,employee_number,user_id))
         except sqlite3.IntegrityError as error:
-            raise w.Problem('Login yoki operator raqami allaqachon mavjud', 409) from error
+            raise w.Problem('Login, operator yoki xodim raqami allaqachon mavjud', 409) from error
     if action!='activate':
         db.execute('DELETE FROM sessions WHERE user_id=?', (user_id,))
     w.audit(db, actor, 'user_'+action, {'user_id':user_id,'username':target['username']})

@@ -17,7 +17,8 @@ COOKIE_NAME = 'navbot_session'
 SESSION_SECONDS = 12 * 60 * 60
 ITERATIONS = 260_000
 ROLES = ('admin', 'manager', 'executor', 'head', 'director')
-FIELDS = 'id,username,full_name,role,department,operator,must_change_password'
+FIELDS = 'id,username,full_name,role,department,operator,must_change_password,employee_number'
+DATABASE_DEPARTMENT = 'Ma’lumotlar bazasi menejeri'
 DEMO_PASSWORD = 'Navbot-Test-2026!'
 
 
@@ -94,6 +95,9 @@ def initialize(db, demo=False):
             window_start INTEGER NOT NULL
         );
     ''')
+    if 'employee_number' not in {row[1] for row in db.execute('PRAGMA table_info(users)')}:
+        db.execute('ALTER TABLE users ADD COLUMN employee_number TEXT')
+    db.execute('CREATE UNIQUE INDEX IF NOT EXISTS users_employee_number ON users(employee_number) WHERE employee_number IS NOT NULL')
     if demo:
         demo_users = [
             ('admin', 'Sinov Superadmin', 'admin', 'Registrar', None),
@@ -144,20 +148,28 @@ def account_fields(data):
         raise AuthError('Menejer uchun 1–30 oralig‘ida operator raqami kerak')
     if role != 'manager' and operator is not None:
         raise AuthError('Operator raqami faqat menejerga beriladi')
-    return username.lower(), name.strip(), role, department.strip(), operator
+    employee_number = data.get('employee_number')
+    if employee_number == '':
+        employee_number = None
+    if employee_number is not None:
+        if role != 'executor' or department.strip() != DATABASE_DEPARTMENT:
+            raise AuthError('Xodim raqami faqat ma’lumotlar bazasi menejeriga beriladi')
+        if not isinstance(employee_number, str) or not re.fullmatch(r'[0-9]{1,20}', employee_number):
+            raise AuthError('Xodim raqami 1–20 ta raqamdan iborat bölsin')
+    return username.lower(), name.strip(), role, department.strip(), operator, employee_number
 
 
 def create_user(db, data):
     """Create one account with a temporary password; caller authorizes admin."""
-    username, name, role, department, operator = account_fields(data)
+    username, name, role, department, operator, employee_number = account_fields(data)
     password = data.get('password')
     _validate_password(password)
     try:
         user_id = db.execute('''INSERT INTO users
-            (username,full_name,role,department,operator,password_hash,must_change_password)
-            VALUES (?,?,?,?,?,?,1)''', (username.lower(), name.strip(), role, department.strip(), operator, _hash(password))).lastrowid
+            (username,full_name,role,department,operator,password_hash,must_change_password,employee_number)
+            VALUES (?,?,?,?,?,?,1,?)''', (username.lower(), name.strip(), role, department.strip(), operator, _hash(password), employee_number)).lastrowid
     except sqlite3.IntegrityError as error:
-        raise AuthError('Login yoki operator raqami allaqachon mavjud', 409) from error
+        raise AuthError('Login, operator yoki xodim raqami allaqachon mavjud', 409) from error
     return _user(db, user_id)
 
 

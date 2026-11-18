@@ -2,6 +2,11 @@
 'use strict';
 window.NavI18n=(()=>{
 const rows=`
+O‘quv bo‘limi|Учебный отдел|Academic affairs office
+Xalqaro aloqalar bo‘limi|Отдел международных связей|International relations office
+Xodimlar bo‘limi|Отдел кадров|Human resources office
+Ma’lumotlar bazasi menejeri|Менеджер базы данных|Database manager
+Xodim raqami|Номер сотрудника|Staff number
 Parolni körsatiş|Показать пароль|Show password
 Parolni yashiriş|Скрыть пароль|Hide password
 Xodimlar röyxati|Список сотрудников|Staff directory
