@@ -38,7 +38,7 @@ Enli Info KeyOS uchun kiosk3 ta yuqori va2 ta pastki kartadan iborat.1024×768 v
 
 ## Excel
 
-Hisobot oynasidagi **Excel yuklab olish** haqiqiy `.xlsx` chiqaradi. Suratdagi12 ustun ishlatiladi: sana, tartib raqami, F.I.Sh., yo‘nalish, kurs, ta’lim shakli, mazmun, menejer F.I.Sh., «Ko‘rilgan chora»ning3 bo‘lagi va murojaat qilish usuli. Menejer va murojaat usuli ustunlari o‘rin almashgan Yuqori sarlavhalar birlashtirilgan, katak chegaralari va matn o‘rash bor. Filtr va tanlangan interfeys tili eksportga qo‘llanadi. Foydalanuvchi matni formula sifatida bajarilmaydi. [Sun’iy ma’lumotli namuna](EXCEL-NAMUNA.xlsx).
+Hisobot oynasidagi **Excel yuklab olish** haqiqiy `.xlsx` chiqaradi. Suratdagi12 ustun ishlatiladi: sana, tartib raqami, F.I.Sh., yo‘nalish, kurs, ta’lim shakli, mazmun, qabul qilgan xodim F.I.Sh., «Ko‘rilgan chora»ning3 bo‘lagi va murojaat qilish usuli. Menejer va murojaat usuli ustunlari o‘rin almashgan Yuqori sarlavhalar birlashtirilgan, katak chegaralari va matn o‘rash bor. Filtr va tanlangan interfeys tili eksportga qo‘llanadi. Foydalanuvchi matni formula sifatida bajarilmaydi. [Sun’iy ma’lumotli namuna](EXCEL-NAMUNA.xlsx).
 
 ## Arizaga fayl biriktirish
 
@@ -111,3 +111,7 @@ Administrator `Tizim sozlamalari → Bo‘lim logotipi` ichida bo‘limni tanlab
 ## Boshlang‘ich Dashboard
 
 Tizimga kirganda Dashboard ochiladi (vaqtinchalik parolni almashtirish talabi bundan oldin turadi). Superadmin va direktor barcha murojaatlarni, boshqa xodimlar esa o‘z vakolatlari doirasidagi murojaatlarni ko‘radi. Jami, faol (yopilmagan), yakunlangan va muddati o‘tgan murojaatlar; Toshkent sanasi bo‘yicha bugungi son va oxirgi 7 kun dinamikasi; holatlar, kanallar va so‘nggi beshta murojaat ko‘rsatiladi. Raqamlar mavjud murojaatlar ro‘yxatidan olinadi; o‘chirilgan yozuvlar kiritilmaydi. Yangilanish avtomatik. Murojaat qatorini bosish kartasini ochadi. Hisobot va yangi murojaat tugmalari tegishli vakolatlarda chiqadi.
+
+Excel hisobotida «Qabul qilgan xodim F.I.Sh.» murojaatni qabul qilgan menejerni ko‘rsatadi. Xodim murojaatni o‘zida qoldirsa yoki o‘zi hal qilsa, muddat qo‘yilgan bo‘lsa ham «Yo‘naltirildi (muddat)» katagi bo‘sh qoladi. Boshqa xodimga biriktirilganda shu katakda uning ism-familiyasi va belgilangan muddat chiqadi.
+
+Murojaatlar va arxiv oynalarida takroriy katta kabinet sarlavhasi olib tashlangan: ro‘yxat va karta yuqorida boshlanadi. Superadminning «Murojaat va navbatlarni tozalash» tugmasi murojaatlar ro‘yxati sarlavhasi yonidagi «⋯» menyusida joylashgan. Tasdiqlash va parol bilan tekshirish talablari saqlanadi.

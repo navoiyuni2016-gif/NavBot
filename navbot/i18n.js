@@ -2,6 +2,7 @@
 'use strict';
 window.NavI18n=(()=>{
 const rows=`
+Murojaat amallari|Действия с обращениями|Request actions
 Faol murojaatlar|Активные обращения|Active requests
 Dashboard|Обзор|Dashboard
 Butun tizim böyiça umumiy körsatiçlar|Общие показатели системы|System overview

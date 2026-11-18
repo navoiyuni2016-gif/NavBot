@@ -45,7 +45,7 @@ def fixture():
                'created_at': '2026-11-16T21:30:00+00:00', 'content': 'Transkript olish',
                'channel': 'kiosk', 'status': status, 'student_id': '100000000001',
                'student': {'full_name': 'Sinov Talaba', 'programme': 'Filologiya', 'course': 3,
-                           'education_form': 'Kunduzgi'}, 'manager_name': 'Sinov Menejer',
+                           'education_form': 'Kunduzgi'}, 'manager_id': 3, 'manager_name': 'Sinov Menejer',
                'assignee_id': None, 'assignee_name': None, 'deadline': None,
                'answer': '', 'result': '', 'unresolved_reason': '', 'closed_at': None}
         row.update(extra)
@@ -80,7 +80,7 @@ class ExcelStructure(unittest.TestCase):
         self.assertEqual(cells['I5'], 'Hal etildi')
         self.assertIn('Yönaltirildi', cells['J5'])
         self.assertIn('Hal etilmadi', cells['K5'])
-        self.assertIn('Mas’ul menejer', cells['H4'])
+        self.assertIn('Qabul qilgan xodim', cells['H4'])
         self.assertIn('Murojaat qiliş usuli', cells['L4'])
         self.assertEqual(cells['B6'], '1')
         self.assertEqual(cells['C6'], 'Sinov Talaba')
@@ -96,6 +96,24 @@ class ExcelStructure(unittest.TestCase):
         self.assertIn('Ilova yetishmaydi', cells['K8'])
         self.assertEqual(cells['H6'], 'Sinov Menejer')
         self.assertIsNotNone(report['sheet'].find('s:cols', NS), 'Readable column widths required')
+
+    def test_referral_only_for_another_staff_member(self):
+        report = fixture()
+        row = report['requests'][0]
+        row.update(assignee_id=3, assignee_name='Sinov Menejer', deadline='2026-11-18T21:00:00+00:00')
+        for status in ('in_progress', 'closed'):
+            row['status'] = status
+            cells = workbook(self.excel.build(report))['cells']
+            self.assertEqual(cells['J6'], '')
+            self.assertEqual(cells['H6'], 'Sinov Menejer')
+        row.update(assignee_id=4, assignee_name='Boshqa Xodim')
+        for status in ('in_progress', 'closed'):
+            row['status'] = status
+            cells = workbook(self.excel.build(report))['cells']
+            self.assertEqual(cells['J6'], 'Boshqa Xodim\n19.11.2026 02:00')
+            self.assertEqual(cells['H6'], 'Sinov Menejer')
+        row['deadline'] = None
+        self.assertEqual(workbook(self.excel.build(report))['cells']['J6'], 'Boshqa Xodim')
 
     def test_dates_are_tashkent_calendar_not_utc(self):
         cells = workbook(self.excel.build(fixture()))['cells']

@@ -9,7 +9,7 @@ LABELS = {
   'title': 'Alişer Navoiy nomidagi Toşkent davlat özbek tili va adabiyoti universiteti',
   'subtitle': 'REGISTRATOR OFISI · MUROJAATLAR STATISTIKASI',
   'period': 'Davr', 'all': 'Barça sanalar',
-  'headers': ['Sana', 'T/r', 'Murojaatçining F.I.Ş.', 'Ta’lim yönalişi (mutaxassisligi)', 'Kurs', 'Ta’lim şekli', 'Murojaat mazmuni', 'Murojaat qiliş usuli (NavBoT, telefon, LMS)', 'Körilgan çora', 'Mas’ul menejer F.I.Ş.'],
+  'headers': ['Sana', 'T/r', 'Murojaatçining F.I.Ş.', 'Ta’lim yönalişi (mutaxassisligi)', 'Kurs', 'Ta’lim şekli', 'Murojaat mazmuni', 'Murojaat qiliş usuli (NavBoT, telefon, LMS)', 'Körilgan çora', 'Qabul qilgan xodim F.I.Ş.'],
   'sub': ['Hal etildi', 'Yönaltirildi (muddat)', 'Hal etilmadi (sabab)'],
   'phone': 'Telefon', 'unknown': 'Noma’lum', 'total': 'Jami murojaatlar',
  },
@@ -17,7 +17,7 @@ LABELS = {
   'title': 'Ташкентский государственный университет узбекского языка и литературы имени Алишера Навои',
   'subtitle': 'ОФИС РЕГИСТРАТОРА · СТАТИСТИКА ОБРАЩЕНИЙ',
   'period': 'Период', 'all': 'Все даты',
-  'headers': ['Дата', '№ п/п', 'Ф.И.О. заявителя', 'Направление подготовки (специальность)', 'Курс', 'Форма обучения', 'Содержание обращения', 'Способ обращения (NavBoT, телефон, LMS)', 'Принятые меры', 'Ф.И.О. ответственного менеджера'],
+  'headers': ['Дата', '№ п/п', 'Ф.И.О. заявителя', 'Направление подготовки (специальность)', 'Курс', 'Форма обучения', 'Содержание обращения', 'Способ обращения (NavBoT, телефон, LMS)', 'Принятые меры', 'Ф.И.О. сотрудника, принявшего обращение'],
   'sub': ['Решено', 'Направлено (срок)', 'Не решено (причина)'],
   'phone': 'Телефон', 'unknown': 'Неизвестно', 'total': 'Всего обращений',
  },
@@ -25,7 +25,7 @@ LABELS = {
   'title': 'Alisher Navo’i Tashkent State University of Uzbek Language and Literature',
   'subtitle': 'REGISTRAR’S OFFICE · REQUEST STATISTICS',
   'period': 'Period', 'all': 'All dates',
-  'headers': ['Date', 'No.', 'Applicant’s full name', 'Programme (specialisation)', 'Year', 'Mode of study', 'Request content', 'Channel (NavBoT, telephone, LMS)', 'Action taken', 'Responsible manager’s full name'],
+  'headers': ['Date', 'No.', 'Applicant’s full name', 'Programme (specialisation)', 'Year', 'Mode of study', 'Request content', 'Channel (NavBoT, telephone, LMS)', 'Action taken', 'Receiving staff member’s full name'],
   'sub': ['Resolved', 'Referred (deadline)', 'Unresolved (reason)'],
   'phone': 'Telephone', 'unknown': 'Unknown', 'total': 'Total requests',
  },
@@ -81,8 +81,8 @@ def build(report, lang='uz', period=None):
     for index, request in enumerate(report.get('requests', []), 1):
         student = request.get('student') or {}
         referred = ''
-        if request.get('assignee_id') and request.get('deadline'):
-            referred = (request.get('assignee_name') or '') + '\n' + display_date(request['deadline'])
+        if request.get('assignee_id') and request['assignee_id'] != request.get('manager_id'):
+            referred = '\n'.join(value for value in (request.get('assignee_name') or '', display_date(request.get('deadline'))) if value)
         closed = request.get('status') == 'closed'
         values = [display_date(request.get('created_at')), index, student.get('full_name', ''), student.get('programme', ''),
                   student.get('course', ''), education_form(student.get('education_form', ''),lang), request.get('content', ''),
