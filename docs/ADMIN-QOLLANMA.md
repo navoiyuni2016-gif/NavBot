@@ -115,3 +115,13 @@ Tizimga kirganda Dashboard ochiladi (vaqtinchalik parolni almashtirish talabi bu
 Excel hisobotida «Qabul qilgan xodim F.I.Sh.» murojaatni qabul qilgan menejerni ko‘rsatadi. Xodim murojaatni o‘zida qoldirsa yoki o‘zi hal qilsa, muddat qo‘yilgan bo‘lsa ham «Yo‘naltirildi (muddat)» katagi bo‘sh qoladi. Boshqa xodimga biriktirilganda shu katakda uning ism-familiyasi va belgilangan muddat chiqadi.
 
 Murojaatlar va arxiv oynalarida takroriy katta kabinet sarlavhasi olib tashlangan: ro‘yxat va karta yuqorida boshlanadi. Superadminning «Murojaat va navbatlarni tozalash» tugmasi murojaatlar ro‘yxati sarlavhasi yonidagi «⋯» menyusida joylashgan. Tasdiqlash va parol bilan tekshirish talablari saqlanadi.
+
+## Xodimlarni tahrirlash, faol/nofaol qilish va o‘chirish
+
+Superadmin «Xodimlar va loginlar → Xodimlar ro‘yxati»da har bir hisobning ism-familiyasi, login, rol, bo‘lim va operator raqamini tahrirlaydi. O‘zgartirishdan so‘ng xodimning eski sessiyalari yopiladi; parol saqlanadi. Yakunlanmagan murojaatlari bor xodimning rol, bo‘lim va oynasini almashtirish bloklanadi, ism va loginni tahrirlash mumkin.
+
+«Nofaol qilish» kirishni darhol to‘xtatadi, eski sessiyalarni bekor qiladi va yangi yo‘naltirish ro‘yxatidan chiqaradi. Hisob ro‘yxatda qoladi va «Faollashtirish» bilan qayta ochiladi; nofaol hisobning operator raqami bandligicha qoladi. Oldingi ishlari superadmin nazoratida qoladi.
+
+«O‘chirish»da hisob loginini kiritib tasdiqlash kerak. Yakunlanmagan murojaatlar bo‘lsa o‘chirish rad etiladi. Hisob ishlatiladigan ro‘yxatlardan chiqariladi, profil rasmi o‘chadi, operator raqami bo‘shaydi; tarixdagi xodim havolalari va murojaatlar saqlanadi. Eski login boshqa hisobga berilmaydi. O‘chirilgan hisobni faollashtirish mumkin emas — vaqtincha yopish uchun «Nofaol qilish»ni tanlang.
+
+O‘z hisobini o‘chirish/nofaol qilish yoki o‘z rolini almashtirish mumkin emas. Oxirgi faol superadmin himoyalangan. Amallar auditga yoziladi.

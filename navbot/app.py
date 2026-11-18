@@ -18,6 +18,7 @@ import auth
 import routing
 import branding
 import profile_photo
+import account_admin
 import student_xlsx
 import request_delete
 import attachments
@@ -147,6 +148,8 @@ def mutate(db, path, data, user):
         w.kiosk_request(db, ticket, ticket['content_name'])
         return {k: ticket[k] for k in ('id', 'lang', 'section', 'service', 'created_at','prefix','queue_seq','target_operator')} | {'content': ticket['content_name'],'code':routing.code(ticket)}
     w.need(user, auth.ROLES)
+    if path == '/api/admin/user/action':
+        return account_admin.change(db, user, data)
     if path == '/api/profile/photo':
         return profile_photo.update(db, user, data)
     if path == '/api/attachment/upload':
@@ -353,6 +356,10 @@ class Handler(BaseHTTPRequestHandler):
                     response['events'] = [dict(row) for row in db.execute('SELECT c.*,t.prefix,t.queue_seq FROM calls c JOIN tickets t ON t.id=c.ticket JOIN requests r ON r.ticket_id=t.id WHERE c.id>? AND r.deleted_at IS NULL ORDER BY c.id', (after,))] if after >= 0 else []
                     return self.reply(response)
                 user = self.user(db)
+                if url.path == '/api/admin/users':
+                    self.guard(user, url.path)
+                    w.need(user, ('admin',))
+                    return self.reply({'users': account_admin.users(db)})
                 if url.path == '/api/me':
                     return self.reply({'user': user})
                 self.guard(user, url.path)

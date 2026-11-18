@@ -177,7 +177,7 @@ def request_action(db, user, data):
         target_id = data.get('assignee_id')
         if type(target_id) is not int:
             raise Problem('Mas’ulni tanlang')
-        target = db.execute("SELECT * FROM users WHERE id=? AND role IN ('manager','executor','head','director','admin')", (target_id,)).fetchone()
+        target = db.execute("SELECT * FROM users WHERE id=? AND id NOT IN (SELECT user_id FROM user_account_states) AND role IN ('manager','executor','head','director','admin')", (target_id,)).fetchone()
         if not target:
             raise Problem('Mas’ul topilmadi')
         if row['deadline']:

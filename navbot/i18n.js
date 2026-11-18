@@ -2,6 +2,18 @@
 'use strict';
 window.NavI18n=(()=>{
 const rows=`
+Xodimlar röyxati|Список сотрудников|Staff directory
+Tahrirlaş|Редактировать|Edit
+Nofaol qiliş|Деактивировать|Deactivate
+Faollaştiriş|Активировать|Activate
+Xodimni tahrirlaş|Редактировать сотрудника|Edit staff member
+Xodimni öçiriş|Удалить сотрудника|Delete staff member
+Xodimni nofaol qiliş|Деактивировать сотрудника|Deactivate staff member
+Xodimni faollaştiriş|Активировать сотрудника|Activate staff member
+Tasdiq uçun xodim loginini kiriting|Для подтверждения введите логин сотрудника|Enter the staff username to confirm
+Hisobga kiriş yopiladi. Avvalgi murojaatlar va audit saqlanadi.|Доступ к учётной записи закрывается. История обращений и аудит сохраняются.|Account access is removed. Previous requests and audit history are retained.
+Hisobga kiriş töxtatiladi va sessiyalar yopiladi. Murojaatlar saqlanadi.|Вход блокируется, сеансы завершаются. Обращения сохраняются.|Login is blocked and sessions are revoked. Requests are retained.
+Xodim yana tizimga kirişi va yangi murojaatlar olişi mumkin.|Сотрудник снова сможет входить и получать обращения.|The staff member can sign in and receive new requests again.
 Murojaat amallari|Действия с обращениями|Request actions
 Faol murojaatlar|Активные обращения|Active requests
 Dashboard|Обзор|Dashboard

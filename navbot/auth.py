@@ -35,7 +35,7 @@ def _one(db, sql, values=()):
 
 
 def _user(db, user_id):
-    row = _one(db, f'SELECT {FIELDS} FROM users WHERE id=?', (user_id,))
+    row = _one(db, f'SELECT {FIELDS} FROM users WHERE id=? AND id NOT IN (SELECT user_id FROM user_account_states)', (user_id,))
     if row:
         row['must_change_password'] = bool(row['must_change_password'])
     return row
@@ -78,6 +78,10 @@ def initialize(db, demo=False):
             password_hash TEXT NOT NULL,
             must_change_password INTEGER NOT NULL DEFAULT 1 CHECK(must_change_password IN (0,1))
         );
+        CREATE TABLE IF NOT EXISTS user_account_states (
+            user_id INTEGER PRIMARY KEY REFERENCES users(id),
+            state TEXT NOT NULL CHECK(state IN ('inactive','deleted'))
+        );
         CREATE TABLE IF NOT EXISTS sessions (
             token_hash TEXT PRIMARY KEY,
             user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -111,7 +115,7 @@ def initialize(db, demo=False):
 
 def users(db):
     """Return routing-directory user records, never password hashes/session data."""
-    cursor = db.execute(f'SELECT {FIELDS} FROM users ORDER BY full_name,id')
+    cursor = db.execute(f'SELECT {FIELDS} FROM users WHERE id NOT IN (SELECT user_id FROM user_account_states) ORDER BY full_name,id')
     names = [x[0] for x in cursor.description]
     result = [dict(zip(names, row)) for row in cursor]
     for row in result:
@@ -119,8 +123,7 @@ def users(db):
     return result
 
 
-def create_user(db, data):
-    """Create one account with a temporary password; caller authorizes admin."""
+def account_fields(data):
     if not isinstance(data, dict):
         raise AuthError('Noto‘g‘ri foydalanuvchi')
     username = data.get('username')
@@ -141,6 +144,12 @@ def create_user(db, data):
         raise AuthError('Menejer uchun 1–30 oralig‘ida operator raqami kerak')
     if role != 'manager' and operator is not None:
         raise AuthError('Operator raqami faqat menejerga beriladi')
+    return username.lower(), name.strip(), role, department.strip(), operator
+
+
+def create_user(db, data):
+    """Create one account with a temporary password; caller authorizes admin."""
+    username, name, role, department, operator = account_fields(data)
     password = data.get('password')
     _validate_password(password)
     try:
@@ -188,7 +197,7 @@ def login(db, username, password):
         if entry and entry['failures'] >= limit and now - entry['window_start'] < window:
             db.commit()
             raise AuthError('Juda ko‘p urinish. Keyinroq qayta urinib ko‘ring', 429)
-    row = _one(db, 'SELECT id,password_hash FROM users WHERE username=?', (identity,))
+    row = _one(db, 'SELECT id,password_hash FROM users WHERE username=? AND id NOT IN (SELECT user_id FROM user_account_states)', (identity,))
     # Run PBKDF2 even for missing accounts to avoid a cheap username timing oracle.
     stored = row['password_hash'] if row else f'pbkdf2_sha256${ITERATIONS}$' + '00' * 16 + '$' + '00' * 32
     valid = _verify(password, stored)
