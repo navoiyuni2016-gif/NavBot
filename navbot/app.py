@@ -395,6 +395,11 @@ class Handler(BaseHTTPRequestHandler):
         try:
             if url.path in ('/', '/kiosk', '/operator', '/manager', '/tv', '/tablo', '/login', '/executor', '/head', '/director', '/admin', '/profile'):
                 return self.send_body((ROOT / 'index.html').read_bytes(), 'text/html; charset=utf-8')
+            if url.path == '/api/tv-version':
+                import hashlib
+                return self.reply({'version':hashlib.sha256((ROOT/'index.html').read_bytes()+(ROOT/'i18n.js').read_bytes()).hexdigest()})
+            if url.path == '/downloads/NAVBOT-TV.apk':
+                return self.send_body((ROOT.parent/'downloads'/'NAVBOT-TV.apk').read_bytes(),'application/vnd.android.package-archive',filename='NAVBOT-TV.apk')
             if url.path == '/downloads/NAVBOT-NATIVE.zip':
                 return self.send_body((ROOT.parent / 'downloads' / 'NAVBOT-NATIVE.zip').read_bytes(),'application/zip',filename='NAVBOT-NATIVE.zip')
             if url.path == '/student':
