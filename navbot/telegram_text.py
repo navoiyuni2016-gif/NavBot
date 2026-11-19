@@ -53,8 +53,23 @@ TEXT={
 }
 
 
+def uz(text):
+    """Apply the same Uzbek alphabet used by the staff UI, to UI text only."""
+    import re
+    text=re.sub(r"([OoGg])[‘’ʻʼ'`]",lambda m:{'O':'Ö','o':'ö','G':'Ğ','g':'ğ'}[m[1]],text)
+    for source,target in (('SH','Ş'),('Sh','Ş'),('sh','ş'),('CH','Ç'),('Ch','Ç'),('ch','ç')):
+        text=text.replace(source,target)
+    return text
+
+
+def labels(key):
+    # Accept buttons sent before the alphabet update as well as the new labels.
+    return tuple(TEXT[key])+tuple(t(key,lang) for lang in LANGS)
+
+
 def t(key,lang='uz'):
-    return TEXT[key][LANGS.index(lang) if lang in LANGS else 0]
+    index=LANGS.index(lang) if lang in LANGS else 0
+    return uz(TEXT[key][index]) if index==0 else TEXT[key][index]
 
 
 def main_keyboard(lang):
@@ -62,4 +77,4 @@ def main_keyboard(lang):
 
 
 def languages():
-    return {'inline_keyboard':[[{'text':'O‘zbekcha','callback_data':'lang:uz'},{'text':'Русский','callback_data':'lang:ru'},{'text':'English','callback_data':'lang:en'}]]}
+    return {'inline_keyboard':[[{'text':'Özbekça','callback_data':'lang:uz'},{'text':'Русский','callback_data':'lang:ru'},{'text':'English','callback_data':'lang:en'}]]}

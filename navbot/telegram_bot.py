@@ -12,7 +12,7 @@ from datetime import datetime, timezone, timedelta
 from uuid import uuid4
 from pathlib import Path
 import workflow as w
-from telegram_text import LANGS, t, main_keyboard, languages
+from telegram_text import LANGS, t, main_keyboard, languages, uz, labels
 
 DEFAULT_CATALOG=json.loads(Path(__file__).with_name('catalog.json').read_text(encoding='utf-8'))
 CODE_TTL=600
@@ -45,7 +45,7 @@ def _launch_button(db,chat_id,batch,student=None):
     if not row or not row['url']:return
     chat=db.execute('SELECT lang FROM telegram_chats WHERE chat_id=?',(chat_id,)).fetchone()
     lang=chat['lang'] if chat else 'uz'
-    label={'uz':'NAVBOT ilovasini ochish','ru':'Открыть NAVBOT','en':'Open NAVBOT'}.get(lang,'Open NAVBOT')
+    label={'uz':'NAVBOT ilovasini oçiş','ru':'Открыть NAVBOT','en':'Open NAVBOT'}.get(lang,'Open NAVBOT')
     _job(db,chat_id,'message',{'text':label,'reply_markup':{'inline_keyboard':[[{'text':label,'web_app':{'url':row['url']}}]]}},batch,student)
 
 
@@ -228,7 +228,9 @@ def _date(value):
 def _service(db,row,lang):
     settings=db.execute('SELECT value FROM settings WHERE id=1').fetchone()
     catalog=json.loads(settings['value']).get('catalog',DEFAULT_CATALOG) if settings else DEFAULT_CATALOG
-    try:return catalog[row['section']][1][row['service']][LANGS.index(lang)]
+    try:
+        name=catalog[row['section']][1][row['service']][LANGS.index(lang)]
+        return uz(name) if lang=='uz' else name
     except (KeyError,IndexError,TypeError):return (row['content'] or '')[:160]
 
 
@@ -342,13 +344,13 @@ def process_update(db,update):
             else:_message(db,chat_id,t('not_approved',lang),None,batch,link,number)
         else:_detail(db,link,row,lang,batch,op=='track')
         return
-    if text in ('/requests',*(t('requests',l) for l in LANGS)):_list(db,link,1,lang,batch)
-    elif text in ('/track',*(t('track',l) for l in LANGS)):_list(db,link,1,lang,batch,True)
-    elif text in ('/profile',*(t('profile',l) for l in LANGS)):
+    if text in ('/requests',*labels('requests')):_list(db,link,1,lang,batch)
+    elif text in ('/track',*labels('track')):_list(db,link,1,lang,batch,True)
+    elif text in ('/profile',*labels('profile')):
         fields=[('HEMIS ID',student['hemis_id']),(t('course',lang),student['course']),(t('faculty',lang),student['faculty']),(t('group',lang),student['student_group']),(t('specialty',lang),student['programme']),(t('type',lang),student['education_type']),(t('form',lang),student['education_form'])]
         _message(db,chat_id,'👤 '+student['full_name']+'\n'+'\n'.join(str(key)+': '+str(value or '—') for key,value in fields)+'\n'+t('verified',lang),_keyboard(db,lang),batch,link)
-    elif text in ('/help',*(t('help',l) for l in LANGS)):_message(db,chat_id,t('help_text',lang),_keyboard(db,lang),batch,link)
-    elif text in ('/language',*(t('language',l) for l in LANGS)):_message(db,chat_id,t('choose_language',lang),languages(),batch,link)
+    elif text in ('/help',*labels('help')):_message(db,chat_id,t('help_text',lang),_keyboard(db,lang),batch,link)
+    elif text in ('/language',*labels('language')):_message(db,chat_id,t('choose_language',lang),languages(),batch,link)
     else:_message(db,chat_id,t('menu',lang),_keyboard(db,lang),batch,link)
 
 

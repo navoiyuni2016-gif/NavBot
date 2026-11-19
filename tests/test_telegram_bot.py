@@ -89,7 +89,7 @@ class TelegramBotTests(unittest.TestCase):
         for command in ('/requests','/track','/profile','/help','/language'):self.send(command)
         for lang in ('ru','en','uz'):self.send(data='lang:'+lang)
         self.send(data='req:'+str(other['id']));self.send(data='ans:'+str(other['id']))
-        self.assertNotIn('INTERNAL NOTE',self.payloads());self.assertIn('ruxsat yo‘q',self.payloads())
+        self.assertNotIn('INTERNAL NOTE',self.payloads());self.assertIn('ruxsat yöq',self.payloads())
         self.assertIn('Mutaxassislik',self.payloads());self.assertIn('NAV-'+str(own['id']).zfill(4),self.payloads())
     def test_draft_hidden_approved_selected_files_and_dedup(self):
         self.link();row=self.pending()
@@ -182,6 +182,19 @@ class TelegramBotTests(unittest.TestCase):
         with patch.object(worker,'configured',return_value=None):
             self.assertFalse(worker.deliver_one(self.db,api,expected_config=('old-reference','old-secret')))
         self.assertEqual(api.calls,[]);self.assertEqual(bot.delivery(self.db,row['id'])['state'],'pending')
+
+    def test_new_alphabet_labels_preserve_student_text_and_legacy_buttons(self):
+        from telegram_text import t,uz,main_keyboard
+        self.assertEqual(t('track','uz'),'📍 Jarayonni kuzatiş')
+        self.assertEqual(t('answer','uz'),'Javobni köriş')
+        self.assertEqual(uz("O‘qish, Gʻisht, Chiqish, SHAXS"),'Öqiş, Ğişt, Çiqiş, ŞAXS')
+        self.assertEqual(t('track','ru'),'📍 Отследить процесс')
+        self.assertEqual(t('track','en'),'📍 Track progress')
+        self.link()
+        with self.db:self.db.execute("UPDATE students SET full_name=? WHERE hemis_id=?",("Shavkat O‘g‘li",SID))
+        self.request();self.send('📍 Jarayonni kuzatish');self.send('/profile')
+        self.assertIn('Kuzatiş uçun',self.payloads());self.assertIn('Shavkat O‘g‘li',self.payloads())
+        self.assertEqual(main_keyboard('uz')['keyboard'][0][1]['text'],'📍 Jarayonni kuzatiş')
 
     def test_unicode_messages_stay_under_telegram_limit(self):
         text='😀'*6000+'abc';parts=list(bot.chunks(text))
