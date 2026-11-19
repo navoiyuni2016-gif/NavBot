@@ -1,4 +1,4 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="uz.navbot.tv" android:versionCode="2" android:versionName="1.1">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="uz.navbot.tv" android:versionCode="3" android:versionName="1.2">
  <uses-sdk android:minSdkVersion="21" android:targetSdkVersion="28"/>
  <uses-permission android:name="android.permission.INTERNET"/>
  <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
@@ -6,9 +6,12 @@
  <uses-feature android:name="android.software.leanback" android:required="false"/>
  <application android:label="NAVBOT TV" android:theme="@android:style/Theme.Material.Light.NoActionBar" android:usesCleartextTraffic="true" android:allowBackup="false" android:icon="@drawable/icon" android:banner="@drawable/banner">
   <activity android:name=".MainActivity" android:launchMode="singleTask" android:exported="true" android:screenOrientation="landscape" android:configChanges="keyboardHidden|orientation|screenSize">
-   <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/><category android:name="android.intent.category.LEANBACK_LAUNCHER"/></intent-filter>
-   <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.HOME"/><category android:name="android.intent.category.DEFAULT"/></intent-filter>
+   <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
+   <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LEANBACK_LAUNCHER"/></intent-filter>
   </activity>
+  <activity-alias android:name=".TvHome" android:targetActivity=".MainActivity" android:label="NAVBOT TV" android:icon="@drawable/icon" android:exported="true" android:enabled="true">
+   <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.HOME"/><category android:name="android.intent.category.DEFAULT"/></intent-filter>
+  </activity-alias>
   <receiver android:name=".BootReceiver" android:exported="true">
    <intent-filter><action android:name="android.intent.action.BOOT_COMPLETED"/><action android:name="android.intent.action.MY_PACKAGE_REPLACED"/></intent-filter>
   </receiver>
