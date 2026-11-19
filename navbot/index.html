@@ -149,6 +149,19 @@ body[data-page=tv] .tv .queue{display:grid;grid-template-columns:repeat(5,minmax
 body[data-page=tv] .tv .chip{min-width:0;padding:1.5vh .5vw;font-size:clamp(24px,5.6vh,74px);line-height:1.1;letter-spacing:-1px;background:#f0f8f8;border:1px solid #c3e2df;border-radius:10px;color:#103b49}
 body[data-page=tv] .queue>p{grid-column:1/-1;text-align:center;color:#728694;font-size:4vh;margin:0}
 
+
+/* Safe inset keeps borders visible on TVs with overscan. */
+body[data-page=tv] .tv .serving .line{font-size:clamp(12px,2.6vh,34px);margin:.4vh 1vw;padding:.4vh 1vw}
+body[data-page=tv] .tv h2{font-size:clamp(14px,2.5vh,34px)}
+body[data-page=tv] #app{padding:2.5vh 2.5vw;background:#e6eff3}
+body[data-page=tv] .public-header{border-radius:12px;padding:1.3vh 1.5vw}
+body[data-page=tv] .public-main{padding:1.8vh 0 0}
+body[data-page=tv] .tv{gap:1.8vh;grid-template-rows:minmax(0,1.15fr) minmax(0,1fr)}
+body[data-page=tv] .tv .panel{border:3px solid #476b81;box-shadow:0 3px 10px #12384e18}
+body[data-page=tv] .tv .current{border-color:#008b80}
+body[data-page=tv] .tv .chip{border:2px solid #639b9f;background:#eaf5f5;padding:1vh .4vw;font-size:clamp(22px,4.8vh,65px)}
+body[data-page=tv] .tv .queue{gap:1vh 1vw;padding:1vh 1vw;overflow:hidden;align-content:start}
+body[data-page=tv] .tv-queue-page{flex-shrink:0;text-align:right;padding:0 1vw .6vh;font-size:clamp(12px,1.8vh,22px);font-weight:650;color:#36566a;line-height:1}
 </style></head><body><div id="app"></div><div id="toast" class="toast" role="status" hidden></div>
 <script src="/assets/i18n.js"></script>
 <script>
@@ -210,7 +223,8 @@ function resumeKioskPrinter(){try{const saved=JSON.parse(sessionStorage.getItem(
 function operatorLabel(item){return state.settings.operator_labels?.[String(item.operator)]?.[state.lang]||(state.lang===0?item.operator+'-operator':state.lang===1?item.operator+'-е окно':'counter '+item.operator)}
 function tvHeading(n){return state.settings.tv_titles?.[state.lang]?.[n]||tr(7+n)}
 function serving(q){return html`<section class="panel serving"><h2>${esc(tvHeading(1))}</h2>${q.serving.length?q.serving.map(t=>html`<div class="line target">${esc(operatorLabel(t))} · ${esc(number(t))}</div>`).join(''):staticHTML('<p>—</p>')}</section>`}
-function waiting(q){return html`<section class="panel waiting"><h2>${esc(tvHeading(2))}</h2><div class="queue">${q.waiting.length?q.waiting.map(t=>html`<div class="chip">${esc(number(t))}</div>`).join(''):staticHTML('<p>—</p>')}</div></section>`}
+let tvQueueStarted=Date.now();
+function waiting(q){const pages=Math.max(1,Math.ceil(q.waiting.length/10)),page=Math.floor((Date.now()-tvQueueStarted)/8000)%pages,visible=q.waiting.slice(page*10,page*10+10);return html`<section class="panel waiting"><h2>${esc(tvHeading(2))}</h2><div class="queue">${q.waiting.length?visible.map(t=>html`<div class="chip">${esc(number(t))}</div>`).join(''):staticHTML('<p>—</p>')}</div>${pages>1?html`<div class="tv-queue-page">${page+1} / ${pages}</div>`:''}</section>`}
 function tv(q){const id=q.current?.called??null;if(!$('.tv'))$('#content').innerHTML=html`<div class="tv"><section class="panel current"></section>${serving(q)}${waiting(q)}</div>`;
  const c=$('.current');if(id!==state.lastCall||!c.childElementCount){c.innerHTML=html`<h2>${esc(tvHeading(0))}</h2><div class="call-body"><div class="number">${q.current?esc(number(q.current)):'—'}</div>${q.current?html`<div class="target">→ ${esc(operatorLabel(q.current))}</div>`:''}</div>`;c.classList.remove('pulse');if(id!==null){void c.offsetWidth;c.style.setProperty('--blink',String(state.settings.blink_count??3));c.classList.add('pulse')}state.lastCall=id}
  if($('h2',c))$('h2',c).textContent=tvHeading(0);if($('.target',c)&&q.current)$('.target',c).textContent='→ '+operatorLabel(q.current);$('.serving').outerHTML=serving(q);$('.waiting').outerHTML=waiting(q);}
