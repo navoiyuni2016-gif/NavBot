@@ -408,6 +408,8 @@ class Handler(BaseHTTPRequestHandler):
             if url.path in mini_assets:
                 name,mime=mini_assets[url.path]
                 return self.send_body((ROOT / name).read_bytes(),mime)
+            if url.path == '/assets/tv-tone.wav':
+                return self.send_body((ROOT/'tv-tone.wav').read_bytes(),'audio/wav')
             if url.path == '/assets/i18n.js':
                 return self.send_body((ROOT / 'i18n.js').read_bytes(), 'text/javascript; charset=utf-8')
             with closing(connection()) as db:
