@@ -35,3 +35,20 @@ Haqiqiy Windows printer sinovi foydalanuvchi qurilmasida bajariladi.
 TV: START-TV-WINDOWS.bat alohida Chrome profilini avtomatik ovoz siyosati bilan ochadi.
 Oddiy Chrome oynasida brauzer avtomatik ovozni cheklashi mumkin.
 Ovoz darajasi Superadmin sozlamasi va Windows ovoz sozlamasidan boshqariladi.
+
+MAVJUD LAN SERVERIGA ULANGAN INFO KIOSK:
+- START-KIOSK-LAN-WINDOWS.bat mustaqil ishlaydi: kioskda Python yoki loyiha bazasi kerak emas.
+- Odatiy manzil http://172.20.30.31/kiosk. Server va kiosk bir tarmoqda bo'lsin.
+- Manzil boshqa bo'lsa: START-KIOSK-LAN-WINDOWS.bat "https://sizning-domeningiz/kiosk"
+  Yoki NAVBOT_KIOSK_URL muhit o'zgaruvchisiga to'liq /kiosk manzilini kiriting.
+- Oldingi kiosk oynalarini Alt+F4 bilan yoping, keyin yangi BATni oching.
+- Maxsus ChromeKioskLAN profili ishlatiladi: --kiosk to'liq ekran,
+  --kiosk-printing esa Chrome chop etish tasdig'ini avtomatik bajaradi.
+- 80 mm chek printerini Windows DEFAULT printer qiling. Printer Windows test
+  sahifasini chiqarishi kerak. Save as PDF yoki boshqa printer tanlanmasin.
+- Xizmat (masalan, Transkript olish) bosilganda shu oynada navbat cheki yaratiladi
+  va window.print chaqiriladi. Yangi brauzer sahifasi ochilmaydi.
+- Print oynasi baribir chiqsa, aynan yangi BAT orqali ochilgan kiosk oynasini
+  ishlatayotganingizni tekshiring; allaqachon ochiq shu profil yangi flaglarni olmaydi.
+- Sayt kodi brauzer yoki Windows printer siyosatini majburan almashtira olmaydi.
+  Haqiqiy dialogsiz chop etish foydalanuvchining Windows qurilmasida tekshiriladi.

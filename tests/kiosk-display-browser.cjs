@@ -1,0 +1,20 @@
+// Use an isolated --seed-demo server. Browser print is intercepted, no physical printer.
+const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=require('node:fs/promises'),path=require('node:path');
+(async()=>{const browser=await chromium.launch({executablePath:'/usr/bin/chromium',headless:true,args:['--no-sandbox']});try{
+ const context=await browser.newContext(),page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));const base=process.env.NAVBOT_URL||'http://127.0.0.1:8098';
+ await page.addInitScript(()=>{window.printCalls=0;window.print=()=>{if(!document.querySelector('.receipt'))throw Error('Receipt not rendered');window.printCalls++}});
+ const image='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aVZkAAAAASUVORK5CYII=';
+ await page.route('**/api/settings',async route=>{const response=await route.fetch(),data=await response.json();data.settings.section_logos[0]=image;await route.fulfill({response,json:data})});
+ for(const [width,height] of [[1024,768],[1280,1024],[1920,1080]]){
+  await page.setViewportSize({width,height});await page.goto(base+'/kiosk');await page.locator('.tile').first().waitFor();
+  async function layout(){const positions=await page.locator('.tile').evaluateAll(es=>es.map(e=>{const b=e.getBoundingClientRect();return {x:b.x,y:b.y,bottom:b.bottom,width:b.width,height:b.height}}));assert.equal(positions.length,5);assert.equal(positions[0].y,positions[2].y);assert.equal(positions[3].y,positions[4].y);assert(positions[4].bottom>=height-30,JSON.stringify({width,height,positions}));assert.equal(await page.evaluate(()=>document.documentElement.scrollHeight>innerHeight),false);assert.equal(await page.locator('.tile .arrow').count(),0)}
+  await layout();await page.locator('.tile').first().click();await layout();assert.equal(await page.locator('.tile .icon img').count(),5);assert.equal(await page.locator('.tile .icon img').first().getAttribute('src'),image);
+ }
+ const beforeUrl=page.url();await page.locator('.tile').first().click();await page.locator('.receipt').waitFor();await page.waitForFunction(()=>window.printCalls===1);assert.equal(page.url(),beforeUrl);assert.equal(context.pages().length,1);
+ const number=await page.locator('.receipt h2').innerText();assert.match(number,/^[A-Z]-\d+$/);await page.locator('#print-ticket').click();assert.equal(await page.evaluate(()=>window.printCalls),2);assert.equal(await page.locator('.receipt h2').innerText(),number);
+ await page.emulateMedia({media:'print'});assert.equal(await page.locator('.public-header').isVisible(),false);assert.equal(await page.locator('.receipt').isVisible(),true);assert.equal(await page.locator('#print-ticket').isVisible(),false);await page.emulateMedia({media:'screen'});
+ await page.reload();await page.locator('.receipt').waitFor();assert.equal(await page.evaluate(()=>window.printCalls),0);assert.equal(await page.locator('.receipt h2').innerText(),number);
+ await page.locator('#new-ticket').click();await page.locator('.tile').first().waitFor();assert.equal(await page.locator('.tile').count(),5);
+ const launcher=await fs.readFile(path.join(__dirname,'../START-KIOSK-LAN-WINDOWS.bat'),'utf8');assert(launcher.includes('--kiosk-printing --kiosk'));assert(launcher.includes('ChromeKioskLAN'));assert(!launcher.includes('START-WINDOWS.bat'));
+ assert.deepEqual(errors,[]);console.log('PASS: 3+2 full-height kiosks at 1024x768, 1280x1024, 1920x1080; no tile arrows; department logos retained on services; receipt and print once without navigation/popups; print-only CSS; no duplicate after reload; LAN launcher flags. Physical Windows/printer not tested.');
+ }finally{await browser.close()}})().catch(e=>{console.error(e);process.exit(1)});

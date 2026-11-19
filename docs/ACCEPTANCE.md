@@ -92,3 +92,5 @@ saqlab snapshot bo‘yicha tozalash, raqamlarni takrorlamaslik o‘tdi. Workflow
 enhancements, CSP, branding va500-audio/five-operator regressiyalari o‘tdi.
 Haqiqiy serverdagi tozalash deployment paytida avtomatik bajarilmaydi;
 superadmin ko‘rsatilgan raqamlar va sonni ko‘rib, o‘z paroli bilan ishga tushiradi.
+
+Info kiosk ekrani: bo‘lim/xizmat tugmalari bo‘sh pastki joyni to‘ldiradi (3+2, 1024×768, 1280×1024 va 1920×1080). Tugmalardagi oldinga strelkalar olib tashlandi; xizmatlarda ham joriy bo‘lim logosi saqlanadi. `tests/kiosk-display-browser.cjs` o‘lchamlar, strelkasiz kartalar, bo‘lim logosi, bitta avtomatik print, yangi sahifasiz chek, print CSS, qayta yuklashda takrorlanmaslikni tekshiradi. `START-KIOSK-LAN-WINDOWS.bat` mavjud LAN serveriga alohida Chrome profili bilan ulanadi; lokal server/baza yaratmaydi. Fizik Windows printerida ishlashi hali amaliy tekshirilishi kerak.
