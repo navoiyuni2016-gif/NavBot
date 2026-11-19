@@ -60,3 +60,10 @@ Windows yordamchisi ZIPini yuklang, alohida papkaga oching. Printer sozlamasini
 shu sahifada yarating va printer-config.json faylini ZIP papkasiga qo'ying.
 START-NAVBOT-NATIVE.bat orqali oching. Boshqa kiosk oynalari yopiq bo'lsin.
 Batafsil: deploy/NATIVE-PRINTER-README.txt. Fizik standart 80 mm printer zarur.
+
+
+Windows kirishida tez ishga tushirish: yangi Native ZIPdan
+INSTALL-NAVBOT-AUTOSTART.bat ni bir marta bosing. printer-config.json shu
+papkada bo'lsin. Task Scheduler orqali joriy foydalanuvchiga kirishda ochiladi;
+Startup papkasidagi eski NAVBOT yozuvlari zaxiralanadi. JSON alohida ochilmaydi.
+Bekor qilish: REMOVE-NAVBOT-AUTOSTART.bat. Windows logini/paroli o'zgarmaydi.

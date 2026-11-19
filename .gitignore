@@ -10,3 +10,8 @@ __pycache__/
 printer-config.json
 print-journal.json
 print-journal.json.tmp
+
+startup-ready.js
+startup-status.txt
+autostart-state.json
+old-startup/

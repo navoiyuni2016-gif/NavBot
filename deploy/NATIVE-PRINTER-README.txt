@@ -48,3 +48,36 @@ Python, yangi port, lokal HTTP server yoki brauzer kengaytmasi kerak emas.
 HTTP LAN manzilida token tarmoq orqali shifrlanmaydi; mavjud ishonchli LAN
 uchun. Ochiq tarmoqda ishonchli sertifikatli HTTPS manzilidan foydalaning.
 Haqiqiy Windows qurilmasi va printerda birinchi sinov alohida bajariladi.
+
+
+TEZROQ AVTOMATIK ISHGA TUSHIRISH (Windows foydalanuvchisiga kirishda):
+- Yangi ZIPdagi barcha fayllarni printer-config.json bor papkaga oching.
+- TEST-NAVBOT-WINDOWS.bat faqat sintaksis/kompilyatsiyani tekshiradi;
+  printerga chiqarmaydi, Windows sozlamalari yoki vazifalarini o'zgartirmaydi.
+- INSTALL-NAVBOT-AUTOSTART.bat ni shu kiosk foydalanuvchisi ostida bir marta bosing.
+- Dastur fayllar va kalitni %LOCALAPPDATA%\NavBoT\NativeKiosk ga nusxalaydi.
+  Downloads papkasini ko'chirish/o'chirish bundan keyin avtoyuklashga ta'sir qilmaydi.
+- Task Schedulerga joriy foydalanuvchi kirishi bilan ishlaydigan PT0S vazifa
+  qo'shiladi. shell:startup papkasining Windows kechikishini kutmaydi.
+- Eski NAVBOT Startup BAT/yorliqlari va printer-config.json avtomatik
+  old-startup zaxira papkasiga ko'chiriladi; unrelated dasturlar tegilmaydi.
+- Faqat joriy foydalanuvchining RestartApps sozlamasi o'chiriladi: Windows
+  avvalgi VS Code/JSON oynasini qayta tiklamasin. Oldingi qiymat saqlanadi.
+- Windows paroli, avtomatik login yoki Explorer shell o'zgartirilmaydi.
+  Kiosk Windows foydalanuvchisiga kirilgandan keyin ochiladi, elektr yoqilgan
+  zahoti yoki Windowsning o'zi yuklanishidan oldin emas.
+- Windowsning o'z yuklanish va Chrome ochilish vaqti baribir kerak bo'ladi.
+- Chrome ochilishi printer yordamchisini yoki avvalgi 3 soniyalik taymerni
+  kutmaydi. Avval NAVBOT kutish ekrani ochiladi. Server/tarmoq tayyor bo'lgach,
+  shu oynaning o'zida kioskka o'tadi. Konfiguratsiya JSONi brauzerga berilmaydi.
+- Installer xato bersa, REMOVE-NAVBOT-AUTOSTART.bat qisman qo'llangan sozlamalarni
+  ham saqlangan manifest orqali tiklaydi. Ruxsat yo'q bo'lsa, shu kiosk
+  foydalanuvchisining Task Scheduler ruxsatini administrator tekshiradi.
+- Bekor qilish: REMOVE-NAVBOT-AUTOSTART.bat. Faqat shu foydalanuvchining NAVBOT
+  vazifasi olib tashlanadi; zaxiralangan yorliqlar va RestartApps avvalgi qiymati
+  (keyin qo'lda o'zgartirilmagan bo'lsa) tiklanadi. Printer kaliti o'chirilmaydi.
+- O'rnatilgan yo'l: %LOCALAPPDATA%\NavBoT\NativeKiosk.
+  startup-status.txt bo'lsa, unda kalitsiz umumiy xato saqlanadi.
+- Windowsdagi real logon/Task Scheduler va file:// navigatsiya shu qurilmada
+  tekshirilishi kerak. Brauzer siyosati lokal HTMLni taqiqlagan bo'lsa,
+  qurilma administratori aynan NAVBOT sahifasiga ruxsatni tekshiradi.
