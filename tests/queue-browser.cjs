@@ -37,17 +37,16 @@ const assert=require('node:assert/strict');
   await kiosk.locator('.tile').first().click();
   await kiosk.evaluate(()=>{window.printInvoked=0;window.print=()=>{window.printInvoked+=1}});
   await kiosk.locator('.tile').first().click();
+  await kiosk.waitForFunction(()=>window.printInvoked===1,null,{timeout:5000});
   await kiosk.locator('.receipt').waitFor({state:'attached'});
   const receipt=await kiosk.locator('.receipt').innerText();
   assert(receipt.includes(receiptLabel));
   assert(receipt.includes(timeLabel),'Receipt time label follows student language');
   assert(!receipt.includes('Invalid Date'));
   const number=await kiosk.locator('.receipt h2').innerText(); console.log('Testing',language,number);
-  await kiosk.waitForFunction(()=>window.printInvoked===1,null,{timeout:5000});
-  await kiosk.locator('#print-ticket').click();
-  await kiosk.locator('#print-ticket').click();
-  assert.equal(await kiosk.evaluate(()=>window.printInvoked),3,'Automatic print plus two reprints invokes printing without new ticket');
-  assert.equal(await kiosk.locator('.receipt h2').innerText(),number);
+  assert.equal(await kiosk.locator('#print-ticket').count(),0);
+  assert.equal(await kiosk.locator('.kiosk-ticket-feedback').count(),0);
+  assert.equal(await kiosk.locator('.tile').count(),5);
   await tv.locator('.waiting').getByText(number,{exact:true}).waitFor();
   const queueRow=operator.locator('.request-row').filter({hasText:number});
   if(!results.length){await queueRow.focus();await operator.waitForTimeout(2200);assert(await queueRow.evaluate(el=>document.activeElement===el),'Polling must preserve keyboard focus on queue row')}
@@ -72,7 +71,7 @@ const assert=require('node:assert/strict');
   assert(!publicText.includes('100000000001'));
   assert(!publicText.includes('Transkript'));
   results.push({language,number,receipt:true,reprint:true,call:true,recall:true,serving:true,finish:true,speechLanguage:voice});
-  await kiosk.locator('#new-ticket').click();
+
  }
  assert.deepEqual(errors,[]);
  console.log(JSON.stringify({results,pageErrors:errors,layout:'left call / right serving / bottom waiting verified at1440x1000',limits:'Speech API language/text verified; physical sound and printer not tested.'},null,2));
