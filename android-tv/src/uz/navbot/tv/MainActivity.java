@@ -93,8 +93,18 @@ public final class MainActivity extends Activity {
     }
     @Override public void onBackPressed() {
         new AlertDialog.Builder(this).setTitle("NAVBOT TV")
-            .setItems(new String[]{"Yangilash", "Ilovadan chiqish"},(d,which)->{
-                if(which==0)web.loadUrl(TV);else finish();
+            .setItems(new String[]{"Yangilash", "Yoqilganda ochilishni sozlash", "Ilovadan chiqish"},(d,which)->{
+                if(which==0)web.loadUrl(TV);
+                else if(which==1)configureHome();else finish();
+            }).setNegativeButton("Bekor qilish",null).show();
+    }
+    private void configureHome() {
+        new AlertDialog.Builder(this).setTitle("Avtomatik ochilish")
+            .setMessage("Keyingi sozlamada NAVBOT TV ni standart bosh ekran (Home) sifatida tanlang. Ortga qaytarish uchun Android sozlamalarida oldingi Launcher ni tanlashingiz mumkin.")
+            .setPositiveButton("Sozlamani ochish", (d,which) -> {
+                android.content.Intent intent=new android.content.Intent(android.provider.Settings.ACTION_HOME_SETTINGS);
+                if(intent.resolveActivity(getPackageManager())!=null)startActivity(intent);
+                else new AlertDialog.Builder(this).setMessage("Android sozlamalari → Ilovalar → Standart ilovalar → Bosh ekran bo‘limidan NAVBOT TV ni tanlang.").setPositiveButton("OK",null).show();
             }).setNegativeButton("Bekor qilish",null).show();
     }
     @Override protected void onDestroy() {web.destroy();super.onDestroy();}
