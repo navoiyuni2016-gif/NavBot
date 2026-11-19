@@ -98,6 +98,16 @@ body[data-page=kiosk] .public-main:before{top:-220px;right:-140px}
 body[data-page=kiosk] .public-main:after{bottom:-250px;left:-170px;border-color:#235f9a1a;box-shadow:0 0 0 42px #235f9a07,0 0 0 84px #235f9a05}
 }
 
+/* Keep kiosk cards legible when the shared browser preference is dark. */
+@media screen{
+html[data-theme=dark] body[data-page=kiosk] .public-main{background-color:#0b1f2e;background-image:radial-gradient(ellipse at 0% 0%,#00a39318,transparent 50%),radial-gradient(ellipse at 100% 100%,#3266a31a,transparent 48%),linear-gradient(#0b1f2ee8,#0b1f2ee8),url('/assets/student-pattern.svg')}
+html[data-theme=dark] body[data-page=kiosk] .kiosk-grid .tile{background:linear-gradient(135deg,#183448,#102737);color:#e4f0fa;border-color:#3b586b;box-shadow:0 4px 14px #00000018}
+html[data-theme=dark] body[data-page=kiosk] .kiosk-grid .tile:hover{background:#17443f;border-color:#45c5b4}
+html[data-theme=dark] body[data-page=kiosk] .kiosk-grid .tile .icon{color:#63deca;background:#173e43}
+html[data-theme=dark] body[data-page=kiosk] .kiosk-title h1{color:#e4f0fa}
+html[data-theme=dark] body[data-page=kiosk] .kiosk-title .muted{color:#bad0df}
+}
+
 /* The paper receipt is only a print target, never a separate kiosk preview. */
 @media screen{
 body[data-page=kiosk] .kiosk-print-receipt{display:none}
