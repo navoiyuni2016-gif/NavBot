@@ -58,6 +58,9 @@ def remove(db,user,data):
     preserved=0
     for student in rows:
         preserved+=db.execute("UPDATE requests SET student_snapshot=?,version=version+1 WHERE student_id=? AND deleted_at IS NULL AND student_snapshot IS NULL",(json.dumps(student,ensure_ascii=False),student['hemis_id'])).rowcount
+        if db.execute("SELECT 1 FROM sqlite_master WHERE name='telegram_links'").fetchone():
+            import telegram_bot
+            telegram_bot.forget_student(db,student['hemis_id'])
         db.execute('DELETE FROM students WHERE hemis_id=?',(student['hemis_id'],))
     db.execute('DELETE FROM student_delete_previews WHERE token_hash=?',(preview['token_hash'],))
     w.audit(db,user,'students_delete',{'count':len(rows),'hemis_ids':[r['hemis_id'] for r in rows],'preserved_requests':preserved})

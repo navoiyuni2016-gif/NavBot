@@ -169,3 +169,5 @@ Superadmin «Audit jurnali»da sana oralig‘i, xodim/login, IP, amal, natija, h
 10 daqiqada bir IPdan10 ta muvaffaqiyatsiz kirish yoki5 daqiqada3 ta maxfiy manzilni qidirish urinishida15 daqiqalik blok qo‘yiladi. Blok va yangi login IP haqidagi xabar superadminning bildirishnomasi va ochiq sahifadagi bannerda chiqadi. Auditdagi «Blokdan chiqarish» tekshirilgan IPni qayta ochadi. Bir IPni bir nechta xodim ishlatishi mumkinligini hisobga oling.
 
 «Brauzer xabarlari» HTTPS va brauzer ruxsatini talab qiladi. Hozirgi lokal HTTPda tizim ichidagi xabar ishlaydi. Brauzer yopiq paytdagi fon Web Push hali ulanmagan. Qoidalar barcha hujumni aniqlash kafolati emas; Nginx, UFW va SSH qatlamlari o‘z jurnallarini yuritadi. Tafsilotlar: [Audit himoyasi](../deploy/AUDIT-SECURITY.md).
+
+Talabalar Telegram boti: talaba kartasida “Telegramga bog‘lash”ni bosing. Shaxsini tekshirib, 10 daqiqalik bir martalik kod yarating. Talaba botda `/start`, HEMIS ID va kodni kiritadi. Rahbar tasdiqlagan javob va faqat tanlangan fayllar avtomatik yuboriladi. Batafsil foydalanish, o‘rnatish va yuborish xatolari: [TELEGRAM-BOT.md](TELEGRAM-BOT.md).

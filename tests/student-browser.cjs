@@ -10,6 +10,7 @@ const assert=require('node:assert/strict');
  await page.locator('#login-form [name=password]').fill('Navbot-Test-2026!');
  await page.locator('#login-form button[type=submit]').click();
  await page.waitForURL('**/manager');
+ await page.locator('#menu [data-view=requests]').click();
  const response=await page.request.post(base+'/api/ticket',{data:{key:crypto.randomUUID(),lang:'uz',section:0,service:0}});
  assert.equal(response.status(),200);
  const ticket=await response.json();

@@ -27,6 +27,7 @@ import attachments
 import audio_store
 import excel
 import integrations
+import telegram_bot
 import workflow as w
 
 ROOT = Path(__file__).resolve().parent
@@ -150,6 +151,12 @@ def mutate(db, path, data, user):
         w.kiosk_request(db, ticket, ticket['content_name'])
         return {k: ticket[k] for k in ('id', 'lang', 'section', 'service', 'created_at','prefix','queue_seq','target_operator')} | {'content': ticket['content_name'],'code':routing.code(ticket)}
     w.need(user, auth.ROLES)
+    if path == '/api/telegram/code':
+        return telegram_bot.issue_code(db,user,data)
+    if path == '/api/telegram/unlink':
+        return telegram_bot.unlink(db,user,data)
+    if path == '/api/telegram/retry':
+        return telegram_bot.retry(db,user,data)
     if path == '/api/security/unblock':
         return security_monitor.unblock(db,user,data,w.REQUEST_CONTEXT.get())
     if path == '/api/admin/students/status':
@@ -420,6 +427,16 @@ class Handler(BaseHTTPRequestHandler):
                 if url.path.startswith('/api/attachment/'):
                     body, mime, name = attachments.download(db, user, url.path.removeprefix('/api/attachment/'))
                     return self.send_body(body, mime, filename=name)
+                if url.path == '/api/telegram/student':
+                    w.need(user,('admin','manager'))
+                    sid=w.validate_id(parse_qs(url.query).get('hemis_id',[''])[0])
+                    return self.reply(telegram_bot.status(db,sid))
+                if url.path == '/api/telegram/request':
+                    row=w.get_request(db,user,int(parse_qs(url.query).get('id',['0'])[0]))
+                    return self.reply(telegram_bot.delivery(db,row['id']))
+                if url.path == '/api/telegram/health':
+                    w.need(user,('admin',))
+                    return self.reply(telegram_bot.health(db))
                 if url.path == '/api/users':
                     return self.reply({'users': auth.users(db)})
                 if url.path == '/api/requests':
@@ -627,6 +644,7 @@ def initialize(demo=False):
         student_registry.initialize(db)
         audio_store.initialize(db)
         integrations.initialize(db)
+        telegram_bot.initialize(db)
         with db:
             config=settings(db)
             for ticket in db.execute('SELECT * FROM tickets WHERE prefix IS NULL OR queue_seq IS NULL OR target_operator IS NULL').fetchall():

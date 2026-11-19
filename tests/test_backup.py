@@ -92,3 +92,19 @@ class BackupTests(unittest.TestCase):
         archive,counts=backup.create_backup(self.data,self.code,self.out,self.pause)
         self.assertEqual(counts,{'students':1,'requests':2,'active_requests':1,'deleted_request_reservations':1})
         self.assertEqual(backup.verify_backup(archive),counts)
+
+    def test_backup_stops_both_writers_and_resumes_in_reverse_order(self):
+        def result(args,**kwargs):
+            return subprocess.CompletedProcess(args,0,'loaded\n' if 'show' in args else 'active\n','')
+        with patch.object(backup.subprocess,'run',side_effect=result) as run:
+            with backup.stopped_services():pass
+        calls=[c.args[0] for c in run.call_args_list]
+        changes=[c for c in calls if c[1] in ('stop','start')]
+        self.assertEqual(changes,[['systemctl','stop','navbot-telegram.service'],['systemctl','stop','navbot.service'],['systemctl','start','navbot.service'],['systemctl','start','navbot-telegram.service']])
+
+    def test_backup_works_before_telegram_unit_is_installed(self):
+        def result(args,**kwargs):
+            return subprocess.CompletedProcess(args,0,'not-found\n' if 'show' in args else 'inactive\n','')
+        with patch.object(backup.subprocess,'run',side_effect=result) as run:
+            with backup.stopped_services():pass
+        self.assertFalse(any('navbot-telegram.service' in c.args[0] and c.args[0][1] in ('start','stop') for c in run.call_args_list))

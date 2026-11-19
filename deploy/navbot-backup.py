@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Private, consistent offline backup with an isolated restore check (stdlib only)."""
 import argparse
-from contextlib import contextmanager
+from contextlib import contextmanager, ExitStack
 from datetime import datetime, timezone
 import fcntl
 import hashlib
@@ -73,6 +73,18 @@ def stopped_service(service):
             subprocess.run(['systemctl', 'is-active', '--quiet', service], check=True)
 
 
+@contextmanager
+def stopped_services():
+    # Stop both writers before copying SQLite and its WAL sidecars.
+    with ExitStack() as stack:
+        state=subprocess.run(['systemctl','show','-p','LoadState','--value','navbot-telegram.service'],capture_output=True,text=True)
+        if state.returncode and state.stdout.strip()!='not-found':raise RuntimeError('Telegram service state is unknown')
+        if state.stdout.strip()=='loaded':stack.enter_context(stopped_service('navbot-telegram.service'))
+        elif state.stdout.strip()!='not-found':raise RuntimeError('Telegram service state is unknown')
+        stack.enter_context(stopped_service('navbot.service'))
+        yield
+
+
 def copy_checked(source, destination):
     # Avoid archiving secrets outside the selected folders through symbolic links.
     for path in [source, *source.rglob('*')]:
@@ -140,8 +152,12 @@ def main():
     configs = [Path('/etc/systemd/system/navbot.service'), Path('/etc/nginx/sites-available/navbot')]
     # Drop-ins are part of the live service configuration and must be restorable.
     configs.extend(sorted(Path('/etc/systemd/system/navbot.service.d').glob('*.conf')))
+    telegram_unit=Path('/etc/systemd/system/navbot-telegram.service')
+    if telegram_unit.is_file():
+        configs.append(telegram_unit)
+        configs.extend(sorted(Path('/etc/systemd/system/navbot-telegram.service.d').glob('*.conf')))
     destination, counts = create_backup('/var/lib/navbot', '/opt/navbot', '/var/backups/navbot',
-        lambda: stopped_service('navbot.service'), configs)
+        stopped_services, configs)
     print('Verified backup:', destination)
     print('Restored record counts:', json.dumps(counts))
 

@@ -20,6 +20,9 @@ def remove(db, user, data):
         rows.append(row)
     stamp=w.now()
     for row in rows:
+        if db.execute("SELECT 1 FROM sqlite_master WHERE name='telegram_outbox'").fetchone():
+            import telegram_bot
+            telegram_bot.forget_request(db,row['id'])
         for table in ('attachments','notifications','history'):
             db.execute(f'DELETE FROM {table} WHERE request_id=?',(row['id'],))
         # Keep only identity/counter tombstones; erase request payload and staff/student links.

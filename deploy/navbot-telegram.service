@@ -1,0 +1,28 @@
+[Unit]
+Description=NAVBOT student Telegram worker
+After=network-online.target navbot.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=navbot-svc
+Group=navbot-svc
+WorkingDirectory=/opt/navbot
+ExecStart=/usr/bin/python3 /opt/navbot/navbot/telegram_worker.py --db /var/lib/navbot/navbot.sqlite3
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=35
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/navbot
+RestrictSUIDSGID=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+CapabilityBoundingSet=
+
+[Install]
+WantedBy=multi-user.target
