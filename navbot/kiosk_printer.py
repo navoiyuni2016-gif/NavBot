@@ -144,7 +144,9 @@ def ticket_status(db,data):
         if not isinstance(raw,str) or str(UUID(raw))!=raw:raise ValueError()
     except (ValueError,TypeError,AttributeError):raise w.Problem('Chek so‘rov kalitini tekshiring')
     ticket=db.execute('SELECT t.id,r.deleted_at FROM tickets t JOIN requests r ON r.ticket_id=t.id WHERE t.request_key=?',(raw,)).fetchone()
-    if not ticket:raise w.Problem('Chek topilmadi',404)
+    if not ticket:
+        if db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='retired_test_tickets'").fetchone() and db.execute('SELECT 1 FROM retired_test_tickets WHERE request_key=?',(raw,)).fetchone():return {'state':'cancelled'}
+        raise w.Problem('Chek topilmadi',404)
     if ticket['deleted_at']:return {'state':'cancelled'}
     _expire(db)
     job=db.execute('SELECT state FROM kiosk_print_jobs WHERE ticket_id=?',(ticket['id'],)).fetchone()
