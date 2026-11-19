@@ -63,7 +63,7 @@ body[data-page=tv] .tv .serving .line{margin:clamp(6px,.6vw,12px);padding:clamp(
 .role-grants{border:1px solid var(--line);border-radius:12px;padding:16px;margin:16px 0}.role-grants[hidden]{display:none}.role-grants legend{font-size:14px;font-weight:700;padding:0 7px}.role-grants p{font-size:12px;line-height:1.6}.role-grants-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px}.role-grants-grid label{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500}.role-grants-grid input{flex-shrink:0;margin:0;width:17px;height:17px;accent-color:var(--teal)}.profile-roles{margin-top:24px}.profile-roles form{max-width:560px}
 .audit-controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:16px}.audit-help{font-size:12px;line-height:1.7;margin:18px 0}.security-audit-table{min-width:1250px}.security-audit-table td{vertical-align:top}.security-audit-table small,.audit-detail{overflow-wrap:anywhere}.audit-ip{font-family:ui-monospace,monospace}.audit-detail{max-width:440px;white-space:pre-wrap;font-size:12px;margin:10px 0}.audit-block-list{border:1px solid #d9a0a0;background:#b3303008;border-radius:12px;padding:18px;margin:18px 0}.audit-block{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 0}.audit-block>span{flex:1;min-width:140px}.audit-block button{font-size:12px}.security-alert-banner{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:#8b2525;color:white;border-radius:12px;padding:16px;margin-bottom:18px}.security-alert-banner strong{flex:1;min-width:160px;font-size:14px}.security-alert-banner button{font-size:12px;white-space:nowrap}.security-alert-banner #close-security-alert{padding:4px 10px;font-size:20px}
 
-/* Kiosk choices occupy the available display, including 4:3 info kiosks. */
+/* Full-screen kiosk shell with balanced, compact touch cards. */
 @media screen {
 body[data-page=kiosk] #app{min-height:100vh;min-height:100dvh;display:flex;flex-direction:column}
 body[data-page=kiosk] .public-header{flex:none;min-height:90px;padding:14px 2vw}
@@ -71,18 +71,47 @@ body[data-page=kiosk] .public-header .institution{font-size:clamp(16px,1.8vw,26p
 body[data-page=kiosk] .public-main{width:100%;max-width:none;margin:0;flex:1;display:flex;flex-direction:column;padding:16px 2vw 22px}
 body[data-page=kiosk] #controls{flex:none;margin-bottom:0}
 body[data-page=kiosk] #controls:empty{display:none}
-body[data-page=kiosk] .kiosk-choices{flex:1;display:flex;flex-direction:column}
+body[data-page=kiosk] .kiosk-choices{flex:1;display:flex;flex-direction:column;justify-content:center;padding:20px 0 40px}
 body[data-page=kiosk] .kiosk-title{max-width:none;flex:none;text-align:center;margin:8px 0 18px}
 body[data-page=kiosk] .kiosk-title:before{height:5px;margin:0 auto 10px}
-body[data-page=kiosk] .kiosk-title h1{font-size:clamp(28px,3.2vw,48px);margin-bottom:8px}
+body[data-page=kiosk] .kiosk-title h1{font-size:clamp(28px,2.6vw,38px);margin-bottom:8px}
 body[data-page=kiosk] .kiosk-title p{margin-bottom:0}
-body[data-page=kiosk] .kiosk-grid{display:flex;flex:1;flex-wrap:wrap;align-content:stretch;width:100%;max-width:none;margin:0;gap:16px}
-body[data-page=kiosk] .kiosk-grid .tile{flex:1 1 calc(33.333% - 16px);grid-column:auto;min-height:145px;justify-content:center;padding:24px;gap:20px;font-size:clamp(21px,2.3vw,36px)}
+body[data-page=kiosk] .kiosk-grid{display:grid;flex:none;grid-template-columns:repeat(6,minmax(0,1fr));align-content:start;width:100%;max-width:1120px;margin:0 auto;gap:16px}
+body[data-page=kiosk] .kiosk-grid .tile,body[data-page=kiosk] .kiosk-grid .tile:nth-child(n+4){grid-column:span 2;min-height:clamp(140px,16vh,180px);justify-content:flex-start;padding:20px;gap:16px;font-size:clamp(20px,1.8vw,28px);border-radius:16px;background:linear-gradient(135deg,#fff,#f3faf9);color:var(--ink);border:1px solid var(--line);box-shadow:0 4px 14px #12334a08}
+body[data-page=kiosk] .kiosk-grid .tile:nth-child(4):nth-last-child(2){grid-column:2 / span 2}
+body[data-page=kiosk] .kiosk-grid.section-kiosk .tile{border-bottom:3px solid var(--teal)}
+body[data-page=kiosk] .kiosk-grid .tile:hover{background:#e8f7f3;border-color:var(--teal);box-shadow:0 5px 18px #008f8318}
 body[data-page=kiosk] .kiosk-grid .tile>span:last-child{overflow-wrap:anywhere}
-body[data-page=kiosk] .kiosk-grid .tile .icon{flex:none;min-width:70px;padding:10px}
-body[data-page=kiosk] .kiosk-grid .tile .icon svg{width:54px;height:54px}
-@media(max-width:740px){body[data-page=kiosk] .kiosk-grid .tile{flex-basis:calc(50% - 16px);min-height:135px;padding:18px;gap:12px;font-size:22px}body[data-page=kiosk] .kiosk-grid .tile .icon{min-width:48px;padding:5px}body[data-page=kiosk] .kiosk-grid .tile .icon svg{width:38px;height:38px}}
-@media(max-width:420px){body[data-page=kiosk] .kiosk-grid .tile{flex-basis:100%;min-height:115px}}
+body[data-page=kiosk] .kiosk-grid .tile .icon{flex:none;min-width:60px;padding:10px;border-radius:13px;color:var(--teal);background:#e3f4f0}
+body[data-page=kiosk] .kiosk-grid .tile .icon svg{width:40px;height:40px}
+body[data-page=kiosk] .kiosk-grid .tile .icon img{width:40px!important;height:40px!important}
+@media(max-width:740px){body[data-page=kiosk] .kiosk-grid .tile:nth-child(4):nth-last-child(2){grid-column:auto}body[data-page=kiosk] .kiosk-grid{grid-template-columns:repeat(2,minmax(0,1fr));max-width:620px}body[data-page=kiosk] .kiosk-grid .tile,body[data-page=kiosk] .kiosk-grid .tile:nth-child(n+4){grid-column:auto;min-height:125px;padding:16px;gap:12px;font-size:20px}body[data-page=kiosk] .kiosk-grid .tile .icon{min-width:48px;padding:5px}body[data-page=kiosk] .kiosk-grid .tile .icon svg{width:38px;height:38px}}
+@media(max-width:420px){body[data-page=kiosk] .kiosk-grid{grid-template-columns:1fr}body[data-page=kiosk] .kiosk-grid .tile{min-height:100px}body[data-page=kiosk] .kiosk-choices{padding:10px 0}}
+
+}
+
+/* Quiet academic backdrop, shared with the student app; never printed. */
+@media screen{
+body[data-page=kiosk] .public-main{position:relative;isolation:isolate;overflow:hidden;background-color:#f2f8fa;background-image:radial-gradient(ellipse at 0% 0%,#00a3931c,transparent 50%),radial-gradient(ellipse at 100% 100%,#3266a31a,transparent 48%),linear-gradient(#f4fafb88,#f4fafb88),url('/assets/student-pattern.svg');background-size:auto,auto,auto,360px 405px;background-position:center}
+body[data-page=kiosk] .public-main:before,body[data-page=kiosk] .public-main:after{content:'';position:absolute;z-index:-1;pointer-events:none;width:400px;height:400px;border:1px solid #008f831a;border-radius:50%;box-shadow:0 0 0 42px #008f8307,0 0 0 84px #008f8305}
+body[data-page=kiosk] .public-main:before{top:-220px;right:-140px}
+body[data-page=kiosk] .public-main:after{bottom:-250px;left:-170px;border-color:#235f9a1a;box-shadow:0 0 0 42px #235f9a07,0 0 0 84px #235f9a05}
+}
+
+/* The paper receipt is only a print target, never a separate kiosk preview. */
+@media screen{
+body[data-page=kiosk] .kiosk-print-receipt{display:none}
+.kiosk-ticket-feedback{max-width:540px;margin:30px auto;text-align:center;padding:26px}
+.kiosk-ticket-feedback h1{font-size:72px;margin:8px 0 12px;letter-spacing:-2px;color:var(--teal)}
+.kiosk-ticket-feedback .row{justify-content:center;margin-top:22px}
+}
+@media print{
+@page{size:auto;margin:2mm}
+.kiosk-print-receipt{display:block!important;width:74mm;max-width:74mm;padding:1mm;margin:0;line-height:1.15}
+.kiosk-print-receipt p,.kiosk-print-receipt p:first-child{font-size:10px;line-height:1.2;padding:1px 0;margin:2px 0;border:0}
+.kiosk-print-receipt h2{font-size:40px;line-height:1.05;margin:4px 0;padding:4px 0;border-top:1px dashed #444;border-bottom:1px dashed #444;letter-spacing:0}
+.kiosk-print-receipt .receipt-label{margin-top:5px;font-size:9px}
+.kiosk-print-receipt .receipt-time,.kiosk-print-receipt .receipt-footer{font-size:9px;margin-top:5px}
 }
 </style></head><body><div id="app"></div><div id="toast" class="toast" role="status" hidden></div>
 <script src="/assets/i18n.js"></script>
@@ -127,11 +156,16 @@ function notice(message){const el=$('#notice');if(el)el.textContent=t(message||'
 function publicShell(){document.body.dataset.page=state.page;app.innerHTML=html`<header class="public-header">${brandLogo()}<div class="institution" id="brand"></div></header><main class="public-main"><div id="controls" class="controls"></div><div id="notice" class="notice" role="status"></div><div id="content"></div></main>`;publicTitle()}
 function publicTitle(){refreshBranding();document.documentElement.lang=languages[state.lang];$('#brand').textContent=state.page==='tv'?t('ToşDÖTAU')+' · '+state.settings.office[state.lang]:state.settings.university[state.lang]+' · '+state.settings.office[state.lang]}
 function kiosk(){state.page='kiosk';document.body.dataset.page='kiosk';publicTitle();const controls=$('#controls'),content=$('#content');controls.innerHTML='';content.innerHTML='';content.classList.toggle('kiosk-choices',!state.ticket);
- if(state.ticket){const t=state.ticket;const i=languages.indexOf(t.lang);state.lang=i<0?state.lang:i;publicTitle();content.innerHTML=html`<section class="receipt"><p>${esc(state.settings.university[state.lang])}</p><p><strong>${esc(state.settings.office[state.lang])}</strong></p><p>${esc(tr(3))}</p><h2>${esc(number(t))}</h2><p>${esc(tr(12))} · ${esc(state.catalog[t.section][0][state.lang])}</p><p><strong>${esc(tr(4))}</strong><br>${esc(t.content||serviceName(t))}</p><p>${esc(tr(13))} · ${esc(dateText(t.created_at||t.created))}</p><p>${esc(state.settings.receipt_footer?.[state.lang]||tr(11))}</p></section><button class="primary" id="print-ticket">${esc(tr(5))}</button> <button id="new-ticket">${esc(tr(6))}</button>`;$('#print-ticket').onclick=()=>window.print();$('#new-ticket').onclick=()=>{state.ticket=null;state.section=null;state.key=null;state.pending=null;sessionStorage.removeItem('navbot-ticket');kiosk()};return}
+ if(state.ticket){const ticket=state.ticket;const i=languages.indexOf(ticket.lang);state.lang=i<0?state.lang:i;publicTitle();content.innerHTML=html`<section class="receipt kiosk-print-receipt"><p class="receipt-university">${esc(state.settings.university[state.lang])}</p><p><strong>${esc(state.settings.office[state.lang])}</strong></p><p class="receipt-label">${esc(tr(3))}</p><h2>${esc(number(ticket))}</h2><p>${esc(tr(12))} · ${esc(state.catalog[ticket.section][0][state.lang])}</p><p><strong>${esc(ticket.content||serviceName(ticket))}</strong></p><p class="receipt-time">${esc(tr(13))} · ${esc(dateText(ticket.created_at||ticket.created))}</p><p class="receipt-footer">${esc(state.settings.receipt_footer?.[state.lang]||tr(11))}</p></section><section class="kiosk-ticket-feedback panel" role="status"><p>${esc(tr(3))}</p><h1>${esc(number(ticket))}</h1><p>${esc(ticket.content||serviceName(ticket))}</p><small>${esc(state.settings.receipt_footer?.[state.lang]||tr(11))}</small><div class="row"><button class="primary" id="new-ticket">${esc(tr(6))}</button><button id="print-ticket">${esc(tr(5))}</button></div></section>`;$('#print-ticket').onclick=printKioskTicket;$('#new-ticket').onclick=resetKioskTicket;return}
+
  controls.innerHTML=($('#ui-utilities')?'':languages.map((l,i)=>html`<button data-lang="${i}" aria-pressed="${i===state.lang}">${esc(words[i][15])}</button>`).join(''))+(state.section!==null?html`<button id="back">${esc(tr(2))}</button>`:'');controls.querySelectorAll('[data-lang]').forEach(el=>el.onclick=()=>{if(!state.busy&&state.pending===null){state.lang=Number(el.dataset.lang);NavI18n.setLanguage(languages[state.lang]);document.documentElement.lang=languages[state.lang];state.section=null;kiosk()}});if($('#back'))$('#back').onclick=()=>{if(!state.busy&&state.pending===null){state.section=null;kiosk()}};
  function choiceLogo(i){const section=state.section===null?i:state.section;const source=state.settings.section_logos?.[section];return source?html`<img src="${esc(source)}" alt="" style="width:64px;height:64px;object-fit:contain;display:block">`:iconList[section]}const choices=state.section===null?state.catalog.map(x=>x[0]):state.catalog[state.section][1];content.innerHTML=html`<div class="kiosk-title"><p class="eyebrow">NAVBOT · ${esc(state.settings.office[state.lang])}</p><h1>${esc(state.section===null?tr(0):state.catalog[state.section][0][state.lang])}</h1>${state.section===null?'':html`<p class="muted">${esc(tr(1))}</p>`}</div><div class="grid kiosk-grid ${state.section!==null?'section-kiosk':''}">${choices.map((translations,i)=>state.section!==null&&state.settings.hidden_services?.includes(state.section+':'+i)?'':html`<button class="tile" data-choice="${i}" ${state.busy||(state.pending!==null&&state.pending!==i)?'disabled':''}><span class="icon" aria-hidden="true">${choiceLogo(i)}</span><span>${esc(translations[state.lang])}</span></button>`).join('')}</div>`;
  content.querySelectorAll('[data-choice]').forEach(el=>el.onclick=()=>{if(state.section===null){state.section=Number(el.dataset.choice);kiosk()}else issue(Number(el.dataset.choice))});}
-async function issue(service){if(state.busy)return;let issuedId=null;state.busy=true;state.pending=service;if(!state.key)state.key=requestKey();notice('');kiosk();try{state.ticket=await api('/api/ticket',{lang:languages[state.lang],section:state.section,service,key:state.key});sessionStorage.setItem('navbot-ticket',JSON.stringify(state.ticket));issuedId=state.ticket.id;state.pending=null}catch(e){notice(e.message)}finally{state.busy=false;kiosk()}if(issuedId!==null)requestAnimationFrame(()=>requestAnimationFrame(()=>{if(state.ticket?.id===issuedId){try{window.print()}catch(e){notice(e.message)}}}))}
+let kioskReturnTimer=null,kioskPrintId=null;
+function resetKioskTicket(){clearTimeout(kioskReturnTimer);kioskPrintId=null;state.ticket=null;state.section=null;state.key=null;state.pending=null;sessionStorage.removeItem('navbot-ticket');kiosk()}
+function printKioskTicket(){if(!state.ticket)return;clearTimeout(kioskReturnTimer);kioskPrintId=state.ticket.id;try{window.print()}catch(error){kioskPrintId=null;notice(error.message)}}
+window.addEventListener('afterprint',()=>{if(state.page!=='kiosk'||!state.ticket||state.ticket.id!==kioskPrintId)return;const id=kioskPrintId;clearTimeout(kioskReturnTimer);kioskReturnTimer=setTimeout(()=>{if(state.page==='kiosk'&&state.ticket?.id===id)resetKioskTicket()},4000)});
+async function issue(service){if(state.busy)return;let issuedId=null;state.busy=true;state.pending=service;if(!state.key)state.key=requestKey();notice('');kiosk();try{state.ticket=await api('/api/ticket',{lang:languages[state.lang],section:state.section,service,key:state.key});sessionStorage.setItem('navbot-ticket',JSON.stringify(state.ticket));issuedId=state.ticket.id;state.pending=null}catch(e){notice(e.message)}finally{state.busy=false;kiosk()}if(issuedId!==null)requestAnimationFrame(()=>requestAnimationFrame(()=>{if(state.ticket?.id===issuedId)printKioskTicket()}))}
 function operatorLabel(item){return state.settings.operator_labels?.[String(item.operator)]?.[state.lang]||(state.lang===0?item.operator+'-operator':state.lang===1?item.operator+'-е окно':'counter '+item.operator)}
 function tvHeading(n){return state.settings.tv_titles?.[state.lang]?.[n]||tr(7+n)}
 function serving(q){return html`<section class="panel serving"><h2>${esc(tvHeading(1))}</h2>${q.serving.length?q.serving.map(t=>html`<div class="line target">${esc(operatorLabel(t))} · ${esc(number(t))}</div>`).join(''):staticHTML('<p>—</p>')}</section>`}
