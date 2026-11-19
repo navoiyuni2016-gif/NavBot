@@ -526,6 +526,11 @@ class Handler(BaseHTTPRequestHandler):
                 filename=data.get('filename') or data.get('name')
                 if isinstance(filename,str):self._audit_context['filename']=security_monitor.clean(filename)
                 self._audit_context['category']='upload'
+            if self.path == '/api/kiosk-printer/status':
+                with closing(connection()) as db,db:
+                    db.execute('BEGIN IMMEDIATE')
+                    response=kiosk_printer.ticket_status(db,data)
+                return self.reply(response)
             if self.path == '/api/kiosk-printer/agent':
                 with closing(connection()) as db,db:
                     db.execute('BEGIN IMMEDIATE')

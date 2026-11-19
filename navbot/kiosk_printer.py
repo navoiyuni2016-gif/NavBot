@@ -134,3 +134,18 @@ def agent(db,authorization,data):
         db.execute("UPDATE kiosk_print_jobs SET state='printing',claim=?,worker=?,lease_until=?,updated_at=? WHERE ticket_id=?",(claim,worker,now+120,now,row['ticket_id']))
         row=db.execute('SELECT * FROM kiosk_print_jobs WHERE ticket_id=?',(row['ticket_id'],)).fetchone()
     return {'job':{'ticket_id':row['ticket_id'],'claim':row['claim'],'state':row['state'],'fresh':fresh,'receipt':json.loads(row['payload'])}}
+
+
+def ticket_status(db,data):
+    """Read only the state of a ticket identified by its unguessable request key."""
+    from uuid import UUID
+    try:
+        raw=data.get('key')
+        if not isinstance(raw,str) or str(UUID(raw))!=raw:raise ValueError()
+    except (ValueError,TypeError,AttributeError):raise w.Problem('Chek so‘rov kalitini tekshiring')
+    ticket=db.execute('SELECT t.id,r.deleted_at FROM tickets t JOIN requests r ON r.ticket_id=t.id WHERE t.request_key=?',(raw,)).fetchone()
+    if not ticket:raise w.Problem('Chek topilmadi',404)
+    if ticket['deleted_at']:return {'state':'cancelled'}
+    _expire(db)
+    job=db.execute('SELECT state FROM kiosk_print_jobs WHERE ticket_id=?',(ticket['id'],)).fetchone()
+    return {'state':job['state'] if job else 'browser'}

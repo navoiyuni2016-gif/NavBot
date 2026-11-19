@@ -75,6 +75,17 @@ class KioskPrinterAcceptance(WorkflowAcceptance):
         self.assertNotIn(credentials['token'],logs)
         self.assertNotIn('token_hash',json.dumps(self.ok(self.client('admin'),'/api/admin/kiosk-printer')))
 
+    def test_ticket_status_requires_nonce_and_tracks_spooling(self):
+        credentials=self.pair();self.poll(credentials)
+        data={'key':str(uuid4()),'lang':'uz','section':0,'service':0,'print_capability':'native-v1'}
+        self.ok(self.public,'/api/ticket',data)
+        def status():return self.ok(self.public,'/api/kiosk-printer/status',{'key':data['key']})
+        self.assertEqual(status(),{'state':'pending'})
+        self.assertEqual(self.public.request('/api/kiosk-printer/status',{'key':'1'})[0],400)
+        self.assertEqual(self.public.request('/api/kiosk-printer/status',{'key':str(uuid4())})[0],404)
+        job=self.poll(credentials);self.assertEqual(status(),{'state':'printing'})
+        self.acknowledge(credentials,job);self.assertEqual(status(),{'state':'spooled'})
+
 for name in list(WorkflowAcceptance.__dict__):
     if name.startswith('test_') and name not in KioskPrinterAcceptance.__dict__:setattr(KioskPrinterAcceptance,name,None)
 del WorkflowAcceptance
