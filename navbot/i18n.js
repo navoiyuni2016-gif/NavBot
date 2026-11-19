@@ -489,3 +489,10 @@ NavI18n.add([["Arizalar","Обращения","Requests"],["Soni","Количе�
 NavI18n.add([["Talabani qidiriş", "Поиск студента", "Find student"], ["Ism-familiya yoki HEMIS ID", "Ф.И.О. или HEMIS ID", "Full name or HEMIS ID"], ["Ism-familiya yoki HEMIS IDni kiriting (2–120 belgi)", "Введите Ф.И.О. или HEMIS ID (2–120 символов)", "Enter name or HEMIS ID (2–120 characters)"], ["Talaba topilmadi. Ism-familiya yoki HEMIS IDni tekşiring.", "Студент не найден. Проверьте Ф.И.О. или HEMIS ID.", "Student not found. Check the name or HEMIS ID."], ["Natijadan talabani tanlang", "Выберите студента из результатов", "Select a student from results"], ["Natijalar köp. Qidiruvni aniqlashtiring.", "Слишком много результатов. Уточните запрос.", "More results available. Refine your search."], ["Qidiruv natijasidan talabani tanlang", "Выберите студента из результатов поиска", "Select a student from search results"]]);
 
 NavI18n.add([["Çek printerga yuborilmoqda. Iltimos, qayta bosmang.","Чек передаётся принтеру. Пожалуйста, не нажимайте повторно.","Sending your ticket to the printer. Please do not press again."],["Navbat yaratilmoqda…","Создаётся талон…","Creating your ticket…"],["Printer javobi kutilmoqda. Xodimga murojaat qiling.","Ожидается ответ принтера. Обратитесь к сотруднику.","Waiting for the printer. Please contact staff."],["Printer bilan aloqa vaqtincha uzildi. Qayta bosmang.","Связь с принтером временно потеряна. Не нажимайте повторно.","Printer connection interrupted. Please do not press again."],["Çek bekor qilindi. Xodimga murojaat qiling.","Талон отменён. Обратитесь к сотруднику.","Ticket cancelled. Please contact staff."]]);
+
+NavI18n.add([
+['Kelmadi — navbatni yopish','Не пришёл — закрыть очередь','No show — close ticket'],
+['Talaba kelmadi — navbat yopildi','Студент не пришёл — очередь закрыта','Student did not attend — ticket closed'],
+['Talaba kelmadi','Студент не пришёл','Student did not attend'],
+['Chaqiruvga kelmadi','Не явился по вызову','Did not attend the call']
+]);

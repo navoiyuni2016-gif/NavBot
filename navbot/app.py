@@ -255,6 +255,11 @@ def mutate(db, path, data, user):
         raise w.Problem('Boşqa operator uçun vakolat yöq', 403)
     action = data.get('action')
     desk = db.execute("SELECT * FROM tickets WHERE operator=? AND status IN ('called','serving')", (operator,)).fetchone()
+    expected=data.get('ticket_id')
+    if action!='call' and expected is not None and (type(expected) is not int or not desk or expected!=desk['id']):
+        raise w.Problem('Navbat o‘zgargan. Oynani yangilang.',409)
+    if action=='no_show' and type(expected) is not int:
+        raise w.Problem('Yopiladigan chekni tanlang',400)
     if action == 'call' and desk is None:
         ticket_id = data.get('ticket_id')
         if ticket_id is not None and type(ticket_id) is not int:
@@ -273,6 +278,12 @@ def mutate(db, path, data, user):
         desk = ticket
     elif not desk or action == 'call':
         raise w.Problem('Operator holati özgargan', 409)
+    elif action == 'no_show' and desk['status'] == 'called':
+        req=db.execute('SELECT * FROM requests WHERE ticket_id=?',(desk['id'],)).fetchone()
+        if not req or req['status']!='new' or req['assignee_id'] is not None or req['deleted_at'] is not None:
+            raise w.Problem('Bu murojaat bo‘yicha ish boshlangan. Kelmadi deb yopib bo‘lmaydi.',409)
+        db.execute("UPDATE tickets SET status='done' WHERE id=?",(desk['id'],))
+        db.execute("UPDATE requests SET status='closed',closed_at=?,result=?,unresolved_reason=? WHERE id=?",(w.now(),'Talaba kelmadi','Chaqiruvga kelmadi',req['id']))
     elif action == 'start' and desk['status'] == 'called':
         db.execute("UPDATE tickets SET status='serving' WHERE id=?", (desk['id'],))
     elif action == 'finish' and desk['status'] == 'serving':
@@ -286,7 +297,7 @@ def mutate(db, path, data, user):
         req = db.execute('SELECT id FROM requests WHERE ticket_id=?', (desk['id'],)).fetchone()
         if req:
             db.execute('UPDATE requests SET version=version+1,updated_at=? WHERE id=?', (w.now(), req['id']))
-            w.record(db, req['id'], user, 'queue_' + action, {'operator': operator,'queue_code':routing.code(desk)})
+            w.record(db, req['id'], user, 'queue_' + action, {'operator': operator,'queue_code':routing.code(desk),**({'reason':'Chaqiruvga kelmadi'} if action=='no_show' else {})})
     return snapshot(db, operator)
 
 

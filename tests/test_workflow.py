@@ -170,6 +170,27 @@ class WorkflowAcceptance(unittest.TestCase):
         self.ok(self.public, '/api/logout', {})
         self.assertIsNone(self.ok(self.public, '/api/me')['user'])
 
+    def test_operator_recalls_then_closes_absent_student_and_calls_next(self):
+        first=self.ticket();second=self.ticket();manager=self.client('manager')
+        self.assertEqual(manager.request('/api/action',{'operator':1,'action':'no_show','ticket_id':first['id']})[0],409)
+        self.ok(manager,'/api/action',{'operator':1,'action':'call','ticket_id':first['id']})
+        for _ in range(3):self.ok(manager,'/api/action',{'operator':1,'action':'recall','ticket_id':first['id']})
+        self.assertEqual(self.client('manager2').request('/api/action',{'operator':1,'action':'no_show','ticket_id':first['id']})[0],403)
+        self.assertEqual(manager.request('/api/action',{'operator':1,'action':'no_show','ticket_id':second['id']})[0],409)
+        state=self.ok(manager,'/api/action',{'operator':1,'action':'no_show','ticket_id':first['id']})
+        self.assertIsNone(state['desk']);self.assertIsNone(state['current'])
+        self.assertEqual([x['id'] for x in state['waiting']],[second['id']])
+        closed=next(r for r in self.requests('manager') if r['ticket_id']==first['id'])
+        self.assertEqual(closed['status'],'closed');self.assertEqual(closed['result'],'Talaba kelmadi')
+        self.assertEqual(sum(h['action']=='queue_no_show' for h in closed['history']),1)
+        self.assertEqual(len(self.ok(self.public,'/api/state?1,0')['events']),4)
+        self.ok(manager,'/api/action',{'operator':1,'action':'call','ticket_id':second['id']})
+        # A stale browser action for the previous ticket cannot close the next one.
+        self.assertEqual(manager.request('/api/action',{'operator':1,'action':'no_show','ticket_id':first['id']})[0],409)
+        self.ok(manager,'/api/action',{'operator':1,'action':'start','ticket_id':second['id']})
+        self.assertEqual(manager.request('/api/action',{'operator':1,'action':'no_show','ticket_id':second['id']})[0],409)
+        self.ok(manager,'/api/action',{'operator':1,'action':'finish','ticket_id':second['id']})
+
     def test_kiosk_idempotency_queue_lifecycle_and_public_privacy(self):
         key = str(uuid4())
         ticket = self.ticket(lang='ru', key=key)
