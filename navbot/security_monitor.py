@@ -9,7 +9,7 @@ import workflow as w
 
 COLUMNS={'ip':"TEXT NOT NULL DEFAULT ''",'method':"TEXT NOT NULL DEFAULT ''",'path':"TEXT NOT NULL DEFAULT ''",'http_status':'INTEGER NOT NULL DEFAULT 200','category':"TEXT NOT NULL DEFAULT 'business'",'severity':"TEXT NOT NULL DEFAULT 'info'",'actor_username':"TEXT NOT NULL DEFAULT ''",'actor_name':"TEXT NOT NULL DEFAULT ''",'actor_role':"TEXT NOT NULL DEFAULT ''",'filename':"TEXT NOT NULL DEFAULT ''",'request_bytes':'INTEGER NOT NULL DEFAULT 0','response_bytes':'INTEGER NOT NULL DEFAULT 0','hits':'INTEGER NOT NULL DEFAULT 1','request_ref':"TEXT NOT NULL DEFAULT ''",'user_agent':"TEXT NOT NULL DEFAULT ''",'rollup_key':'TEXT'}
 PUBLIC_READ=('/', '/login','/kiosk','/tv','/tablo','/assets/i18n.js','/api/catalog','/api/state','/api/settings','/api/audio','/api/audio/plan','/api/branding')
-POLL_PATHS=('/api/state','/api/settings','/api/catalog','/api/requests','/api/notifications','/api/me','/api/security/audit')
+POLL_PATHS=('/api/kiosk-printer/agent','/api/admin/kiosk-printer','/api/state','/api/settings','/api/catalog','/api/requests','/api/notifications','/api/me','/api/security/audit')
 RECOVERY=('/api/me','/api/notifications','/api/profile/role','/api/security/audit','/api/security/unblock','/admin','/profile','/assets/i18n.js')
 
 

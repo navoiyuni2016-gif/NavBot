@@ -6,3 +6,7 @@ __pycache__/
 *.integration-secrets/
 
 /private/
+
+printer-config.json
+print-journal.json
+print-journal.json.tmp

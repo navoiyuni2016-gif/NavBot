@@ -29,6 +29,7 @@ import excel
 import integrations
 import telegram_bot
 import telegram_mini
+import kiosk_printer
 import workflow as w
 
 ROOT = Path(__file__).resolve().parent
@@ -134,6 +135,8 @@ def mutate(db, path, data, user):
     if path == '/api/ticket':
         key = str(UUID(data.get('key', '')))
         section, service, lang = w.selection(data, config['catalog'])
+        if kiosk_printer.mode(db)=='agent' and data.get('print_capability')!='native-v1':
+            raise w.Problem('Kiosk oynasini yopib, yangi ishga tushirish fayli bilan qayta oching',409)
         existing = db.execute('SELECT * FROM tickets WHERE request_key=?', (key,)).fetchone()
         if existing:
             if (existing['lang'], existing['section'], existing['service']) != (lang, section, service):
@@ -142,6 +145,7 @@ def mutate(db, path, data, user):
                 raise w.Problem('Öçirilgan murojaatni qayta yaratib bölmaydi',409)
             ticket = dict(existing)
         else:
+            kiosk_printer.ensure_ready(db)
             if f'{section}:{service}' in config['hidden_services']:
                 raise w.Problem('Xizmat vaqtinça mavjud emas', 409)
             route = routing.for_section(config['section_routes'], section)
@@ -150,8 +154,11 @@ def mutate(db, path, data, user):
                        (key, lang, section, service, w.now(), config['catalog'][section][1][service][LANGUAGES.index(lang)],route['prefix'],sequence,route['operator']))
             ticket = dict(db.execute('SELECT * FROM tickets WHERE request_key=?', (key,)).fetchone())
         w.kiosk_request(db, ticket, ticket['content_name'])
-        return {k: ticket[k] for k in ('id', 'lang', 'section', 'service', 'created_at','prefix','queue_seq','target_operator')} | {'content': ticket['content_name'],'code':routing.code(ticket)}
+        print_result=kiosk_printer.enqueue(db,ticket,config)
+        return {k: ticket[k] for k in ('id', 'lang', 'section', 'service', 'created_at','prefix','queue_seq','target_operator')} | {'content': ticket['content_name'],'code':routing.code(ticket),**print_result}
     w.need(user, auth.ROLES)
+    if path == '/api/admin/kiosk-printer':
+        return kiosk_printer.configure(db,user,data)
     if path == '/api/telegram/mini-config':
         return telegram_mini.save_config(db,user,data)
     if path == '/api/telegram/code':
@@ -388,6 +395,8 @@ class Handler(BaseHTTPRequestHandler):
         try:
             if url.path in ('/', '/kiosk', '/operator', '/manager', '/tv', '/tablo', '/login', '/executor', '/head', '/director', '/admin', '/profile'):
                 return self.send_body((ROOT / 'index.html').read_bytes(), 'text/html; charset=utf-8')
+            if url.path == '/downloads/NAVBOT-NATIVE.zip':
+                return self.send_body((ROOT.parent / 'downloads' / 'NAVBOT-NATIVE.zip').read_bytes(),'application/zip',filename='NAVBOT-NATIVE.zip')
             if url.path == '/student':
                 return self.send_body((ROOT / 'student.html').read_bytes(),'text/html; charset=utf-8')
             mini_assets={'/assets/student.js':('student.js','text/javascript; charset=utf-8'),'/assets/student.css':('student.css','text/css; charset=utf-8'),'/assets/student-pattern.svg':('student-pattern.svg','image/svg+xml')}
@@ -438,6 +447,9 @@ class Handler(BaseHTTPRequestHandler):
                 if url.path.startswith('/api/attachment/'):
                     body, mime, name = attachments.download(db, user, url.path.removeprefix('/api/attachment/'))
                     return self.send_body(body, mime, filename=name)
+                if url.path == '/api/admin/kiosk-printer':
+                    w.need(user,('admin',))
+                    return self.reply(kiosk_printer.metadata(db))
                 if url.path == '/api/telegram/mini-config':
                     w.need(user,('admin',))
                     return self.reply(telegram_mini.config(db))
@@ -514,6 +526,11 @@ class Handler(BaseHTTPRequestHandler):
                 filename=data.get('filename') or data.get('name')
                 if isinstance(filename,str):self._audit_context['filename']=security_monitor.clean(filename)
                 self._audit_context['category']='upload'
+            if self.path == '/api/kiosk-printer/agent':
+                with closing(connection()) as db,db:
+                    db.execute('BEGIN IMMEDIATE')
+                    response=kiosk_printer.agent(db,self.headers.get('Authorization',''),data)
+                return self.reply(response)
             if self.path == '/api/telegram/mini':
                 with closing(connection()) as db,db:
                     db.execute('BEGIN IMMEDIATE')
@@ -668,6 +685,7 @@ def initialize(demo=False):
         integrations.initialize(db)
         telegram_bot.initialize(db)
         telegram_mini.initialize(db)
+        kiosk_printer.initialize(db)
         with db:
             config=settings(db)
             for ticket in db.execute('SELECT * FROM tickets WHERE prefix IS NULL OR queue_seq IS NULL OR target_operator IS NULL').fetchall():

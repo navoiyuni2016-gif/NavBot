@@ -20,6 +20,8 @@ def remove(db, user, data):
         rows.append(row)
     stamp=w.now()
     for row in rows:
+        if row['ticket_id'] and db.execute("SELECT 1 FROM sqlite_master WHERE name='kiosk_print_jobs'").fetchone():
+            db.execute("UPDATE kiosk_print_jobs SET state='cancelled',payload='{}' WHERE ticket_id=?",(row['ticket_id'],))
         if db.execute("SELECT 1 FROM sqlite_master WHERE name='telegram_outbox'").fetchone():
             import telegram_bot
             telegram_bot.forget_request(db,row['id'])

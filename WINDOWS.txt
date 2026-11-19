@@ -52,3 +52,11 @@ MAVJUD LAN SERVERIGA ULANGAN INFO KIOSK:
   ishlatayotganingizni tekshiring; allaqachon ochiq shu profil yangi flaglarni olmaydi.
 - Sayt kodi brauzer yoki Windows printer siyosatini majburan almashtira olmaydi.
   Haqiqiy dialogsiz chop etish foydalanuvchining Windows qurilmasida tekshiriladi.
+
+CHROME OYNASI MILTILLAMASDAN CHEK CHIQARISH:
+--kiosk-printing ham Chrome print oynasini qisqa ko'rsatishi mumkin.
+To'liq oynasiz yo'l: superadmin -> Kiosk, TV va tablo -> Oynasiz chek chiqarish.
+Windows yordamchisi ZIPini yuklang, alohida papkaga oching. Printer sozlamasini
+shu sahifada yarating va printer-config.json faylini ZIP papkasiga qo'ying.
+START-NAVBOT-NATIVE.bat orqali oching. Boshqa kiosk oynalari yopiq bo'lsin.
+Batafsil: deploy/NATIVE-PRINTER-README.txt. Fizik standart 80 mm printer zarur.
