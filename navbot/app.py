@@ -28,6 +28,7 @@ import audio_store
 import excel
 import integrations
 import telegram_bot
+import telegram_mini
 import workflow as w
 
 ROOT = Path(__file__).resolve().parent
@@ -151,6 +152,8 @@ def mutate(db, path, data, user):
         w.kiosk_request(db, ticket, ticket['content_name'])
         return {k: ticket[k] for k in ('id', 'lang', 'section', 'service', 'created_at','prefix','queue_seq','target_operator')} | {'content': ticket['content_name'],'code':routing.code(ticket)}
     w.need(user, auth.ROLES)
+    if path == '/api/telegram/mini-config':
+        return telegram_mini.save_config(db,user,data)
     if path == '/api/telegram/code':
         return telegram_bot.issue_code(db,user,data)
     if path == '/api/telegram/unlink':
@@ -338,7 +341,8 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header('Cache-Control', 'no-store')
         self.send_header('X-Content-Type-Options', 'nosniff')
         self.send_header('Referrer-Policy', 'same-origin')
-        self.send_header('X-Frame-Options', 'DENY')
+        mini_page=urlsplit(self.path).path=='/student' and mime.startswith('text/html')
+        if not mini_page:self.send_header('X-Frame-Options', 'DENY')
         # Only the trusted static page's exact inline scripts are allowed. User
         # text is JSON/escaped DOM content, never an HTML response template.
         script_sources = ["'self'"]
@@ -348,7 +352,8 @@ class Handler(BaseHTTPRequestHandler):
                 script = script.replace(b'\r\n', b'\n').replace(b'\r', b'\n')
                 digest = base64.b64encode(hashlib.sha256(script).digest()).decode('ascii')
                 script_sources.append("'sha256-" + digest + "'")
-        self.send_header('Content-Security-Policy', "default-src 'self'; script-src " + ' '.join(script_sources) + "; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self' blob:; connect-src 'self'; object-src 'none'; frame-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'")
+        if mini_page:script_sources.append('https://telegram.org')
+        self.send_header('Content-Security-Policy', "default-src 'self'; script-src " + ' '.join(script_sources) + "; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self' blob:; connect-src 'self'; object-src 'none'; frame-src 'none'; frame-ancestors " + ("https://web.telegram.org https://*.web.telegram.org" if mini_page else "'none'") + "; base-uri 'none'; form-action 'self'")
         self.send_header('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
         self.send_header('Cross-Origin-Opener-Policy', 'same-origin')
         self.send_header('Cross-Origin-Resource-Policy', 'same-origin')
@@ -383,6 +388,12 @@ class Handler(BaseHTTPRequestHandler):
         try:
             if url.path in ('/', '/kiosk', '/operator', '/manager', '/tv', '/tablo', '/login', '/executor', '/head', '/director', '/admin', '/profile'):
                 return self.send_body((ROOT / 'index.html').read_bytes(), 'text/html; charset=utf-8')
+            if url.path == '/student':
+                return self.send_body((ROOT / 'student.html').read_bytes(),'text/html; charset=utf-8')
+            mini_assets={'/assets/student.js':('student.js','text/javascript; charset=utf-8'),'/assets/student.css':('student.css','text/css; charset=utf-8'),'/assets/student-pattern.svg':('student-pattern.svg','image/svg+xml')}
+            if url.path in mini_assets:
+                name,mime=mini_assets[url.path]
+                return self.send_body((ROOT / name).read_bytes(),mime)
             if url.path == '/assets/i18n.js':
                 return self.send_body((ROOT / 'i18n.js').read_bytes(), 'text/javascript; charset=utf-8')
             with closing(connection()) as db:
@@ -427,6 +438,9 @@ class Handler(BaseHTTPRequestHandler):
                 if url.path.startswith('/api/attachment/'):
                     body, mime, name = attachments.download(db, user, url.path.removeprefix('/api/attachment/'))
                     return self.send_body(body, mime, filename=name)
+                if url.path == '/api/telegram/mini-config':
+                    w.need(user,('admin',))
+                    return self.reply(telegram_mini.config(db))
                 if url.path == '/api/telegram/student':
                     w.need(user,('admin','manager'))
                     sid=w.validate_id(parse_qs(url.query).get('hemis_id',[''])[0])
@@ -487,7 +501,7 @@ class Handler(BaseHTTPRequestHandler):
         try:
             self.same_origin()
             length = int(self.headers.get('Content-Length', '0'))
-            limit = 16 * 1024 * 1024 if self.path == '/api/attachment/upload' else 8 * 1024 * 1024 if self.path in ('/api/admin/audio/upload','/api/students/import-xlsx') else 4 * 1024 * 1024
+            limit = 32768 if self.path == '/api/telegram/mini' else 16 * 1024 * 1024 if self.path == '/api/attachment/upload' else 8 * 1024 * 1024 if self.path in ('/api/admin/audio/upload','/api/students/import-xlsx') else 4 * 1024 * 1024
             if not 0 < length <= limit:
                 raise w.Problem('Sörov hajmi belgilangan limitdan katta', 413)
             data = json.loads(self.rfile.read(length), parse_constant=lambda _: (_ for _ in ()).throw(ValueError()))
@@ -500,6 +514,14 @@ class Handler(BaseHTTPRequestHandler):
                 filename=data.get('filename') or data.get('name')
                 if isinstance(filename,str):self._audit_context['filename']=security_monitor.clean(filename)
                 self._audit_context['category']='upload'
+            if self.path == '/api/telegram/mini':
+                with closing(connection()) as db,db:
+                    db.execute('BEGIN IMMEDIATE')
+                    response=telegram_mini.handle(db,data)
+                if isinstance(response,tuple):
+                    body,mime,name=response
+                    return self.send_body(body,mime,filename=name)
+                return self.reply(response)
             if self.path == '/api/login':
                 self._audit_context['category']='login'
                 if isinstance(data.get('username'),str):self._audit_context['username']=security_monitor.clean(data['username'],64)
@@ -645,6 +667,7 @@ def initialize(demo=False):
         audio_store.initialize(db)
         integrations.initialize(db)
         telegram_bot.initialize(db)
+        telegram_mini.initialize(db)
         with db:
             config=settings(db)
             for ticket in db.execute('SELECT * FROM tickets WHERE prefix IS NULL OR queue_seq IS NULL OR target_operator IS NULL').fetchall():

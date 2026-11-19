@@ -10,9 +10,11 @@ import secrets
 import time
 from datetime import datetime, timezone, timedelta
 from uuid import uuid4
+from pathlib import Path
 import workflow as w
 from telegram_text import LANGS, t, main_keyboard, languages
 
+DEFAULT_CATALOG=json.loads(Path(__file__).with_name('catalog.json').read_text(encoding='utf-8'))
 CODE_TTL=600
 CODE_ALPHABET='23456789ABCDEFGHJKLMNPQRSTUVWXYZ'
 
@@ -29,6 +31,22 @@ def initialize(db):
       CREATE INDEX IF NOT EXISTS telegram_jobs_pending ON telegram_outbox(state,next_attempt,id);
       CREATE INDEX IF NOT EXISTS telegram_jobs_request ON telegram_outbox(request_id);
     ''')
+
+
+def _keyboard(db,lang):
+    return main_keyboard(lang)
+
+
+def _launch_button(db,chat_id,batch,student=None):
+    # Inline Web App launches provide signed initData. Keyboard-button launches
+    # may omit it, so do not use ReplyKeyboardButton.web_app for authentication.
+    exists=db.execute("SELECT 1 FROM sqlite_master WHERE name='telegram_mini_config'").fetchone()
+    row=db.execute('SELECT url FROM telegram_mini_config WHERE id=1').fetchone() if exists else None
+    if not row or not row['url']:return
+    chat=db.execute('SELECT lang FROM telegram_chats WHERE chat_id=?',(chat_id,)).fetchone()
+    lang=chat['lang'] if chat else 'uz'
+    label={'uz':'NAVBOT ilovasini ochish','ru':'Открыть NAVBOT','en':'Open NAVBOT'}.get(lang,'Open NAVBOT')
+    _job(db,chat_id,'message',{'text':label,'reply_markup':{'inline_keyboard':[[{'text':label,'web_app':{'url':row['url']}}]]}},batch,student)
 
 
 def background_audit(db,action,detail):
@@ -143,6 +161,7 @@ def _message(db,chat_id,text,keyboard,batch,student=None,request_id=None,approve
         if approved:payload['approved_answer']=True
         if keyboard and index==len(pieces)-1:payload['reply_markup']=keyboard
         _job(db,chat_id,'message',payload,batch,student,request_id)
+    if keyboard and 'keyboard' in keyboard:_launch_button(db,chat_id,batch,student)
 
 
 def _release_valid(db,release):
@@ -208,10 +227,9 @@ def _date(value):
 
 def _service(db,row,lang):
     settings=db.execute('SELECT value FROM settings WHERE id=1').fetchone()
-    if settings:
-        try:return json.loads(settings['value'])['catalog'][row['section']][1][row['service']][LANGS.index(lang)]
-        except (KeyError,IndexError,TypeError):pass
-    return (row['content'] or '')[:160]
+    catalog=json.loads(settings['value']).get('catalog',DEFAULT_CATALOG) if settings else DEFAULT_CATALOG
+    try:return catalog[row['section']][1][row['service']][LANGS.index(lang)]
+    except (KeyError,IndexError,TypeError):return (row['content'] or '')[:160]
 
 
 def _request(db,link,request_id):
@@ -223,7 +241,7 @@ def _list(db,link,page,lang,batch,tracking=False):
     page=min(max(1,page),max(1,(total+4)//5))
     rows=db.execute('SELECT * FROM requests WHERE student_id=? AND deleted_at IS NULL ORDER BY id DESC LIMIT 5 OFFSET ?',(link['student_id'],(page-1)*5)).fetchall()
     if not rows:
-        _message(db,link['chat_id'],t('none',lang),main_keyboard(lang),batch,link);return
+        _message(db,link['chat_id'],t('none',lang),_keyboard(db,lang),batch,link);return
     buttons=[];lines=[t('choose_request' if tracking else 'your_requests',lang)]
     for row in rows:
         released=db.execute('SELECT 1 FROM telegram_releases WHERE request_id=?',(row['id'],)).fetchone()
@@ -286,7 +304,7 @@ def process_update(db,update):
         chosen=data.split(':',1)[1]
         if chosen in LANGS:lang=chosen;db.execute('UPDATE telegram_chats SET lang=? WHERE chat_id=?',(lang,chat_id))
         linked=db.execute('SELECT 1 FROM telegram_links WHERE chat_id=?',(chat_id,)).fetchone()
-        _message(db,chat_id,t('menu' if linked else 'code' if state['pending_sid'] else 'welcome',lang),main_keyboard(lang) if linked else None,batch);return
+        _message(db,chat_id,t('menu' if linked else 'code' if state['pending_sid'] else 'welcome',lang),_keyboard(db,lang) if linked else None,batch);return
     link=db.execute('SELECT * FROM telegram_links WHERE chat_id=?',(chat_id,)).fetchone()
     if not link:
         if text.startswith('/start') or not state['pending_sid']:
@@ -304,7 +322,7 @@ def process_update(db,update):
         if outcome=='linked':
             db.execute("UPDATE telegram_chats SET state='linked',pending_sid=NULL WHERE chat_id=?",(chat_id,))
             link=db.execute('SELECT * FROM telegram_links WHERE chat_id=?',(chat_id,)).fetchone()
-            _message(db,chat_id,t('linked',lang)+'\n'+t('menu',lang),main_keyboard(lang),batch,link)
+            _message(db,chat_id,t('linked',lang)+'\n'+t('menu',lang),_keyboard(db,lang),batch,link)
             schedule_releases(db)
         else:_message(db,chat_id,t(outcome,lang),None,batch)
         return
@@ -328,10 +346,10 @@ def process_update(db,update):
     elif text in ('/track',*(t('track',l) for l in LANGS)):_list(db,link,1,lang,batch,True)
     elif text in ('/profile',*(t('profile',l) for l in LANGS)):
         fields=[('HEMIS ID',student['hemis_id']),(t('course',lang),student['course']),(t('faculty',lang),student['faculty']),(t('group',lang),student['student_group']),(t('specialty',lang),student['programme']),(t('type',lang),student['education_type']),(t('form',lang),student['education_form'])]
-        _message(db,chat_id,'👤 '+student['full_name']+'\n'+'\n'.join(str(key)+': '+str(value or '—') for key,value in fields)+'\n'+t('verified',lang),main_keyboard(lang),batch,link)
-    elif text in ('/help',*(t('help',l) for l in LANGS)):_message(db,chat_id,t('help_text',lang),main_keyboard(lang),batch,link)
+        _message(db,chat_id,'👤 '+student['full_name']+'\n'+'\n'.join(str(key)+': '+str(value or '—') for key,value in fields)+'\n'+t('verified',lang),_keyboard(db,lang),batch,link)
+    elif text in ('/help',*(t('help',l) for l in LANGS)):_message(db,chat_id,t('help_text',lang),_keyboard(db,lang),batch,link)
     elif text in ('/language',*(t('language',l) for l in LANGS)):_message(db,chat_id,t('choose_language',lang),languages(),batch,link)
-    else:_message(db,chat_id,t('menu',lang),main_keyboard(lang),batch,link)
+    else:_message(db,chat_id,t('menu',lang),_keyboard(db,lang),batch,link)
 
 
 def retry(db,user,data):

@@ -54,3 +54,24 @@ Worker bitta nusxada fayl qulfi bilan ishlaydi. Kiruvchi update raqami va javob 
 `python3 -m unittest discover -s tests -p 'test_telegram*.py' -v`
 
 Testlar haqiqiy Telegramga ulanmaydi. Token qo‘yilgach, alohida sinov talaba va bot bilan `/start` → kod → murojaatlar → rahbar tasdig‘i → tanlangan fayl jarayonini amalda tekshirish kerak. Ishchi talabalarga test xabari yubormang.
+
+## Rasmdagi dizayn: Telegram Mini App
+
+`/student` sahifasi rasmlardagi to‘q ko‘k sarlavha, ta’lim belgili havorang fon, oq kartochkalar va yashil tugmalar bilan tayyorlangan. Bu Telegram chatining mavzusini o‘zgartirmaydi: bot xabaridagi **NAVBOT ilovasini ochish** tugmasi alohida oynada ilovani ochadi. Telefon ramkasi, soat, batareya va Telegramning xabar yozish paneli ilova ichida soxta qilib chizilmaydi; ular qurilma va Telegramga tegishli.
+
+Ekranlar: HEMIS ID → xodim bergan kod → asosiy menyu; Murojaatlarim (5 tadan sahifa); Jarayonni kuzatish (asosiy menyuda alohida); tasdiqlangan javob va faqat tanlangan fayllar; Profilim; Yordam va Til. Profil mavjud kelishilgan 8 ustunni ko‘rsatadi. Jadvaldagi ID haqiqiyligi yoki talaba ismi kod bilan tasdiqlanmaguncha oshkor qilinmaydi. Bosqich sanalari real murojaat tarixidan olinadi, Toshkent vaqti ko‘rsatiladi. “Talabaga yuborildi” Telegram qabul qilganini bildiradi, talaba o‘qiganini bildirmaydi.
+
+**Telegram Mini App uchun ochiq, ishonchli sertifikatli HTTPS manzil zarur.** Hozirgi `http://172.20.30.31` yoki boshqa oddiy HTTP manzilini Mini App manzili sifatida kiritmang. Avval domen va HTTPS ishga tushsin; bu o‘zgarish HTTPSni avtomatik sozlamaydi.
+
+O‘rnatish:
+
+1. Asosiy NAVBOT va `navbot-telegram` xizmatlarini yangi kod bilan qayta ishga tushiring.
+2. Superadmin → Integratsiyalar → **Telegram Mini App dizayni**: `https://sizning-domeningiz/student` manzilini saqlang. BotFather’da Main Mini App yoki menu button sozlansa, shu manzilni ko‘rsating; botning oddiy xabaridagi inline tugma bilan ham ishlaydi.
+3. Talaba botda `/start` bosadi, keyin **NAVBOT ilovasini ochish** tugmasini bosadi. HEMIS ID va xodimning bir martalik kodi shu dizayndagi oynada kiritiladi. Avval chatda bog‘langan hisob qayta kod so‘ramaydi.
+4. Manzilni bo‘sh saqlash ilovani ochish tugmasini olib tashlaydi. Mavjud bot menyulari va avtomatik tasdiqlangan javob yuborish saqlanadi. Ilovani ochish uchun inline Web App tugmasi ishlatiladi; u tekshirishga kerakli Telegram `initData`ni beradi.
+
+Ilova har bir API so‘rovida Telegram `initData` imzosini serverda bot tokeni bilan tekshiradi (1 soatlik muddat, 30 soniya soat farqi). Eskirsa, talaba ilovani botdan qayta ochadi. Brauzer bergan user/chat/HEMIS ID o‘zidan o‘zi vakolat bermaydi. Staff sessiyasi ham talaba tasdig‘i o‘rniga o‘tmaydi. Token frontendga uzatilmaydi; `initData` va kodlar lokal xotiraga yoki auditga yozilmaydi. API har safar faol talaba va joriy hisob bog‘lanishini qayta tekshiradi. Ruxsatsiz yoki tasdiqlanmagan fayl berilmaydi. Oddiy tashqi brauzer haqiqiy ma’lumotga kira olmaydi.
+
+Vizual ko‘rish: `/student?demo=1` — faqat sun’iy ma’lumotli, aniq belgilangan dizayn namunasi. Bu rejim serverdagi tasdiqni chetlab o‘tmaydi va real APIga ulanmaydi. Namuna sahifasida davom etish uchun sinov ID va 8 belgili istalgan namuna kodini kiriting.
+
+Sinovlar: `python3 -m unittest discover -s tests -p 'test_telegram_mini*.py' -v` va `node tests/telegram-mini-browser.cjs`. Brauzer sinovi izolyatsiyalangan bazada, soxta token bilan haqiqiy HTTP jarayonini tekshiradi; Telegram SDK tasdig‘i imzolangan test qiymati bilan almashtiriladi. Haqiqiy Telegram/iOS/Android ichida va ochiq HTTPS manzilida ishlashi alohida amaliy tekshiruvni talab qiladi. Mini App faylni yuklab olish tugmasini beradi; mobil WebView faylni saqlash imkonini cheklasa, tasdiqlangan faylning bot chatiga avtomatik kelgan nusxasini oching.
