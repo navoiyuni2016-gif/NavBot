@@ -9,7 +9,7 @@ LABELS = {
   'title': 'Alişer Navoiy nomidagi Toşkent davlat özbek tili va adabiyoti universiteti',
   'subtitle': 'REGISTRATOR OFISI · MUROJAATLAR STATISTIKASI',
   'period': 'Davr', 'all': 'Barça sanalar',
-  'headers': ['Sana', 'T/r', 'Murojaatçining F.I.Ş.', 'Ta’lim yönalişi (mutaxassisligi)', 'Kurs', 'Ta’lim şakli', 'Murojaat mazmuni', 'Murojaat qiliş usuli (NavBoT, telefon, LMS)', 'Körilgan çora', 'Qabul qilgan xodim F.I.Ş.'],
+  'headers': ['Sana', 'T/r', 'Murojaatçining F.I.Ş.', 'Fakultet', 'Mutaxassislik shifri', 'Kurs', 'Ta’lim şakli', 'Murojaat mazmuni', 'Murojaat qiliş usuli (NavBoT, telefon, LMS)', 'Körilgan çora', 'Qabul qilgan xodim F.I.Ş.'],
   'sub': ['Hal etildi', 'Yönaltirildi (muddat)', 'Hal etilmadi (sabab)'],
   'phone': 'Telefon', 'unknown': 'Noma’lum', 'total': 'Jami murojaatlar',
  },
@@ -17,7 +17,7 @@ LABELS = {
   'title': 'Ташкентский государственный университет узбекского языка и литературы имени Алишера Навои',
   'subtitle': 'ОФИС РЕГИСТРАТОРА · СТАТИСТИКА ОБРАЩЕНИЙ',
   'period': 'Период', 'all': 'Все даты',
-  'headers': ['Дата', '№ п/п', 'Ф.И.О. заявителя', 'Направление подготовки (специальность)', 'Курс', 'Форма обучения', 'Содержание обращения', 'Способ обращения (NavBoT, телефон, LMS)', 'Принятые меры', 'Ф.И.О. сотрудника, принявшего обращение'],
+  'headers': ['Дата', '№ п/п', 'Ф.И.О. заявителя', 'Факультет', 'Код специальности', 'Курс', 'Форма обучения', 'Содержание обращения', 'Способ обращения (NavBoT, телефон, LMS)', 'Принятые меры', 'Ф.И.О. сотрудника, принявшего обращение'],
   'sub': ['Решено', 'Направлено (срок)', 'Не решено (причина)'],
   'phone': 'Телефон', 'unknown': 'Неизвестно', 'total': 'Всего обращений',
  },
@@ -25,7 +25,7 @@ LABELS = {
   'title': 'Alisher Navo’i Tashkent State University of Uzbek Language and Literature',
   'subtitle': 'REGISTRAR’S OFFICE · REQUEST STATISTICS',
   'period': 'Period', 'all': 'All dates',
-  'headers': ['Date', 'No.', 'Applicant’s full name', 'Programme (specialisation)', 'Year', 'Mode of study', 'Request content', 'Channel (NavBoT, telephone, LMS)', 'Action taken', 'Receiving staff member’s full name'],
+  'headers': ['Date', 'No.', 'Applicant’s full name', 'Faculty', 'Specialty code', 'Year', 'Mode of study', 'Request content', 'Channel (NavBoT, telephone, LMS)', 'Action taken', 'Receiving staff member’s full name'],
   'sub': ['Resolved', 'Referred (deadline)', 'Unresolved (reason)'],
   'phone': 'Telephone', 'unknown': 'Unknown', 'total': 'Total requests',
  },
@@ -76,15 +76,15 @@ def build(report, lang='uz', period=None):
     row(2, [labels['subtitle']], 6, 28)
     row(3, [labels['period'] + ': ' + (period or labels['all'])], 2, 26)
     top = labels['headers']
-    row(4, top[:7] + [top[9], top[8], '', '', top[7]], 3, 42)
-    row(5, [''] * 8 + labels['sub'] + [''], 3, 35)
+    row(4, top[:8] + [top[10], top[9], '', '', top[8]], 3, 42)
+    row(5, [''] * 9 + labels['sub'] + [''], 3, 35)
     for index, request in enumerate(report.get('requests', []), 1):
         student = request.get('student') or {}
         referred = ''
         if request.get('assignee_id') and request['assignee_id'] != request.get('manager_id'):
             referred = '\n'.join(value for value in (request.get('assignee_name') or '', display_date(request.get('deadline'))) if value)
         closed = request.get('status') == 'closed'
-        values = [display_date(request.get('created_at')), index, student.get('full_name', ''), student.get('programme', ''),
+        values = [display_date(request.get('created_at')), index, student.get('full_name', ''), student.get('faculty', ''), student.get('programme', ''),
                   student.get('course', ''), education_form(student.get('education_form', ''),lang), request.get('content', ''),
                   request.get('manager_name') or '',
                   (request.get('result') or request.get('answer') or '') if closed else '', referred,
@@ -93,11 +93,11 @@ def build(report, lang='uz', period=None):
         row(index + 5, values, 4 if index % 2 else 5, 60)
     last = 5 + len(report.get('requests', []))
     row(last + 2, [labels['total'], len(report.get('requests', []))], 2, 25)
-    merges = ['A1:L1', 'A2:L2', 'A3:L3', f'C{last+2}:L{last+2}'] + [f'{col}4:{col}5' for col in 'ABCDEFGH'] + ['I4:K4', 'L4:L5']
-    widths = [19, 7, 30, 34, 8, 20, 44, 30, 34, 36, 35, 23]
+    merges = ['A1:M1', 'A2:M2', 'A3:M3', f'C{last+2}:M{last+2}'] + [f'{col}4:{col}5' for col in 'ABCDEFGHI'] + ['J4:L4', 'M4:M5']
+    widths = [19, 7, 30, 28, 22, 8, 20, 44, 30, 34, 36, 35, 23]
     cols = ''.join(f'<col min="{i}" max="{i}" width="{width}" customWidth="1"/>' for i, width in enumerate(widths, 1))
     sheet = f'''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<worksheet xmlns="{NS}"><sheetPr><pageSetUpPr fitToPage="1"/></sheetPr><dimension ref="A1:L{last+2}"/>
+<worksheet xmlns="{NS}"><sheetPr><pageSetUpPr fitToPage="1"/></sheetPr><dimension ref="A1:M{last+2}"/>
 <sheetViews><sheetView workbookViewId="0" showGridLines="1" zoomScale="100"><pane ySplit="5" topLeftCell="A6" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>
 <sheetFormatPr defaultRowHeight="20"/><cols>{cols}</cols><sheetData>{''.join(rows)}</sheetData>
 <mergeCells count="{len(merges)}">{''.join('<mergeCell ref="'+m+'"/>' for m in merges)}</mergeCells>

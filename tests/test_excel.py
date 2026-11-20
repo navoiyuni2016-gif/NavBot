@@ -44,7 +44,7 @@ def fixture():
         row = {'id': id, 'number': f'NAV-{id:04}', 'queue_number': f'A-{id:03}',
                'created_at': '2026-11-16T21:30:00+00:00', 'content': 'Transkript olish',
                'channel': 'kiosk', 'status': status, 'student_id': '100000000001',
-               'student': {'full_name': 'Sinov Talaba', 'programme': 'Filologiya', 'course': 3,
+               'student': {'full_name': 'Sinov Talaba', 'programme': '00123456', 'faculty':'Sinov fakulteti', 'course': 3,
                            'education_form': 'Kunduzgi'}, 'manager_id': 3, 'manager_name': 'Sinov Menejer',
                'assignee_id': None, 'assignee_name': None, 'deadline': None,
                'answer': '', 'result': '', 'unresolved_reason': '', 'closed_at': None}
@@ -69,32 +69,35 @@ class ExcelStructure(unittest.TestCase):
         for part in ['[Content_Types].xml', '_rels/.rels', 'xl/workbook.xml', 'xl/_rels/workbook.xml.rels',
                      'xl/worksheets/sheet1.xml', 'xl/styles.xml']:
             self.assertIn(part, report['parts'])
-        expected = {'A1:L1', 'A4:A5', 'B4:B5', 'C4:C5', 'D4:D5', 'E4:E5', 'F4:F5', 'G4:G5', 'H4:H5', 'I4:K4', 'L4:L5'}
+        expected = {'A1:M1', 'A4:A5', 'B4:B5', 'C4:C5', 'D4:D5', 'E4:E5', 'F4:F5', 'G4:G5', 'H4:H5', 'I4:I5', 'J4:L4', 'M4:M5'}
         self.assertTrue(expected.issubset(report['merges']), report['merges'])
         cells = report['cells']
         self.assertEqual(cells['A4'], 'Sana')
         self.assertEqual(cells['B4'], 'T/r')
         self.assertIn('F.I.', cells['C4'])
-        self.assertEqual(cells['E4'], 'Kurs')
-        self.assertEqual(cells['I4'], 'Körilgan çora')
-        self.assertEqual(cells['I5'], 'Hal etildi')
-        self.assertIn('Yönaltirildi', cells['J5'])
-        self.assertIn('Hal etilmadi', cells['K5'])
-        self.assertIn('Qabul qilgan xodim', cells['H4'])
-        self.assertIn('Murojaat qiliş usuli', cells['L4'])
+        self.assertEqual(cells['F4'], 'Kurs')
+        self.assertEqual(cells['J4'], 'Körilgan çora')
+        self.assertEqual(cells['J5'], 'Hal etildi')
+        self.assertIn('Yönaltirildi', cells['K5'])
+        self.assertIn('Hal etilmadi', cells['L5'])
+        self.assertIn('Qabul qilgan xodim', cells['I4'])
+        self.assertIn('Murojaat qiliş usuli', cells['M4'])
         self.assertEqual(cells['B6'], '1')
         self.assertEqual(cells['C6'], 'Sinov Talaba')
-        self.assertEqual(cells['D6'], 'Filologiya')
-        self.assertEqual(cells['E6'], '3')
-        self.assertEqual(cells['F6'], 'Kunduzgi')
-        self.assertEqual(cells['G6'], 'Transkript olish')
-        self.assertEqual(cells['L6'], 'NavBoT')
-        self.assertIn('Talabaga transkript berildi', cells['I6'])
-        self.assertEqual(cells['L7'].lower(), 'telefon')
-        self.assertIn('2026', cells['J7'])
-        self.assertEqual(cells['L8'], 'LMS')
-        self.assertIn('Ilova yetishmaydi', cells['K8'])
-        self.assertEqual(cells['H6'], 'Sinov Menejer')
+        self.assertEqual(cells['D4'], 'Fakultet')
+        self.assertEqual(cells['E4'], 'Mutaxassislik shifri')
+        self.assertEqual(cells['D6'], 'Sinov fakulteti')
+        self.assertEqual(cells['E6'], '00123456')
+        self.assertEqual(cells['F6'], '3')
+        self.assertEqual(cells['G6'], 'Kunduzgi')
+        self.assertEqual(cells['H6'], 'Transkript olish')
+        self.assertEqual(cells['M6'], 'NavBoT')
+        self.assertIn('Talabaga transkript berildi', cells['J6'])
+        self.assertEqual(cells['M7'].lower(), 'telefon')
+        self.assertIn('2026', cells['K7'])
+        self.assertEqual(cells['M8'], 'LMS')
+        self.assertIn('Ilova yetishmaydi', cells['L8'])
+        self.assertEqual(cells['I6'], 'Sinov Menejer')
         self.assertIsNotNone(report['sheet'].find('s:cols', NS), 'Readable column widths required')
 
     def test_referral_only_for_another_staff_member(self):
@@ -104,23 +107,23 @@ class ExcelStructure(unittest.TestCase):
         for status in ('in_progress', 'closed'):
             row['status'] = status
             cells = workbook(self.excel.build(report))['cells']
-            self.assertEqual(cells['J6'], '')
-            self.assertEqual(cells['H6'], 'Sinov Menejer')
+            self.assertEqual(cells['K6'], '')
+            self.assertEqual(cells['I6'], 'Sinov Menejer')
         row.update(assignee_id=4, assignee_name='Boshqa Xodim')
         for status in ('in_progress', 'closed'):
             row['status'] = status
             cells = workbook(self.excel.build(report))['cells']
-            self.assertEqual(cells['J6'], 'Boshqa Xodim\n19.11.2026 02:00')
-            self.assertEqual(cells['H6'], 'Sinov Menejer')
+            self.assertEqual(cells['K6'], 'Boshqa Xodim\n19.11.2026 02:00')
+            self.assertEqual(cells['I6'], 'Sinov Menejer')
         row['deadline'] = None
-        self.assertEqual(workbook(self.excel.build(report))['cells']['J6'], 'Boshqa Xodim')
+        self.assertEqual(workbook(self.excel.build(report))['cells']['K6'], 'Boshqa Xodim')
 
     def test_dates_are_tashkent_calendar_not_utc(self):
         cells = workbook(self.excel.build(fixture()))['cells']
         # 16 Nov21:30UTC is 17 Nov02:30 in Tashkent.
         self.assertRegex(cells['A6'], r'(17[./-]11[./-]2026|2026[./-]11[./-]17)')
         # Deadline18 Nov21UTC crosses into 19 Nov02:00Tashkent.
-        self.assertRegex(cells['J7'], r'(19[./-]11[./-]2026|2026[./-]11[./-]19)')
+        self.assertRegex(cells['K7'], r'(19[./-]11[./-]2026|2026[./-]11[./-]19)')
 
     def test_formula_looking_student_text_is_literal_not_formula(self):
         report = fixture()
@@ -130,7 +133,7 @@ class ExcelStructure(unittest.TestCase):
         row['result'] = '@DangerousFormula'
         parsed = workbook(self.excel.build(report))
         self.assertEqual(parsed['cells']['C6'], row['student']['full_name'])
-        self.assertEqual(parsed['cells']['G6'], row['content'])
+        self.assertEqual(parsed['cells']['H6'], row['content'])
         self.assertEqual(parsed['sheet'].findall('.//s:f', NS), [], 'User text must never become Excel formulas')
         cell = parsed['sheet'].find('.//s:c[@r="C6"]', NS)
         self.assertIn(cell.get('t'), ('inlineStr', 's'))
@@ -139,7 +142,7 @@ class ExcelStructure(unittest.TestCase):
         report = fixture()
         report['requests'] = []
         parsed = workbook(self.excel.build(report))
-        self.assertIn('I4:K4', parsed['merges'])
+        self.assertIn('J4:L4', parsed['merges'])
         self.assertNotIn('A6', parsed['cells'])
         self.assertNotIn('C6', parsed['cells'])
 
@@ -149,16 +152,20 @@ class ExcelStructure(unittest.TestCase):
             with self.subTest(lang=lang):
                 parsed = workbook(self.excel.build(fixture(), lang=lang))
                 self.assertEqual(parsed['cells']['A4'], first)
+                self.assertEqual(parsed['cells']['D4'],{'uz':'Fakultet','ru':'Факультет','en':'Faculty'}[lang])
+                self.assertEqual(parsed['cells']['E4'],{'uz':'Mutaxassislik shifri','ru':'Код специальности','en':'Specialty code'}[lang])
+                self.assertEqual(parsed['cells']['D6'],'Sinov fakulteti')
+                self.assertEqual(parsed['cells']['E6'],'00123456')
                 self.assertEqual(parsed['cells']['A1'], self.excel.LABELS[lang]['title'])
                 self.assertEqual(parsed['cells']['A2'], self.excel.LABELS[lang]['subtitle'])
                 self.assertIn(self.excel.LABELS[lang]['period'], parsed['cells']['A3'])
-                self.assertIn('A3:L3', parsed['merges'])
+                self.assertIn('A3:M3', parsed['merges'])
                 self.assertEqual(parsed['sheet'].find('s:sheetViews/s:sheetView', NS).get('showGridLines'), '1')
-                self.assertEqual(parsed['cells']['H4'], self.excel.LABELS[lang]['headers'][9])
-                self.assertEqual(parsed['cells']['L4'], self.excel.LABELS[lang]['headers'][7])
-                self.assertEqual(parsed['cells']['H6'], 'Sinov Menejer')
-                self.assertEqual(parsed['cells']['L6'], 'NavBoT')
-                self.assertIn('I4:K4', parsed['merges'])
+                self.assertEqual(parsed['cells']['I4'], self.excel.LABELS[lang]['headers'][10])
+                self.assertEqual(parsed['cells']['M4'], self.excel.LABELS[lang]['headers'][8])
+                self.assertEqual(parsed['cells']['I6'], 'Sinov Menejer')
+                self.assertEqual(parsed['cells']['M6'], 'NavBoT')
+                self.assertIn('J4:L4', parsed['merges'])
         # A supplied unsupported language must be rejected or use a documented safe default.
         try:
             data = self.excel.build(fixture(), lang='bad-language')
@@ -184,7 +191,7 @@ class ExcelEndpoint(WorkflowAcceptance):
                 self.assertIn('.xlsx', response.headers.get('Content-Disposition', ''))
                 parsed = workbook(response.read())
                 self.assertEqual(parsed['cells']['C6'], 'Sinov Talaba Bir')
-                self.assertEqual(parsed['cells']['H6'], 'Sinov Menejer 1')
+                self.assertEqual(parsed['cells']['I6'], 'Sinov Menejer 1')
                 response.close()
         response = self.client('director').opener.open(self.base + '/api/report.xlsx?channel=phone', timeout=8)
         parsed = workbook(response.read())

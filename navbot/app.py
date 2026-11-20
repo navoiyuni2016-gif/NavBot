@@ -264,7 +264,7 @@ def mutate(db, path, data, user):
         ticket_id = data.get('ticket_id')
         if ticket_id is not None and type(ticket_id) is not int:
             raise w.Problem('Çek raqamini tekşiring')
-        ticket = db.execute("SELECT * FROM tickets WHERE status='waiting' AND target_operator=? AND (? IS NULL OR id=?) ORDER BY id LIMIT 1", (operator,ticket_id, ticket_id)).fetchone()
+        ticket = db.execute("SELECT t.* FROM tickets t JOIN requests r ON r.ticket_id=t.id WHERE t.status='waiting' AND r.deleted_at IS NULL AND r.status!='closed' AND (r.manager_id IS NULL OR r.manager_id=? OR ?) AND (? IS NULL OR t.id=?) ORDER BY t.id LIMIT 1", (user['id'],user['role']=='admin',ticket_id,ticket_id)).fetchone()
         if ticket is None:
             raise w.Problem('Navbat böş yoki çaqirilgan', 409)
         req = db.execute('SELECT * FROM requests WHERE ticket_id=?', (ticket['id'],)).fetchone()
