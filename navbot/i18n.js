@@ -511,3 +511,10 @@ NavI18n.add([
 ['Navbat bo‘yicha qabul tugatilgan','Приём по талону завершён','Ticket reception is complete'],
 ['Navbat holati yangilanmoqda','Статус очереди обновляется','Refreshing ticket status']
 ]);
+
+NavI18n.add([
+['Mutaxassislik shifri','Код специальности','Specialty code'],
+['Hali biriktirilmagan','Ещё не назначен','Not assigned yet'],
+['Xizmat bölimi','Раздел услуги','Service section'],
+['Ichki xizmat muddati mas’ul xodim belgilagan sana bo‘yicha. Huquqiy asos:','Внутренний срок исполнения определяется датой, установленной ответственным сотрудником. Правовое основание:','The internal service deadline is the date set by the responsible staff member. Legal reference:']
+]);

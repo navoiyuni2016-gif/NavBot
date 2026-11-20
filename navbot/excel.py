@@ -9,7 +9,7 @@ LABELS = {
   'title': 'Alişer Navoiy nomidagi Toşkent davlat özbek tili va adabiyoti universiteti',
   'subtitle': 'REGISTRATOR OFISI · MUROJAATLAR STATISTIKASI',
   'period': 'Davr', 'all': 'Barça sanalar',
-  'headers': ['Sana', 'T/r', 'Murojaatçining F.I.Ş.', 'Fakultet', 'Mutaxassislik shifri', 'Kurs', 'Ta’lim şakli', 'Murojaat mazmuni', 'Murojaat qiliş usuli (NavBoT, telefon, LMS)', 'Körilgan çora', 'Qabul qilgan xodim F.I.Ş.'],
+  'headers': ['Sana', 'T/r', 'Murojaatçining F.I.Ş.', 'Fakultet', 'Mutaxassislik şifri', 'Kurs', 'Ta’lim şakli', 'Murojaat mazmuni', 'Murojaat qiliş usuli (NavBoT, telefon, LMS)', 'Körilgan çora', 'Qabul qilgan xodim F.I.Ş.'],
   'sub': ['Hal etildi', 'Yönaltirildi (muddat)', 'Hal etilmadi (sabab)'],
   'phone': 'Telefon', 'unknown': 'Noma’lum', 'total': 'Jami murojaatlar',
  },
