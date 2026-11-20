@@ -178,7 +178,9 @@ class WorkflowAcceptance(unittest.TestCase):
             self.assertEqual({r['id'] for r in self.requests(role)},all_ids)
         self.assertEqual([r['id'] for r in self.requests('executor')],[first['id']])
         other=next(r for r in self.requests('admin') if r['id']!=first['id'])
-        # Seeing another operator's unclaimed ticket must not permit taking it over.
+        # Another manager's claimed ticket stays read-only.
+        self.ok(self.client('manager2'),'/api/action',{'operator':2,'action':'call','ticket_id':other['ticket_id']})
+        other=next(r for r in self.requests('admin') if r['id']==other['id'])
         denied=self.client('manager').request('/api/request/action',{'id':other['id'],'version':other['version'],'action':'update','hemis_id':'100000000001','content':'Unauthorized edit'})
         self.assertEqual(denied[0],403)
         first=self.transition('executor',first,'submit',answer='Tayyor javob')
@@ -187,6 +189,18 @@ class WorkflowAcceptance(unittest.TestCase):
             shared=next(r for r in self.requests(role) if r['id']==first['id'])
             self.assertEqual(shared['status'],'closed')
             self.assertTrue(any(h['action']=='approve' for h in shared['history']))
+
+    def test_any_manager_can_link_student_before_calling_unclaimed_ticket(self):
+        ticket=self.ticket()
+        row=next(r for r in self.requests('manager2') if r['ticket_id']==ticket['id'])
+        updated=self.transition('manager2',row,'update',hemis_id='100000000001',content='Ariza berish',note='Talaba qabulga keldi')
+        user=self.ok(self.client('manager2'),'/api/me')['user']
+        self.assertEqual(updated['manager_id'],user['id'])
+        self.assertEqual(updated['student_id'],'100000000001')
+        self.assertEqual(self.client('manager').request('/api/action',{'operator':1,'action':'call','ticket_id':ticket['id']})[0],409)
+        self.assertEqual(self.client('manager').request('/api/request/action',{'id':row['id'],'version':row['version'],'action':'update','hemis_id':'100000000002','content':'Stale change'})[0],409)
+        claimed=self.ok(self.client('manager2'),'/api/action',{'operator':2,'action':'call','ticket_id':ticket['id']})
+        self.assertEqual(claimed['desk']['id'],ticket['id'])
 
     def test_operator_recalls_then_closes_absent_student_and_calls_next(self):
         first=self.ticket();second=self.ticket();manager=self.client('manager')

@@ -157,7 +157,9 @@ def deadline(value):
 
 
 def owner(user, row, db):
-    if user['role'] != 'admin' and not (user['role'] == 'manager' and row['manager_id'] in (None, user['id']) and work_scope(user,row,db)):
+    unclaimed=(row['manager_id'] is None and row['channel']=='kiosk' and row['status']=='new'
+               and db.execute("SELECT 1 FROM tickets WHERE id=? AND status='waiting'",(row['ticket_id'],)).fetchone() is not None)
+    if user['role'] != 'admin' and not (user['role']=='manager' and row['manager_id'] in (None,user['id']) and (work_scope(user,row,db) or unclaimed)):
         raise Problem('Faqat mas’ul menejer bajara oladi', 403)
 
 
