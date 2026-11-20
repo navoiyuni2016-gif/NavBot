@@ -496,3 +496,9 @@ NavI18n.add([
 ['Talaba kelmadi','Студент не пришёл','Student did not attend'],
 ['Chaqiruvga kelmadi','Не явился по вызову','Did not attend the call']
 ]);
+
+NavI18n.add([
+['Joriy qabul','Текущий приём','Current reception'],
+['Joriy qabulga qaytish','Вернуться к текущему приёму','Return to current reception'],
+['Keyingi talabani chaqirishdan oldin joriy qabulni tugating.','Завершите текущий приём перед вызовом следующего студента.','Finish the current reception before calling the next student.']
+]);
