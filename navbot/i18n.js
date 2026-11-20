@@ -502,3 +502,12 @@ NavI18n.add([
 ['Joriy qabulga qaytish','Вернуться к текущему приёму','Return to current reception'],
 ['Keyingi talabani chaqirishdan oldin joriy qabulni tugating.','Завершите текущий приём перед вызовом следующего студента.','Finish the current reception before calling the next student.']
 ]);
+
+NavI18n.add([
+['Talabani chaqirish','Вызвать студента','Call student'],
+['Avval joriy qabulni tugating','Сначала завершите текущий приём','Finish the current reception first'],
+['Murojaat boshqa menejerga biriktirilgan','Обращение закреплено за другим менеджером','Request belongs to another manager'],
+['Talaba boshqa oynada qabul qilinmoqda','Студент принимается в другом окне','Student is being received at another counter'],
+['Navbat bo‘yicha qabul tugatilgan','Приём по талону завершён','Ticket reception is complete'],
+['Navbat holati yangilanmoqda','Статус очереди обновляется','Refreshing ticket status']
+]);

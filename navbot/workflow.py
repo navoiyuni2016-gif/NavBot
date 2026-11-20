@@ -104,11 +104,13 @@ def visible(user, row, db):
 def serialize(db, row, related=None):
     result = dict(row)
     result['number'] = f"NAV-{row['id']:04d}"
-    ticket=(related['tickets'].get(row['ticket_id']) if related is not None else db.execute('SELECT prefix,queue_seq,target_operator FROM tickets WHERE id=?',(row['ticket_id'],)).fetchone()) if row['ticket_id'] else None
+    ticket=(related['tickets'].get(row['ticket_id']) if related is not None else db.execute('SELECT prefix,queue_seq,target_operator,status,operator FROM tickets WHERE id=?',(row['ticket_id'],)).fetchone()) if row['ticket_id'] else None
     result['queue_number']=routing.code(ticket) if ticket else None
     result['queue_prefix']=ticket['prefix'] if ticket else None
     result['queue_seq']=ticket['queue_seq'] if ticket else None
     result['target_operator']=ticket['target_operator'] if ticket else None
+    result['queue_status']=ticket['status'] if ticket else None
+    result['queue_operator']=ticket['operator'] if ticket else None
     result['student'] = json.loads(row['student_snapshot']) if row['student_snapshot'] else (related['students'].get(row['student_id']) if related is not None else student(db,row['student_id'])) if row['student_id'] else None
     for key in ('manager', 'assignee'):
         if related is not None:result[key+'_name']=related['names'].get(row[key+'_id'])
