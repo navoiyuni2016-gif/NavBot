@@ -202,6 +202,26 @@ class WorkflowAcceptance(unittest.TestCase):
         claimed=self.ok(self.client('manager2'),'/api/action',{'operator':2,'action':'call','ticket_id':ticket['id']})
         self.assertEqual(claimed['desk']['id'],ticket['id'])
 
+    def test_closed_request_leaves_waiting_display_and_legacy_stale_ticket_is_hidden(self):
+        import sqlite3
+        first=self.ticket();second=self.ticket()
+        row=next(r for r in self.requests('manager') if r['ticket_id']==first['id'])
+        row=self.transition('manager',row,'update',hemis_id='100000000001',content='Joyida tushuntirish')
+        row=self.transition('manager',row,'resolve',answer='Tushuntirildi',result='Hal qilindi')
+        state=self.ok(self.public,'/api/state?1,-1')
+        self.assertEqual([t['id'] for t in state['waiting']],[second['id']])
+        with sqlite3.connect(Path(self.temp.name)/'test.sqlite3') as db:
+            self.assertEqual(db.execute('SELECT status FROM tickets WHERE id=?',(first['id'],)).fetchone()[0],'done')
+            # Old versions could close a request without updating its waiting ticket.
+            db.execute("UPDATE tickets SET status='waiting' WHERE id=?",(first['id'],))
+        state=self.ok(self.public,'/api/state?1,-1')
+        self.assertEqual([t['id'] for t in state['waiting']],[second['id']])
+        self.assertEqual(self.client('manager').request('/api/action',{'operator':1,'action':'call','ticket_id':first['id']})[0],409)
+        next_state=self.ok(self.client('manager'),'/api/action',{'operator':1,'action':'call'})
+        self.assertEqual(next_state['desk']['id'],second['id'])
+        saved=next(r for r in self.requests('admin') if r['id']==row['id'])
+        self.assertEqual(saved['status'],'closed');self.assertTrue(saved['history'])
+
     def test_operator_recalls_then_closes_absent_student_and_calls_next(self):
         first=self.ticket();second=self.ticket();manager=self.client('manager')
         self.assertEqual(manager.request('/api/action',{'operator':1,'action':'no_show','ticket_id':first['id']})[0],409)

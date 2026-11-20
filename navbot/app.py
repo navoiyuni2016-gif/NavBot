@@ -123,7 +123,7 @@ def save_settings(db, user, data):
 def snapshot(db, operator):
     # Public data is deliberately restricted: no student, request, notes, or staff names.
     items = [routing.public_ticket(row) for row in db.execute(
-        'SELECT id,lang,section,service,status,operator,called,prefix,queue_seq,target_operator FROM tickets WHERE status != ? ORDER BY id', ('done',))]
+        "SELECT t.id,t.lang,t.section,t.service,t.status,t.operator,t.called,t.prefix,t.queue_seq,t.target_operator FROM tickets t WHERE t.status!=? AND (t.status!='waiting' OR NOT EXISTS(SELECT 1 FROM requests r WHERE r.ticket_id=t.id AND (r.status='closed' OR r.deleted_at IS NOT NULL))) ORDER BY t.id", ('done',))]
     called = max((i for i in items if i['status'] == 'called'), key=lambda i: i['called'] or 0, default=None)
     return {'waiting': [i for i in items if i['status'] == 'waiting'],
             'serving': sorted((i for i in items if i['status'] == 'serving'), key=lambda i: i['operator']),

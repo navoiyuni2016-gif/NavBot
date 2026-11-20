@@ -296,6 +296,8 @@ def request_action(db, user, data):
         raise Problem('Noma’lum amal')
     values.update(updated_at=now(), version=row['version'] + 1)
     db.execute('UPDATE requests SET ' + ','.join(k + '=?' for k in values) + ' WHERE id=?', (*values.values(), row['id']))
+    if values.get('status')=='closed' and row['ticket_id']:
+        db.execute("UPDATE tickets SET status='done' WHERE id=? AND status='waiting'",(row['ticket_id'],))
     record(db, row['id'], user, action, detail)
     if action == 'approve' and row['student_id']:
         import telegram_bot
