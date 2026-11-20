@@ -85,12 +85,16 @@ def notify(db, user_id, request_id, message):
                    (user_id, request_id, message, now()))
 
 
-def visible(user, row, db):
+def work_scope(user, row, db):
     role = user['role']
     return (role in ('admin', 'director') or row['manager_id'] == user['id'] or
             row['assignee_id'] == user['id'] or
             (role == 'manager' and row['manager_id'] is None and row['channel'] == 'kiosk' and db.execute('SELECT 1 FROM tickets WHERE id=? AND target_operator=?',(row['ticket_id'],user['operator'])).fetchone() is not None) or
             (role == 'head' and row['department'] == user['department']))
+
+
+def visible(user, row, db):
+    return user['role'] in ('admin','director','manager','head') or work_scope(user,row,db)
 
 
 def serialize(db, row):
@@ -152,8 +156,8 @@ def deadline(value):
         raise Problem('Muddat vaqt mintaqasi bilan berilişi kerak')
 
 
-def owner(user, row):
-    if user['role'] != 'admin' and not (user['role'] == 'manager' and row['manager_id'] in (None, user['id'])):
+def owner(user, row, db):
+    if user['role'] != 'admin' and not (user['role'] == 'manager' and row['manager_id'] in (None, user['id']) and work_scope(user,row,db)):
         raise Problem('Faqat mas’ul menejer bajara oladi', 403)
 
 
@@ -167,7 +171,7 @@ def request_action(db, user, data):
     values = {}
     detail = {}
     if action in ('update', 'assign', 'resolve'):
-        owner(user, row)
+        owner(user, row, db)
         if row['status'] == 'pending_approval':
             raise Problem('Ariza tasdiqda', 409)
         values['manager_id'] = row['manager_id'] or user['id']

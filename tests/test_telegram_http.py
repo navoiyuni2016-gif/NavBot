@@ -21,7 +21,8 @@ class TelegramHTTPAcceptance(WorkflowAcceptance):
     def test_request_status_follows_visibility_and_rejects_bad_ids(self):
         _,row=self.linked_request()
         self.assertEqual(self.ok(self.client('manager'),'/api/telegram/request?id='+str(row['id']))['state'],'not_approved')
-        self.assertEqual(self.client('manager2').request('/api/telegram/request?id='+str(row['id']))[0],403)
+        self.assertEqual(self.client('manager2').request('/api/telegram/request?id='+str(row['id']))[0],200)
+        self.assertEqual(self.client('manager2').request('/api/telegram/retry',{'id':row['id']})[0],403)
         self.assertEqual(self.client('admin').request('/api/telegram/request?id=oops')[0],400)
         self.assertEqual(self.public.request('/api/telegram/request?id='+str(row['id']))[0],401)
 

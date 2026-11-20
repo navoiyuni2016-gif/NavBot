@@ -18,7 +18,7 @@ class AttachmentAcceptance(WorkflowAcceptance):
         self.assertEqual(result['attachments'][0]['name'],'javob.txt')
         url=result['attachments'][0]['url']
         self.assertEqual(self.public.request(url)[0],401)
-        self.assertEqual(self.client('manager2').request(url)[0],403)
+        self.assertEqual(self.client('manager2').request(url)[0],200)
         for role in ('manager','executor','head','director','admin'):
             status,body,headers=self.client(role).request(url)
             self.assertEqual(status,200)

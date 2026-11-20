@@ -72,6 +72,7 @@ def validate(name, raw):
 def upload(db, user, data):
     w.need(user, ('admin','manager','executor','head','director'))
     row = w.get_request(db, user, data.get('id'))
+    if not w.work_scope(user,row,db):raise w.Problem('Bu murojaatga fayl biriktirish uchun vakolat yo‘q',403)
     if row['status'] == 'closed':
         raise w.Problem('Yopilgan arizaga yangi fayl biriktirib bölmaydi',409)
     key = str(uuid.UUID(data.get('key','')))

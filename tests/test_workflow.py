@@ -170,6 +170,24 @@ class WorkflowAcceptance(unittest.TestCase):
         self.ok(self.public, '/api/logout', {})
         self.assertIsNone(self.ok(self.public, '/api/me')['user'])
 
+    def test_shared_overview_includes_all_stages_without_extra_write_permissions(self):
+        _,first=self.assigned_request()
+        self.ok(self.public,'/api/ticket',{'key':str(uuid4()),'lang':'uz','section':1,'service':0})
+        all_ids={r['id'] for r in self.requests('admin')}
+        for role in ('manager','manager2','head','director'):
+            self.assertEqual({r['id'] for r in self.requests(role)},all_ids)
+        self.assertEqual([r['id'] for r in self.requests('executor')],[first['id']])
+        other=next(r for r in self.requests('admin') if r['id']!=first['id'])
+        # Seeing another operator's unclaimed ticket must not permit taking it over.
+        denied=self.client('manager').request('/api/request/action',{'id':other['id'],'version':other['version'],'action':'update','hemis_id':'100000000001','content':'Unauthorized edit'})
+        self.assertEqual(denied[0],403)
+        first=self.transition('executor',first,'submit',answer='Tayyor javob')
+        first=self.transition('head',first,'approve',result='Tasdiqlandi')
+        for role in ('manager','manager2','head','admin'):
+            shared=next(r for r in self.requests(role) if r['id']==first['id'])
+            self.assertEqual(shared['status'],'closed')
+            self.assertTrue(any(h['action']=='approve' for h in shared['history']))
+
     def test_operator_recalls_then_closes_absent_student_and_calls_next(self):
         first=self.ticket();second=self.ticket();manager=self.client('manager')
         self.assertEqual(manager.request('/api/action',{'operator':1,'action':'no_show','ticket_id':first['id']})[0],409)
@@ -237,7 +255,7 @@ class WorkflowAcceptance(unittest.TestCase):
         self.assertEqual((request['deadline'], request['internal_basis']), (deadline, basis))
         self.assertTrue(number.startswith('NAV-'))
         self.assertEqual([r['id'] for r in self.requests('executor')], [request['id']])
-        self.assertEqual(self.requests('manager2'), [])
+        self.assertEqual(len(self.requests('manager2')),1)
         self.assertTrue(any(n['request_id'] == request['id'] for n in self.ok(self.client('executor'), '/api/notifications')['notifications']))
         status, _, _ = self.client('manager2').request('/api/request/action', {
             'id': request['id'], 'version': request['version'], 'action': 'resolve', 'answer': 'No access', 'result': 'No access',
@@ -311,7 +329,7 @@ class WorkflowAcceptance(unittest.TestCase):
         self.assertEqual(head.login('foreignhead', 'Foreign-Head-2026!')[0], 200)
         self.ok(head, '/api/password', {'current_password': 'Foreign-Head-2026!', 'new_password': 'Changed-Head-2026!'})
         self.assertEqual(head.login('foreignhead', 'Changed-Head-2026!')[0], 200)
-        self.assertEqual(self.ok(head, '/api/requests')['requests'], [])
+        self.assertEqual(len(self.ok(head, '/api/requests')['requests']),1)
         for action, extra in [('approve', {'result': 'Unauthorized closure'}),
                               ('correct', {'reason': 'Unauthorized correction'}),
                               ('deadline', {'deadline': (datetime.now(timezone.utc) + timedelta(days=20)).isoformat(),
@@ -320,7 +338,7 @@ class WorkflowAcceptance(unittest.TestCase):
                 'id': request['id'], 'version': request['version'], 'action': action, **extra,
             })
             self.assertEqual(response[0], 403, response[1])
-        self.assertEqual(self.ok(head, '/api/report')['summary']['total'], 0)
+        self.assertEqual(self.ok(head, '/api/report')['summary']['total'], 1)
         unchanged = next(r for r in self.requests('admin') if r['id'] == request['id'])
         self.assertEqual((unchanged['status'], unchanged['version'], unchanged['deadline']),
                          (request['status'], request['version'], request['deadline']))

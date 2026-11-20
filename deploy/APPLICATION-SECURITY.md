@@ -47,3 +47,5 @@ Secure cookies configured for verified TLS/proxy handling, application admin
 MFA, off-host protected backups and staging disaster-recovery acceptance,
 malware-scanning/quarantine policy for documents, monitoring and independent
 security assessment. Passing regression tests is not an expert certification.
+
+Staff overview policy: active manager/operator and head roles can read all non-deleted requests, history, attachments, Telegram delivery status and reports, including completed requests. Executors retain assigned-request scope. This read access does not grant another operator’s queue actions, request ownership, attachment uploads or another department’s approvals/deadline changes. Private APIs still require authentication.

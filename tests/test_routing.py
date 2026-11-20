@@ -11,7 +11,7 @@ class RoutingAcceptance(WorkflowAcceptance):
         for i,ticket in enumerate(tickets,1):
             manager=self.client('manager' if i==1 else 'manager'+str(i))
             requests=self.ok(manager,'/api/requests')['requests']
-            self.assertEqual([r['queue_number'] for r in requests],[ticket['code']])
+            self.assertEqual({r['queue_number'] for r in requests},{t['code'] for t in tickets})
             if i!=5:
                 self.assertEqual(manager.request('/api/action',{'operator':i,'action':'call','ticket_id':tickets[-1]['id']})[0],409)
             result=self.ok(manager,'/api/action',{'operator':i,'action':'call'})
