@@ -18,6 +18,21 @@ class StudentSearchAcceptance(WorkflowAcceptance):
         for query in ("ro'ziboyev",'röziboyev','şohjahon'):
             self.assertEqual(self.search(manager,query)[1]['students'][0]['hemis_id'],'123456789012')
         self.assertEqual(self.search(manager,'алиев')[1]['students'][0]['hemis_id'],'123456789013')
+    def test_lookup_responds_while_another_connection_holds_writer_lock(self):
+        from concurrent.futures import ThreadPoolExecutor
+        manager=self.client('manager')
+        with sqlite3.connect(Path(self.temp.name)/'test.sqlite3') as writer:
+            writer.execute('BEGIN IMMEDIATE')
+            try:
+                with ThreadPoolExecutor(1) as pool:
+                    future=pool.submit(self.search,manager,'talaba')
+                    try:
+                        code,result,_=future.result(timeout=3)
+                        self.assertEqual(code,200)
+                        self.assertTrue(result['students'])
+                    finally:writer.rollback()
+            finally:writer.rollback()
+
     def test_bounded_results_and_invalid_or_injected_query(self):
         manager=self.client('manager')
         for query in (None,12,'','a','%'*10,'x'*121):self.assertEqual(self.search(manager,query)[0],400)

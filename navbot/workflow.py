@@ -1,5 +1,6 @@
 """Local request registry. All mutations run in one SQLite transaction."""
 import json
+from functools import lru_cache
 import routing
 import re
 import unicodedata
@@ -45,18 +46,21 @@ def student(db, hemis_id):
     return dict(row) if row else None
 
 
+@lru_cache(maxsize=16384)
+def normalize_student_search(value):
+    text=unicodedata.normalize('NFKC',value or '').casefold()
+    for source,target in (('ö','o'),('ğ','g'),('ş','sh'),('ç','ch')):
+        text=text.replace(source,target)
+    return ' '.join(''.join(c for c in text if c.isalnum() or c.isspace()).split())
+
+
 def search_students(db, query):
     if not isinstance(query,str) or not 2<=len(query.strip())<=120:
         raise Problem('Ism-familiya yoki HEMIS IDni kiriting (2–120 belgi)')
-    def normalized(value):
-        text=unicodedata.normalize('NFKC',value or '').casefold()
-        for source,target in (('ö','o'),('ğ','g'),('ş','sh'),('ç','ch')):
-            text=text.replace(source,target)
-        return ' '.join(''.join(c for c in text if c.isalnum() or c.isspace()).split())
-    tokens=normalized(query).split()
+    tokens=normalize_student_search(query).split()
     if not tokens or len(tokens)>8 or len(''.join(tokens))<2:
         raise Problem('Ism-familiya yoki HEMIS IDni kiriting (2–120 belgi)')
-    db.create_function('student_search_text',1,normalized,deterministic=True)
+    db.create_function('student_search_text',1,normalize_student_search,deterministic=True)
     where=' AND '.join("student_search_text(hemis_id || ' ' || full_name) LIKE ?" for _ in tokens)
     rows=db.execute('SELECT * FROM students WHERE '+where+' ORDER BY CASE WHEN hemis_id=? THEN 0 ELSE 1 END,full_name,hemis_id LIMIT 21',tuple('%'+token+'%' for token in tokens)+(query.strip(),)).fetchall()
     return {'students':[dict(r) for r in rows[:20]],'more':len(rows)>20}
@@ -97,28 +101,51 @@ def visible(user, row, db):
     return user['role'] in ('admin','director','manager','head') or work_scope(user,row,db)
 
 
-def serialize(db, row):
+def serialize(db, row, related=None):
     result = dict(row)
     result['number'] = f"NAV-{row['id']:04d}"
-    ticket=db.execute('SELECT prefix,queue_seq,target_operator FROM tickets WHERE id=?',(row['ticket_id'],)).fetchone() if row['ticket_id'] else None
+    ticket=(related['tickets'].get(row['ticket_id']) if related is not None else db.execute('SELECT prefix,queue_seq,target_operator FROM tickets WHERE id=?',(row['ticket_id'],)).fetchone()) if row['ticket_id'] else None
     result['queue_number']=routing.code(ticket) if ticket else None
     result['queue_prefix']=ticket['prefix'] if ticket else None
     result['queue_seq']=ticket['queue_seq'] if ticket else None
     result['target_operator']=ticket['target_operator'] if ticket else None
-    result['student'] = json.loads(row['student_snapshot']) if row['student_snapshot'] else student(db, row['student_id']) if row['student_id'] else None
+    result['student'] = json.loads(row['student_snapshot']) if row['student_snapshot'] else (related['students'].get(row['student_id']) if related is not None else student(db,row['student_id'])) if row['student_id'] else None
     for key in ('manager', 'assignee'):
-        who = db.execute('SELECT full_name FROM users WHERE id=?', (row[key + '_id'],)).fetchone()
-        result[key + '_name'] = who['full_name'] if who else None
-    import attachments
-    result['attachments'] = attachments.list_for(db, row['id'])
-    result['history'] = [dict(i) for i in db.execute(
-        "SELECT h.id,COALESCE(u.full_name,'Kiosk') actor,h.action,h.detail,h.created_at FROM history h "
-        'LEFT JOIN users u ON u.id=h.actor_id WHERE request_id=? ORDER BY h.id', (row['id'],))]
+        if related is not None:result[key+'_name']=related['names'].get(row[key+'_id'])
+        else:
+            who=db.execute('SELECT full_name FROM users WHERE id=?',(row[key+'_id'],)).fetchone()
+            result[key+'_name']=who['full_name'] if who else None
+    if related is not None:
+        result['attachments']=related['attachments'].get(row['id'],[])
+        result['history']=related['history'].get(row['id'],[])
+    else:
+        import attachments
+        result['attachments']=attachments.list_for(db,row['id'])
+        result['history']=[dict(i) for i in db.execute("SELECT h.id,COALESCE(u.full_name,'Kiosk') actor,h.action,h.detail,h.created_at FROM history h LEFT JOIN users u ON u.id=h.actor_id WHERE request_id=? ORDER BY h.id",(row['id'],))]
     return result
 
 
+def request_relations(db, rows):
+    related={'tickets':{},'students':{},'names':{},'attachments':{},'history':{}}
+    if not rows:return related
+    related['names']={r['id']:r['full_name'] for r in db.execute('SELECT id,full_name FROM users')}
+    ids=[r['id'] for r in rows]
+    for start in range(0,len(ids),400):
+        chunk=ids[start:start+400];marks=','.join('?' for _ in chunk)
+        for ticket in db.execute('SELECT t.* FROM tickets t JOIN requests r ON r.ticket_id=t.id WHERE r.id IN ('+marks+')',chunk):related['tickets'][ticket['id']]=dict(ticket)
+        for item in db.execute('SELECT s.* FROM students s JOIN requests r ON r.student_id=s.hemis_id WHERE r.id IN ('+marks+')',chunk):related['students'][item['hemis_id']]=dict(item)
+        for item in db.execute('SELECT a.request_id,a.id,a.name,a.mime,a.size,a.uploader_id,a.created_at,u.full_name uploader FROM attachments a LEFT JOIN users u ON u.id=a.uploader_id WHERE a.request_id IN ('+marks+') ORDER BY a.rowid',chunk):
+            attachment=dict(item);request_id=attachment.pop('request_id');attachment['url']='/api/attachment/'+attachment['id']
+            related['attachments'].setdefault(request_id,[]).append(attachment)
+        for item in db.execute("SELECT h.request_id,h.id,COALESCE(u.full_name,'Kiosk') actor,h.action,h.detail,h.created_at FROM history h LEFT JOIN users u ON u.id=h.actor_id WHERE h.request_id IN ("+marks+') ORDER BY h.id',chunk):
+            history=dict(item);request_id=history.pop('request_id');related['history'].setdefault(request_id,[]).append(history)
+    return related
+
+
 def requests(db, user):
-    return [serialize(db, r) for r in db.execute('SELECT * FROM requests WHERE deleted_at IS NULL ORDER BY id DESC') if visible(user, r, db)]
+    rows=[r for r in db.execute('SELECT * FROM requests WHERE deleted_at IS NULL ORDER BY id DESC') if visible(user,r,db)]
+    related=request_relations(db,rows)
+    return [serialize(db,r,related) for r in rows]
 
 
 def get_request(db, user, request_id):
@@ -399,6 +426,7 @@ def initialize(db):
         CREATE TABLE IF NOT EXISTS settings (id INTEGER PRIMARY KEY CHECK(id=1), value TEXT NOT NULL);
         CREATE INDEX IF NOT EXISTS request_assignee ON requests(assignee_id,status);
         CREATE INDEX IF NOT EXISTS request_manager ON requests(manager_id,status);
+        CREATE INDEX IF NOT EXISTS history_request_id ON history(request_id,id);
         CREATE INDEX IF NOT EXISTS notification_user ON notifications(user_id,read);
     ''')
     if 'student_snapshot' not in {row['name'] for row in db.execute('PRAGMA table_info(requests)')}:

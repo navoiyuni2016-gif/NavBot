@@ -544,6 +544,15 @@ class Handler(BaseHTTPRequestHandler):
                 filename=data.get('filename') or data.get('name')
                 if isinstance(filename,str):self._audit_context['filename']=security_monitor.clean(filename)
                 self._audit_context['category']='upload'
+            if self.path in ('/api/students/search','/api/student'):
+                # Lookups never reserve the sole SQLite writer slot.
+                with closing(connection()) as db:
+                    db.execute('PRAGMA query_only=ON')
+                    db.execute('BEGIN')
+                    user=self.user(db)
+                    self.guard(user,self.path)
+                    response=mutate(db,self.path,data,user)
+                return self.reply(response)
             if self.path == '/api/kiosk-printer/status':
                 with closing(connection()) as db,db:
                     db.execute('BEGIN IMMEDIATE')

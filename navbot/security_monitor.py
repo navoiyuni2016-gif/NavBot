@@ -19,6 +19,7 @@ def initialize(db):
         if name not in existing:db.execute(f'ALTER TABLE audit ADD COLUMN {name} {spec}')
     db.execute('CREATE UNIQUE INDEX IF NOT EXISTS audit_rollup ON audit(rollup_key) WHERE rollup_key IS NOT NULL')
     db.execute('CREATE INDEX IF NOT EXISTS audit_security_ip ON audit(ip,created_at)')
+    db.execute('CREATE INDEX IF NOT EXISTS audit_request_ref ON audit(request_ref)')
     db.execute('CREATE INDEX IF NOT EXISTS audit_security_action ON audit(action,created_at)')
     db.execute('CREATE TABLE IF NOT EXISTS security_ip_blocks(ip TEXT PRIMARY KEY,blocked_until INTEGER NOT NULL,reason TEXT NOT NULL,created_at TEXT NOT NULL)')
     if 'security_alert_id' not in {r[1] for r in db.execute('PRAGMA table_info(notifications)')}:
