@@ -126,11 +126,17 @@ const { chromium } = require("playwright"),
       state.selected=base.id;
       navigate('archive');
       const emptyHasCall=!!document.querySelector('#call-empty,[data-queue]');
+      const archiveWidth=document.querySelector('.archive-layout').getBoundingClientRect().width;
+      if(Math.abs(document.querySelector('.requests-list').getBoundingClientRect().width-archiveWidth)>2)throw Error('Archive must fill work area');
+      if(getComputedStyle(document.querySelector('.archive-detail')).display!=='none')throw Error('Empty detail should not reserve space');
       const filters=[...document.querySelectorAll('#request-filters button')].map(b=>b.dataset.filter);
       const ids=[...document.querySelectorAll('#request-list [data-id]')].map(b=>Number(b.dataset.id));
       state.selected=999999;state.detailVersion=null;renderDetail();
       const archiveHasControls=!!document.querySelector('.queue-controls,[data-queue],#open-active-queue,[data-telegram-open],#clear-current-requests');
       const hasHistory=!!document.querySelector('.timeline');
+      if(getComputedStyle(document.querySelector('.requests-list')).display!=='none')throw Error('Detail must open separately');
+      document.querySelector('#archive-back').click();
+      if(getComputedStyle(document.querySelector('.requests-list')).display==='none')throw Error('Back must restore archive');
       state.requests=original;state.selected=null;navigate('requests');
       const intakeHasCall=!!document.querySelector('#call-empty');
       return {emptyHasCall,filters,ids,archiveHasControls,hasHistory,intakeHasCall};
