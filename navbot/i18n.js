@@ -536,3 +536,5 @@ NavI18n.add([
 ]);
 
 NavI18n.add([['Bugungi murojaatlar','Сегодняшние обращения','Today’s requests'],['Oldingi kundan qolgan','Открытые с предыдущих дней','Open from previous days']]);
+
+NavI18n.add([['Yakunlangan sana — dan','Дата завершения — с','Completion date — from'],['Yakunlangan sana — gaça','Дата завершения — по','Completion date — to'],['Barça bölimlar','Все разделы','All sections'],['Barça menejerlar','Все менеджеры','All managers'],['Arxiv sahifalari','Страницы архива','Archive pages']]);
