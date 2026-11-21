@@ -19,6 +19,11 @@ window.NavDashboard = (() => {
   const faculty = (r) => r.student?.faculty || "Talaba biriktirilmagan",
     course = (r) =>
       r.student?.course ? `${r.student.course}-kurs` : "Kurs noma’lum";
+  // Course order is academic, independent of request volume; unknown stays last.
+  const courseGroups = (rows) => groups(rows, course).sort(([a], [b]) => {
+    const rank = (name) => /^\d+-kurs$/.test(name) ? Number.parseInt(name, 10) : Infinity;
+    return rank(a) - rank(b) || a.localeCompare(b);
+  });
   function model(source, catalog) {
     const rows = source.filter(
       (r) =>
@@ -39,7 +44,7 @@ window.NavDashboard = (() => {
         (r) => catalog[r.section]?.[0]?.[0] || "Bölim noma’lum",
       ),
       faculties: groups(rows, faculty),
-      courses: groups(rows, course),
+      courses: courseGroups(rows),
       daily: Array.from({ length: 7 }, (_, i) => {
         const date = day(now - (6 - i) * 86400000);
         return [date, rows.filter((r) => day(r.created_at) === date).length];
@@ -78,7 +83,7 @@ window.NavDashboard = (() => {
     const ratio = m.total ? (m.closed / m.total) * 100 : 0;
     host.innerHTML = NavI18n.html`<div class="official-dashboard">
       <header class="dash-heading"><div><p>ToşDÖTAU · REGISTRATOR OFISI</p><h1>Faoliyat körsatkiçlari</h1><span>${day(Date.now())} · Toşkent vaqti</span></div><div class="dash-export"><button data-export="png">PNG yuklab oliş</button><button data-export="pdf">PDF yuklab oliş</button></div></header>
-      <div class="dash-filters"><label>Fakultet<select data-filter="faculty">${options("faculty", groups(source, faculty))}</select></label><label>Kurs<select data-filter="course">${options("course", groups(source, course))}</select></label><span>Umumiy natijalar: barça sanalar<br>Dinamika: oxirgi 7 kun</span></div>
+      <div class="dash-filters"><label>Fakultet<select data-filter="faculty">${options("faculty", groups(source, faculty))}</select></label><label>Kurs<select data-filter="course">${options("course", courseGroups(source))}</select></label><span>Umumiy natijalar: barça sanalar<br>Dinamika: oxirgi 7 kun</span></div>
       <div class="dash-kpis">${labels.map(([name, key]) => `<article data-dashboard-metric="${key}" class="dash-kpi-${key}"><span>${esc(NavI18n.t(name))}</span><div class="dash-kpi-number"><strong class="value">${m[key]}</strong><small>ta</small></div><footer>${key === "closed" ? (m.total ? Math.round(ratio) : 0) + "% bajarilgan" : "Tanlangan kesim böyiça"}</footer></article>`).join("")}</div>
       <div class="dash-panels">
         <section><header><h2>Sohalar böyiça murojaatlar</h2><span class="dash-tag">Jami ${m.total} ta</span></header>${barChart(m.sections)}</section>
