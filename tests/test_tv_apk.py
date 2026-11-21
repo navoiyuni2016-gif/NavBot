@@ -9,7 +9,7 @@ class TVApkAcceptance(WorkflowAcceptance):
         root=Path(__file__).resolve().parents[1]
         code,data,headers=self.public.request('/api/tv-version')
         self.assertEqual(code,200)
-        self.assertEqual(data,{'version':hashlib.sha256((root/'navbot/index.html').read_bytes()+(root/'navbot/i18n.js').read_bytes()).hexdigest()})
+        self.assertEqual(data,{'version':hashlib.sha256(b''.join((root/'navbot'/name).read_bytes() for name in ('index.html','i18n.js','dashboard.js','dashboard.css'))).hexdigest()})
         self.assertEqual(headers.get('Cache-Control'),'no-store')
     def test_signed_apk_can_be_downloaded_without_login(self):
         with urllib.request.urlopen(self.public.base+'/downloads/NAVBOT-TV.apk') as response:

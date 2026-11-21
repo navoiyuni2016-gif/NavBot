@@ -1,6 +1,6 @@
 [
  [["Akademik masalalar","Академические вопросы","Academic services"],[
- ["Transkript oliş","Получение транскрипта","Request a transcript"],
+ ["Tibbiy ma’lumotnoma taqdim etiş","Предоставление медицинской справки","Submit a medical certificate"],
  ["Öqişni köçiriş","Перевод на обучение","Transfer studies"],
  ["HEMIS parolini tiklaş","Восстановление пароля HEMIS","Reset HEMIS password"],
  ["Ariza beriş","Подача заявления","Submit an application"],
@@ -18,7 +18,7 @@
  ["Xalqaro grantlar","Международные гранты","International grants"],
  ["Boşqa masala","Другой вопрос","Other request"]]],
  [["Moliya va bandlik","Финансы и занятость","Finance and employment"],[
- ["Tölovlar","Платежи","Payments"],
+ ["Tölov-kontrakt","Оплата контракта","Tuition contract payment"],
  ["Stipendiya","Стипендия","Scholarship"],
  ["Bandlik","Занятость","Employment"],
  ["Şartnoma va subsidiya","Договор и субсидия","Contracts and subsidies"],

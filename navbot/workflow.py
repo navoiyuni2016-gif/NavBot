@@ -104,13 +104,15 @@ def visible(user, row, db):
 def serialize(db, row, related=None):
     result = dict(row)
     result['number'] = f"NAV-{row['id']:04d}"
-    ticket=(related['tickets'].get(row['ticket_id']) if related is not None else db.execute('SELECT prefix,queue_seq,target_operator,status,operator FROM tickets WHERE id=?',(row['ticket_id'],)).fetchone()) if row['ticket_id'] else None
+    ticket=(related['tickets'].get(row['ticket_id']) if related is not None else db.execute('SELECT prefix,queue_seq,target_operator,status,operator,queue_day,content_name FROM tickets WHERE id=?',(row['ticket_id'],)).fetchone()) if row['ticket_id'] else None
     result['queue_number']=routing.code(ticket) if ticket else None
     result['queue_prefix']=ticket['prefix'] if ticket else None
     result['queue_seq']=ticket['queue_seq'] if ticket else None
     result['target_operator']=ticket['target_operator'] if ticket else None
     result['queue_status']=ticket['status'] if ticket else None
     result['queue_operator']=ticket['operator'] if ticket else None
+    result['queue_day']=ticket['queue_day'] if ticket else None
+    result['service_name']=ticket['content_name'] if ticket else None
     result['student'] = json.loads(row['student_snapshot']) if row['student_snapshot'] else (related['students'].get(row['student_id']) if related is not None else student(db,row['student_id'])) if row['student_id'] else None
     for key in ('manager', 'assignee'):
         if related is not None:result[key+'_name']=related['names'].get(row[key+'_id'])
@@ -193,6 +195,8 @@ def owner(user, row, db):
 
 
 def request_action(db, user, data):
+    import service_access
+    service_access.enforce(db,user,'/api/request/action')
     row = get_request(db, user, data.get('id'))
     if type(data.get('version')) is not int or data['version'] != row['version']:
         raise Problem('Ariza özgargan. Yangilab qayta urinib köring', 409)
@@ -206,6 +210,7 @@ def request_action(db, user, data):
         if row['status'] == 'pending_approval':
             raise Problem('Ariza tasdiqda', 409)
         values['manager_id'] = row['manager_id'] or user['id']
+        if not row['department']:values['department']=user['department']
     if action == 'update':
         if row['status'] == 'in_progress' and row['assignee_id'] not in (None, user['id']):
             raise Problem('Ijrodagi arizani avval mas’ul qaytarişi kerak', 409)

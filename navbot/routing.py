@@ -1,4 +1,5 @@
 """Section routing and immutable, independently numbered queue codes."""
+from datetime import datetime, timezone, timedelta
 import json
 import re
 
@@ -28,3 +29,22 @@ def code(ticket):
 
 def public_ticket(ticket):
     return dict(ticket)|{'code':code(ticket)}
+
+
+def queue_day(stamp):
+    if not stamp:return 'legacy'
+    try:
+        value=datetime.fromisoformat(str(stamp).replace('Z','+00:00'))
+        if value.tzinfo is None:value=value.replace(tzinfo=timezone.utc)
+        return value.astimezone(timezone(timedelta(hours=5))).date().isoformat()
+    except ValueError:return 'legacy'
+
+
+def initialize_daily_queue(db):
+    columns={r[1] for r in db.execute('PRAGMA table_info(tickets)')}
+    if 'queue_day' not in columns:db.execute("ALTER TABLE tickets ADD COLUMN queue_day TEXT NOT NULL DEFAULT ''")
+    for ticket in db.execute("SELECT id,created_at FROM tickets WHERE queue_day='' ").fetchall():
+        db.execute('UPDATE tickets SET queue_day=? WHERE id=?',(queue_day(ticket['created_at']),ticket['id']))
+    # Keep existing receipt numbers intact; uniqueness now includes the issue date.
+    db.execute('DROP INDEX IF EXISTS ticket_code')
+    db.execute('CREATE UNIQUE INDEX IF NOT EXISTS ticket_day_code ON tickets(prefix,queue_day,queue_seq)')

@@ -58,7 +58,8 @@ class SettingsAcceptance(unittest.TestCase):
             app.save_settings(self.db, self.admin, {'settings': {'catalog': catalog}})
             reprint = app.mutate(self.db, '/api/ticket', payload, None)
         self.assertEqual(reprint['id'], receipt['id'])
-        self.assertEqual(reprint['content'], 'Request a transcript')
+        self.assertEqual(reprint['content'], receipt['content'])
+        self.assertEqual(reprint['content'], 'Submit a medical certificate')
         self.assertEqual(self.db.execute('SELECT COUNT(*) FROM tickets').fetchone()[0], 1)
         self.assertEqual(self.db.execute('SELECT COUNT(*) FROM requests').fetchone()[0], 1)
 

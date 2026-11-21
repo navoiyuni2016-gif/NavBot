@@ -518,3 +518,19 @@ NavI18n.add([
 ['Xizmat bölimi','Раздел услуги','Service section'],
 ['Ichki xizmat muddati mas’ul xodim belgilagan sana bo‘yicha. Huquqiy asos:','Внутренний срок исполнения определяется датой, установленной ответственным сотрудником. Правовое основание:','The internal service deadline is the date set by the responsible staff member. Legal reference:']
 ]);
+
+NavI18n.add([
+['Faoliyat körsatkiçlari','Показатели деятельности','Activity overview'],
+['PNG yuklab oliş','Скачать PNG','Download PNG'],
+['PDF yuklab oliş','Скачать PDF','Download PDF'],
+['Sohalar böyiça murojaatlar','Обращения по направлениям','Requests by service area'],
+['Fakultetlar kesimida','По факультетам','By faculty'],
+['Kurslar kesimida','По курсам','By course'],
+['Har bir xizmat bölimiga kelgan murojaatlar','Обращения в каждый раздел услуг','Requests received by each service section'],
+['Tanlangan fakultet va kurs böyiça · 7 kun','По выбранному факультету и курсу · 7 дней','Selected faculty and course · 7 days'],
+['Menejerlar qabuli','Приём менеджеров','Manager reception'],
+['Qabulni bloklaş','Заблокировать приём','Suspend reception'],
+['Qabulni tiklaş','Восстановить приём','Restore reception'],
+['Menejer qabuli bloklandi','Приём менеджера заблокирован','Manager reception suspended'],
+['Menejer qabuli tiklandi','Приём менеджера восстановлен','Manager reception restored']
+]);

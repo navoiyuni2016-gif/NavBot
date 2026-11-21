@@ -6,6 +6,7 @@ import csv
 import io
 import json
 import logging
+import os
 import hashlib
 import re
 import sqlite3
@@ -30,6 +31,7 @@ import integrations
 import telegram_bot
 import telegram_mini
 import kiosk_printer
+import service_access
 import workflow as w
 
 ROOT = Path(__file__).resolve().parent
@@ -123,7 +125,7 @@ def save_settings(db, user, data):
 def snapshot(db, operator):
     # Public data is deliberately restricted: no student, request, notes, or staff names.
     items = [routing.public_ticket(row) for row in db.execute(
-        "SELECT t.id,t.lang,t.section,t.service,t.status,t.operator,t.called,t.prefix,t.queue_seq,t.target_operator FROM tickets t WHERE t.status!=? AND (t.status!='waiting' OR NOT EXISTS(SELECT 1 FROM requests r WHERE r.ticket_id=t.id AND (r.status='closed' OR r.deleted_at IS NOT NULL))) ORDER BY t.id", ('done',))]
+        "SELECT t.id,t.lang,t.section,t.service,t.status,t.operator,t.called,t.prefix,t.queue_seq,t.target_operator,t.queue_day FROM tickets t WHERE t.status!=? AND (t.status!='waiting' OR NOT EXISTS(SELECT 1 FROM requests r WHERE r.ticket_id=t.id AND (r.status='closed' OR r.deleted_at IS NOT NULL))) ORDER BY t.id", ('done',))]
     called = max((i for i in items if i['status'] == 'called'), key=lambda i: i['called'] or 0, default=None)
     return {'waiting': [i for i in items if i['status'] == 'waiting'],
             'serving': sorted((i for i in items if i['status'] == 'serving'), key=lambda i: i['operator']),
@@ -149,14 +151,18 @@ def mutate(db, path, data, user):
             if f'{section}:{service}' in config['hidden_services']:
                 raise w.Problem('Xizmat vaqtinça mavjud emas', 409)
             route = routing.for_section(config['section_routes'], section)
-            sequence = db.execute('SELECT COALESCE(MAX(queue_seq),0)+1 FROM tickets WHERE prefix=?', (route['prefix'],)).fetchone()[0]
-            db.execute('INSERT INTO tickets(request_key,lang,section,service,created_at,content_name,prefix,queue_seq,target_operator) VALUES (?,?,?,?,?,?,?,?,?)',
-                       (key, lang, section, service, w.now(), config['catalog'][section][1][service][LANGUAGES.index(lang)],route['prefix'],sequence,route['operator']))
+            stamp=w.now();day=routing.queue_day(stamp)
+            sequence = db.execute('SELECT COALESCE(MAX(queue_seq),0)+1 FROM tickets WHERE prefix=? AND queue_day=?', (route['prefix'],day)).fetchone()[0]
+            db.execute('INSERT INTO tickets(request_key,lang,section,service,created_at,content_name,prefix,queue_seq,target_operator,queue_day) VALUES (?,?,?,?,?,?,?,?,?,?)',
+                       (key, lang, section, service, stamp, config['catalog'][section][1][service][LANGUAGES.index(lang)],route['prefix'],sequence,route['operator'],day))
             ticket = dict(db.execute('SELECT * FROM tickets WHERE request_key=?', (key,)).fetchone())
         w.kiosk_request(db, ticket, ticket['content_name'])
         print_result=kiosk_printer.enqueue(db,ticket,config)
-        return {k: ticket[k] for k in ('id', 'lang', 'section', 'service', 'created_at','prefix','queue_seq','target_operator')} | {'content': ticket['content_name'],'code':routing.code(ticket),**print_result}
+        return {k: ticket[k] for k in ('id', 'lang', 'section', 'service', 'created_at','prefix','queue_seq','target_operator','queue_day')} | {'content': ticket['content_name'],'code':routing.code(ticket),**print_result}
     w.need(user, auth.ROLES)
+    if path == '/api/manager-service':
+        return service_access.change(db,user,data)
+    service_access.enforce(db,user,path)
     if path == '/api/admin/kiosk-printer':
         return kiosk_printer.configure(db,user,data)
     if path == '/api/telegram/mini-config':
@@ -272,8 +278,8 @@ def mutate(db, path, data, user):
             raise w.Problem('Navbat boşqa menejerga biriktirilgan', 409)
         db.execute("UPDATE tickets SET status='called',operator=? WHERE id=?", (operator, ticket['id']))
         if req:
-            db.execute('UPDATE requests SET manager_id=COALESCE(manager_id,?),version=version+1,updated_at=? WHERE id=?',
-                       (user['id'], w.now(), req['id']))
+            db.execute("UPDATE requests SET manager_id=COALESCE(manager_id,?),department=CASE WHEN department='' THEN ? ELSE department END,version=version+1,updated_at=? WHERE id=?",
+                       (user['id'],user['department'], w.now(), req['id']))
             w.record(db, req['id'], user, 'call', {'operator': operator,'queue_code':routing.code(ticket)})
         desk = ticket
     elif not desk or action == 'call':
@@ -394,6 +400,7 @@ class Handler(BaseHTTPRequestHandler):
         if hasattr(self,'_audit_context'):self._audit_user=user
         if user:
             user['avatar_url'] = profile_photo.url(db, user)
+            user['service_block']=service_access.status(db,user['id'])
         return user
 
     def guard(self, user, path):
@@ -408,14 +415,14 @@ class Handler(BaseHTTPRequestHandler):
                 return self.send_body((ROOT / 'index.html').read_bytes(), 'text/html; charset=utf-8')
             if url.path == '/api/tv-version':
                 import hashlib
-                return self.reply({'version':hashlib.sha256((ROOT/'index.html').read_bytes()+(ROOT/'i18n.js').read_bytes()).hexdigest()})
+                return self.reply({'version':hashlib.sha256(b''.join((ROOT/name).read_bytes() for name in ('index.html','i18n.js','dashboard.js','dashboard.css'))).hexdigest()})
             if url.path == '/downloads/NAVBOT-TV.apk':
                 return self.send_body((ROOT.parent/'downloads'/'NAVBOT-TV.apk').read_bytes(),'application/vnd.android.package-archive',filename='NAVBOT-TV.apk')
             if url.path == '/downloads/NAVBOT-NATIVE.zip':
                 return self.send_body((ROOT.parent / 'downloads' / 'NAVBOT-NATIVE.zip').read_bytes(),'application/zip',filename='NAVBOT-NATIVE.zip')
             if url.path == '/student':
                 return self.send_body((ROOT / 'student.html').read_bytes(),'text/html; charset=utf-8')
-            mini_assets={'/assets/student.js':('student.js','text/javascript; charset=utf-8'),'/assets/student.css':('student.css','text/css; charset=utf-8'),'/assets/student-pattern.svg':('student-pattern.svg','image/svg+xml')}
+            mini_assets={'/assets/dashboard.js':('dashboard.js','text/javascript; charset=utf-8'),'/assets/dashboard.css':('dashboard.css','text/css; charset=utf-8'),'/assets/student.js':('student.js','text/javascript; charset=utf-8'),'/assets/student.css':('student.css','text/css; charset=utf-8'),'/assets/student-pattern.svg':('student-pattern.svg','image/svg+xml')}
             if url.path in mini_assets:
                 name,mime=mini_assets[url.path]
                 return self.send_body((ROOT / name).read_bytes(),mime)
@@ -481,10 +488,12 @@ class Handler(BaseHTTPRequestHandler):
                 if url.path == '/api/telegram/health':
                     w.need(user,('admin',))
                     return self.reply(telegram_bot.health(db))
+                if url.path == '/api/manager-service':
+                    return self.reply(service_access.managers(db,user))
                 if url.path == '/api/users':
                     return self.reply({'users': auth.users(db)})
                 if url.path == '/api/requests':
-                    return self.reply({'requests': w.requests(db, user)})
+                    return self.reply({'requests': w.requests(db,user),'service_block':service_access.status(db,user['id'])})
                 if url.path == '/api/students':
                     w.need(user, ('admin', 'head', 'director'))
                     return self.reply({'students': [dict(r) for r in db.execute('SELECT * FROM students ORDER BY full_name')]})
@@ -678,11 +687,12 @@ def initialize(demo=False):
     # Preserve a recoverable snapshot before the first v0.5 schema migration.
     if Path(DATABASE).is_file():
         with closing(sqlite3.connect(DATABASE)) as source:
-            if source.execute('PRAGMA user_version').fetchone()[0] < 7:
+            if source.execute('PRAGMA user_version').fetchone()[0] < 8:
                 stamp = w.now().replace(':', '').replace('+', '_')
                 backup_path = str(DATABASE) + '.pre-v05-' + stamp + '.bak'
                 with closing(sqlite3.connect(backup_path)) as backup:
                     source.backup(backup)
+                os.chmod(backup_path,0o600)
                 print('Baza zaxirasi: ' + backup_path, flush=True)
     with closing(connection()) as db:
         db.execute('PRAGMA journal_mode=WAL')
@@ -718,12 +728,20 @@ def initialize(demo=False):
         telegram_bot.initialize(db)
         telegram_mini.initialize(db)
         kiosk_printer.initialize(db)
+        service_access.initialize(db)
         with db:
             config=settings(db)
+            renamed=False
+            for section,old_names in ((0,('Transkript oliş','Transkript olish')),(3,('Tölovlar','To‘lovlar',"To'lovlar"))):
+                if config['catalog'][section][1][0][0] in old_names:
+                    config['catalog'][section][1][0]=copy.deepcopy(CATALOG[section][1][0]);renamed=True
+            if renamed:db.execute('UPDATE settings SET value=? WHERE id=1',(json.dumps(config,ensure_ascii=False),))
+
             for ticket in db.execute('SELECT * FROM tickets WHERE prefix IS NULL OR queue_seq IS NULL OR target_operator IS NULL').fetchall():
                 route=routing.for_section(config['section_routes'],ticket['section'])
                 db.execute('UPDATE tickets SET prefix=COALESCE(prefix,?),queue_seq=COALESCE(queue_seq,id),target_operator=COALESCE(target_operator,operator,?) WHERE id=?',('A',route['operator'],ticket['id']))
-            db.execute('CREATE UNIQUE INDEX IF NOT EXISTS ticket_code ON tickets(prefix,queue_seq)')
+            routing.initialize_daily_queue(db)
+            db.execute("UPDATE requests SET department=COALESCE(NULLIF((SELECT department FROM users WHERE id=requests.assignee_id),''),(SELECT department FROM users WHERE id=requests.manager_id),'') WHERE department='' AND (assignee_id IS NOT NULL OR manager_id IS NOT NULL)")
             if demo:
                 db.executemany('INSERT INTO students(hemis_id,full_name,faculty,programme,course,student_group,education_form,status) VALUES (?,?,?,?,?,?,?,?) ON CONFLICT(hemis_id) DO NOTHING', [
                     ('100000000001', 'Sinov Talaba Bir', 'Filologiya (sinov)', 'Özbek tili', 2, 'TEST-201', 'Kunduzgi', 'active'),
@@ -738,7 +756,7 @@ def initialize(demo=False):
                 rid = w.kiosk_request(db, ticket, content)
                 if ticket['created_at'] is None:
                     w.record(db, rid, None, 'legacy_import', {'note': 'Eski çek; yaratilgan vaqt noma’lum. Ariza import vaqti bilan qayd etildi.', 'queue_status': ticket['status']})
-            db.execute('PRAGMA user_version=7')
+            db.execute('PRAGMA user_version=8')
 
 
 if __name__ == '__main__':
