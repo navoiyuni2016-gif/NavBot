@@ -164,12 +164,20 @@ def plan(db, lang, ticket, operator, prefix='A'):
     if full_call in available:
         return {'mode': 'recorded', 'urls': [available[full_call]], 'missing': []}
     layout=db.execute('SELECT layout FROM audio_layouts WHERE lang=?',(lang,)).fetchone()
-    if layout and layout['layout']=='numbered':
-        slots=['intro',f'letter:{prefix}',f'number:{ticket}',f'operator:{operator}']
+    numbered=[f'letter:{prefix}',f'number:{ticket}',f'operator:{operator}']
+    legacy=['prefix',f'number:{ticket}','between',f'operator:{operator}','suffix']
+    # A greeting is optional; the actual letter, number and operator never are.
+    # Keep complete legacy sequences intact. Recognize numbered packs saved
+    # before their layout was selected, without modifying recordings/settings.
+    legacy_complete=prefix=='A' and all(slot in available for slot in legacy)
+    use_numbered=(layout is not None and layout['layout']=='numbered') or (
+        not legacy_complete and all(slot in available for slot in numbered))
+    if use_numbered:
+        slots=(['intro'] if 'intro' in available else [])+numbered
     elif prefix!='A':
         return {'mode':'incomplete','urls':[],'missing':[f'letter:{prefix}']}
     else:
-        slots = ['prefix', f'number:{ticket}', 'between', f'operator:{operator}', 'suffix']
+        slots=legacy
     missing = [s for s in slots if s not in available]
     return {'mode': 'incomplete' if missing else 'recorded', 'urls': [] if missing else [available[s] for s in slots], 'missing': missing}
 

@@ -119,6 +119,12 @@ const { chromium } = require("playwright"),
     await page.waitForFunction(()=>document.querySelector('[data-audio-language=uz] .badge')?.textContent==='0');
     const remaining=(await(await page.request.get(base+'/api/audio')).json()).clips;
     assert.deepEqual(remaining.map(c=>c.lang).sort(),['en','ru']);
+    await page.locator('#audio-bulk [name=lang]').selectOption('ru');
+    await page.locator('#audio-bulk [name=files]').setInputFiles({name:'s2.wav',mimeType:'audio/wav',buffer:Buffer.from(wav,'base64')});
+    await page.locator('#audio-bulk button[type=submit]').click();
+    await page.waitForFunction(()=>document.querySelector('[data-audio-language=ru] .badge')?.textContent==='2');
+    assert.match(await page.locator('#audio-bulk-status').innerText(),/1/);
+
     const archiveCheck = await page.evaluate(() => {
       const original=state.requests;
       const base=original[0];

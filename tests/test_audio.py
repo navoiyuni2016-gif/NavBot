@@ -110,6 +110,34 @@ class AudioStorage(unittest.TestCase):
         self.assertEqual(plan['mode'],'recorded')
         self.assertEqual(self.audio.plan(self.db,'ru',500,1,'B')['mode'],'speech')
 
+    def test_missing_greeting_does_not_silence_three_language_numbered_calls(self):
+        for lang in ('uz','ru','en'):
+            for slot in ('letter:E','number:2','operator:3'):
+                self.audio.upload(self.db,ADMIN,clip(slot,lang))
+            self.audio.set_mode(self.db,ADMIN,{'lang':lang,'mode':'recorded','layout':'numbered'})
+            manifest=self.audio.metadata(self.db)
+            by_url={c['url']:c for c in manifest['clips']}
+            plan=self.audio.plan(self.db,lang,2,3,'E')
+            self.assertEqual(plan['mode'],'recorded')
+            self.assertEqual(plan['missing'],[])
+            self.assertEqual([by_url[u]['slot'] for u in plan['urls']],['letter:E','number:2','operator:3'])
+            self.assertTrue(all(by_url[u]['lang']==lang for u in plan['urls']))
+            greeting=self.upload('intro',lang)
+            self.assertEqual(self.audio.plan(self.db,lang,2,3,'E')['urls'][0],greeting['url'])
+            # Exact core slots remain mandatory; no other-language reuse.
+            wrong=self.audio.plan(self.db,lang,99,3,'E')
+            self.assertEqual(wrong['mode'],'incomplete')
+            self.assertIn('number:99',wrong['missing'])
+            self.assertEqual(wrong['urls'],[])
+
+    def test_numbered_pack_without_saved_layout_is_detected_read_only(self):
+        for slot in ('letter:E','number:2','operator:3'):
+            self.audio.upload(self.db,ADMIN,clip(slot,'ru'))
+        self.audio.set_mode(self.db,ADMIN,{'lang':'ru','mode':'recorded'})
+        before=self.audio.metadata(self.db)
+        self.assertEqual(self.audio.plan(self.db,'ru',2,3,'E')['mode'],'recorded')
+        self.assertEqual(self.audio.metadata(self.db),before)
+
     def test_provided_pack_is_exact_four_file_sequence(self):
         from pathlib import Path
         self.audio.install_pack(self.db,ADMIN)
