@@ -97,6 +97,45 @@ const { chromium } = require("playwright"),
       path: "/tmp/navbot-dashboard-v2-mobile.png",
       fullPage: true,
     });
+    const wav=(await fs.readFile(path.resolve(__dirname,'../navbot/tv-tone.wav'))).toString('base64');
+    for(const lang of ['uz','ru','en']){
+      const upload=await page.request.post(base+'/api/admin/audio/upload',{data:{lang,slot:'intro',label:lang+'-sample',filename:'sample.wav',mime:'audio/wav',data:wav}});
+      assert.equal(upload.status(),200);
+    }
+    await page.locator('#menu [data-view=audio]').click();
+    await page.locator('[data-audio-language]').first().waitFor();
+    assert.equal(await page.locator('[data-audio-language]').count(),3);
+    assert.equal(await page.locator('[data-audio-language][open]').count(),0);
+    assert.equal(await page.locator('#audio-library audio').count(),0);
+    await page.locator('[data-audio-language=ru] summary').click();
+    await page.locator('[data-audio-language=ru] audio').waitFor();
+    assert.equal(await page.locator('[data-audio-language=ru] .audio-item strong').innerText(),'ru-sample');
+    await page.locator('[data-audio-language=uz] summary').click();
+    await page.locator('[data-audio-language=uz] audio').waitFor();
+    await page.waitForFunction(()=>!document.querySelector('[data-audio-language=ru]').open);
+    assert.equal(await page.locator('[data-audio-language=uz] .audio-item strong').innerText(),'uz-sample');
+    assert.equal(await page.locator('[data-audio-language=uz] audio').getAttribute('preload'),'none');
+    await page.locator('[data-audio-language=uz] [data-delete-audio]').click();
+    await page.waitForFunction(()=>document.querySelector('[data-audio-language=uz] .badge')?.textContent==='0');
+    const remaining=(await(await page.request.get(base+'/api/audio')).json()).clips;
+    assert.deepEqual(remaining.map(c=>c.lang).sort(),['en','ru']);
+    const archiveCheck = await page.evaluate(() => {
+      const original=state.requests;
+      const base=original[0];
+      state.requests=[base,{...base,id:999999,status:'closed',number:'NAV-ARCHIVE',queue_status:'called',ticket_id:999999}];
+      state.selected=base.id;
+      navigate('archive');
+      const emptyHasCall=!!document.querySelector('#call-empty,[data-queue]');
+      const filters=[...document.querySelectorAll('#request-filters button')].map(b=>b.dataset.filter);
+      const ids=[...document.querySelectorAll('#request-list [data-id]')].map(b=>Number(b.dataset.id));
+      state.selected=999999;state.detailVersion=null;renderDetail();
+      const archiveHasControls=!!document.querySelector('.queue-controls,[data-queue],#open-active-queue,[data-telegram-open],#clear-current-requests');
+      const hasHistory=!!document.querySelector('.timeline');
+      state.requests=original;state.selected=null;navigate('requests');
+      const intakeHasCall=!!document.querySelector('#call-empty');
+      return {emptyHasCall,filters,ids,archiveHasControls,hasHistory,intakeHasCall};
+    });
+    assert.deepEqual(archiveCheck,{emptyHasCall:false,filters:['closed'],ids:[999999],archiveHasControls:false,hasHistory:true,intakeHasCall:true});
     await page.locator("#menu [data-view=service-access]").click();
     await page.locator("[data-service-manager]").first().waitFor();
     const form = page.locator("[data-service-manager]").first();

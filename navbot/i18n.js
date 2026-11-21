@@ -534,3 +534,5 @@ NavI18n.add([
 ['Menejer qabuli bloklandi','Приём менеджера заблокирован','Manager reception suspended'],
 ['Menejer qabuli tiklandi','Приём менеджера восстановлен','Manager reception restored']
 ]);
+
+NavI18n.add([['Bugungi murojaatlar','Сегодняшние обращения','Today’s requests'],['Oldingi kundan qolgan','Открытые с предыдущих дней','Open from previous days']]);
