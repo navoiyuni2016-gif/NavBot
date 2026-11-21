@@ -171,7 +171,7 @@ def plan(db, lang, ticket, operator, prefix='A'):
     # before their layout was selected, without modifying recordings/settings.
     legacy_complete=prefix=='A' and all(slot in available for slot in legacy)
     use_numbered=(layout is not None and layout['layout']=='numbered') or (
-        not legacy_complete and all(slot in available for slot in numbered))
+        not legacy_complete and any(slot.startswith('letter:') for slot in available))
     if use_numbered:
         slots=(['intro'] if 'intro' in available else [])+numbered
     elif prefix!='A':

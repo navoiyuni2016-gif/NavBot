@@ -138,6 +138,21 @@ class AudioStorage(unittest.TestCase):
         self.assertEqual(self.audio.plan(self.db,'ru',2,3,'E')['mode'],'recorded')
         self.assertEqual(self.audio.metadata(self.db),before)
 
+    def test_old_layout_reports_actual_missing_number_or_operator_not_existing_letter(self):
+        for lang in ('uz','ru','en'):
+            self.upload('letter:C',lang)
+            self.upload('operator:3',lang)
+            self.audio.set_mode(self.db,ADMIN,{'lang':lang,'mode':'recorded','layout':'legacy'})
+            missing_number=self.audio.plan(self.db,lang,3,3,'C')
+            self.assertEqual(missing_number['missing'],['number:3'])
+            self.assertEqual(missing_number['urls'],[])
+            self.upload('number:3',lang)
+            self.assertEqual(self.audio.plan(self.db,lang,3,3,'C')['mode'],'recorded')
+            missing_operator=self.audio.plan(self.db,lang,3,4,'C')
+            self.assertEqual(missing_operator['missing'],['operator:4'])
+            missing_letter=self.audio.plan(self.db,lang,3,3,'D')
+            self.assertEqual(missing_letter['missing'],['letter:D'])
+
     def test_provided_pack_is_exact_four_file_sequence(self):
         from pathlib import Path
         self.audio.install_pack(self.db,ADMIN)
