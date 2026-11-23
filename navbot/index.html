@@ -237,7 +237,44 @@ function tv(q){const id=q.current?.called??null;if(!$('.tv'))$('#content').inner
  const c=$('.current');if(id!==state.lastCall||!c.childElementCount){c.innerHTML=html`<h2>${esc(tvHeading(0))}</h2><div class="call-body"><div class="number">${q.current?esc(number(q.current)):'—'}${q.current?queueDate(q.current):''}</div>${q.current?html`<div class="target">→ ${esc(operatorLabel(q.current))}</div>`:''}</div>`;c.classList.remove('pulse');if(id!==null){void c.offsetWidth;c.style.setProperty('--blink',String(state.settings.blink_count??3));c.classList.add('pulse')}state.lastCall=id}
  if($('h2',c))$('h2',c).textContent=tvHeading(0);if($('.target',c)&&q.current)$('.target',c).textContent='→ '+operatorLabel(q.current);$('.serving').outerHTML=serving(q);$('.waiting').outerHTML=waiting(q);}
 
-async function publicPoll(){try{const q=await api('/api/state?'+desk+','+state.after);state.after=q.last;if(state.page==='tv'){tv(q);speak(q.events||[])}else if(state.page==='tablo'){$('#content').innerHTML=html`<section class="desk-display"><h1>${esc(operatorLabel({operator:desk}))}</h1><div class="number">${q.desk?esc(number(q.desk)):'—'}${q.desk?queueDate(q.desk):''}</div></section>`}notice('')}catch(e){notice(tr(14))}setTimeout(publicPoll,700)}
+// Public TV/tablo polling must never wait forever for an interrupted LAN request.
+const PUBLIC_POLL_TIMEOUT_MS=8000;
+const PUBLIC_POLL_RELOAD_AFTER_MS=60000;
+let publicPollHealthyAt=Date.now();
+async function fetchPublicState(){
+ const controller=new AbortController();
+ const timer=setTimeout(()=>controller.abort(),PUBLIC_POLL_TIMEOUT_MS);
+ try{
+  const response=await fetch('/api/state?'+desk+','+state.after,{cache:'no-store',signal:controller.signal});
+  if(!response.ok)throw new Error('HTTP '+response.status);
+  return await response.json();
+ }finally{clearTimeout(timer)}
+}
+function publicPollWatchdog(){
+ if(Date.now()-publicPollHealthyAt<PUBLIC_POLL_RELOAD_AFTER_MS||navigator.onLine===false)return;
+ // Reload at most once every five minutes, including across automatic page reloads.
+ const now=Date.now(),key='navbot-public-last-reload';
+ try{
+  if(now-Number(sessionStorage.getItem(key)||0)<300000)return;
+  sessionStorage.setItem(key,String(now));
+ }catch(error){/* Storage may be disabled on managed Android devices. */}
+ location.reload();
+}
+async function publicPoll(){
+ try{
+  const q=await fetchPublicState();
+  if(state.page==='tv'){tv(q);speak(q.events||[])}
+  else if(state.page==='tablo'){$('#content').innerHTML=html`<section class="desk-display"><h1>${esc(operatorLabel({operator:desk}))}</h1><div class="number">${q.desk?esc(number(q.desk)):'—'}${q.desk?queueDate(q.desk):''}</div></section>`}
+  state.after=q.last;
+  publicPollHealthyAt=Date.now();
+  notice('');
+ }catch(error){
+  notice(tr(14));
+ }finally{
+  // Even a render error must not permanently stop the TV refresh loop.
+  setTimeout(publicPoll,700);
+ }
+}
 function shell(){document.body.dataset.page='private';app.innerHTML=html`<div class="shell"><aside class="sidebar">${brandLogo()}<div class="uni"><strong>ToşDÖTAU</strong><br>Registrator ofisi</div><nav id="menu"></nav><div class="bottom sidebar-footer"><div class="footer-wordmark" aria-label="NAVBOT"><span>NAV</span><span>BOT</span></div><p>Ma’lumot va xizmat ko‘rsatish tizimi</p><small>© 2026 ToşDÖTAU</small></div></aside><div class="workspace"><header class="topbar"><h2 id="work-title">${esc(userRoleName(state.user))} iş oynasi</h2><div class="row"><button id="notify-button" aria-label="Bildirişnomalar">${uiIcon('notifications','♧')} <span id="notify-count">0</span></button><button id="profile-button">${avatar(state.user)} ${esc(userRoleName(state.user))}</button><button id="logout">Çiqiş</button></div></header><main class="workmain"><div id="notice" class="notice" role="status"></div><div id="work"></div></main></div></div>`;
  mountUtilities();$('#logout').onclick=async()=>{try{await api('/api/logout',{});location.href='/login'}catch(e){toast(e.message,true)}};$('#profile-button').onclick=()=>navigate('profile');$('#notify-button').onclick=toggleNotifications;
  const menu=[['dashboard','','Dashboard'],['requests','▤','Murojaatlar']];if(['manager','admin'].includes(state.user.role))menu.push(['phone','＋','Yangi murojaat']);if(['head','director','admin'].includes(state.user.role))menu.push(['report','▥','Hisobot'],['students','♧','Talabalar bazasi']);menu.push(['archive','▣','Arxiv'],['notifications','♧','Bildirişnomalar'],['profile','♙','Mening profilim']);if(state.user.role==='admin')menu.push(['users','♧','Xodimlar va loginlar'],['settings','⚙','Tizim sozlamalari'],['audit','▤','Audit jurnali'],['audio','♫','Ovozli çaqiruv']);if(state.user.role==='admin')menu.push(['integrations','↔','Integratsiyalar'],['devices','▣','Kiosk, TV va tablo']);
@@ -499,7 +536,7 @@ new MutationObserver(decorateFileInputs).observe(app,{childList:true,subtree:tru
 document.addEventListener('invalid',e=>{if(e.target.setCustomValidity)e.target.setCustomValidity(t('Maydonni tekşiring'))},true);document.addEventListener('input',e=>{if(e.target.setCustomValidity)e.target.setCustomValidity('')});
 
 (async()=>{try{const [settings,catalog,branding]=await Promise.all([api('/api/settings'),api('/api/catalog'),api('/api/branding')]);state.brandingTargets=branding.targets;state.settings={...defaults,...settings.settings};state.catalog=catalog;
- if(['kiosk','tv','tablo'].includes(state.page)){if(state.page==='tv'){state.lang=Math.max(0,languages.indexOf(state.settings.tv_language));NavI18n.setLanguage(languages[state.lang],false)}publicShell();if(state.page==='kiosk'){mountUtilities();setInterval(async()=>{if(state.section!==null||state.ticket||state.busy)return;try{const settings=(await api('/api/settings')).settings;if(JSON.stringify(settings)!==JSON.stringify(state.settings)){state.settings={...defaults,...settings};state.catalog=state.settings.catalog||state.catalog;kiosk()}}catch{}},10000);resumeKioskPrinter()}else{if(state.page==='tv'){state.audio=true;$('#controls').hidden=true;setupTVAudio()}publicPoll();setInterval(async()=>{try{const s=(await api('/api/settings')).settings;state.settings={...defaults,...s};if(state.page==='tv'){state.lang=Math.max(0,languages.indexOf(state.settings.tv_language));NavI18n.setLanguage(languages[state.lang],false);publicTitle()}}catch{}},10000)}return}
+ if(['kiosk','tv','tablo'].includes(state.page)){if(state.page==='tv'){state.lang=Math.max(0,languages.indexOf(state.settings.tv_language));NavI18n.setLanguage(languages[state.lang],false)}publicShell();if(state.page==='kiosk'){mountUtilities();setInterval(async()=>{if(state.section!==null||state.ticket||state.busy)return;try{const settings=(await api('/api/settings')).settings;if(JSON.stringify(settings)!==JSON.stringify(state.settings)){state.settings={...defaults,...settings};state.catalog=state.settings.catalog||state.catalog;kiosk()}}catch{}},10000);resumeKioskPrinter()}else{if(state.page==='tv'){state.audio=true;$('#controls').hidden=true;setupTVAudio()}publicPoll();setInterval(publicPollWatchdog,15000);setInterval(async()=>{try{const s=(await api('/api/settings')).settings;const prior=JSON.stringify([state.settings.tv_language,state.settings.office,state.settings.university,state.settings.branding]);state.settings={...defaults,...s};const current=JSON.stringify([state.settings.tv_language,state.settings.office,state.settings.university,state.settings.branding]);if(state.page==='tv'&&current!==prior){state.lang=Math.max(0,languages.indexOf(state.settings.tv_language));NavI18n.setLanguage(languages[state.lang],false);publicTitle()}}catch{}},10000)}return}
  state.user=(await api('/api/me')).user;if(!state.user){login();return}if(state.page==='login'){location.href='/'+state.user.role;return}desk=state.user.operator||desk;if(state.user.must_change_password){shell();navigate('profile');return}state.users=(await api('/api/users')).users;await refreshPrivate();shell();if(state.user.must_change_password||state.page==='profile')navigate('profile');else navigate('dashboard');privatePoll();
  }catch(e){app.innerHTML=html`<main class="public-main"><section class="panel"><h1>NavBoTni oçib bölmadi</h1><p>${esc(e.message)}</p><button id="retry-app">Qayta uriniş</button></section></main>`;$('#retry-app').onclick=()=>location.reload()}})();
 </script></body></html>
