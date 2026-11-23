@@ -194,6 +194,9 @@ body[data-page=kiosk] .kiosk-languages{gap:clamp(12px,1.5vw,23px)}
 body[data-page=kiosk] .kiosk-languages button{width:clamp(78px,7.5vw,128px);min-width:0!important;min-height:clamp(54px,6.4vh,72px);padding:6px 12px!important;gap:0!important;border-radius:22px!important}
 body[data-page=kiosk] .kiosk-languages .kiosk-flag{font-size:clamp(35px,3.1vw,50px);line-height:1}
 }
+
+/* WebView vector flags, not country-letter emoji fallbacks */
+@media screen{body[data-page=kiosk] .kiosk-languages svg.kiosk-flag{display:block!important;width:clamp(48px,4.7vw,70px)!important;height:auto!important;aspect-ratio:3/2;border-radius:5px;overflow:hidden;box-shadow:0 2px 7px #0008;flex:none}}
 </style></head><body><div id="app"></div><div id="toast" class="toast" role="status" hidden></div>
 <link rel="stylesheet" href="/assets/dashboard.css"><script src="/assets/dashboard.js"></script>
 <script src="/assets/i18n.js"></script>
@@ -244,7 +247,13 @@ const kioskIcons={"graduation-cap":"<path d=\"m2 9 10-5 10 5-10 5L2 9Z\"/><path 
 const kioskSectionNames=["graduation-cap","lightbulb","globe","briefcase-business","clipboard-check"];
 const kioskServiceNames=[["file-text","arrow-left-right","key-round","file-pen-line","message-circle"],["book-open-check","presentation","graduation-cap","award","message-circle"],["plane","arrow-left-right","landmark","globe","message-circle"],["credit-card","award","briefcase-business","file-pen-line","message-circle"],["building-2","calendar-check","refresh-cw","file-pen-line","message-circle"]];
 function kioskThemeIcon(s,v){const n=v===null?kioskSectionNames[s]:kioskServiceNames[s]?.[v];return staticHTML('<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+(kioskIcons[n]||kioskIcons['message-circle'])+'</svg>')}
-function kioskFlag(i){const flag=['🇺🇿','🇷🇺','🇬🇧'][i];return html`<span class="kiosk-flag" aria-hidden="true">${flag}</span>`}
+// Actual inline SVG flags instead of emoji: Android WebView may show UZ RU GB text.
+const KIOSK_FLAG_SVGS=[
+ '<svg class="kiosk-flag" viewBox="0 0 60 40" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#169cd2"/><rect y="14" width="60" height="13" fill="#fff"/><rect y="27" width="60" height="13" fill="#159b57"/><path d="M0 13.5h60M0 27h60" stroke="#de3044" stroke-width="1"/><circle cx="10" cy="6.8" r="4.2" fill="#fff"/><circle cx="12.4" cy="6.4" r="3.6" fill="#169cd2"/>'+Array.from({length:12},(_,j)=>{const x=j<3?20+j*6:j<7?17+(j-3)*6:14+(j-7)*6;const y=j<3?3.2:j<7?7.2:11.2;return '<path d="M'+x+' '+(y-1.65)+'l.42 1.19h1.28l-1.02.78.38 1.23L'+x+' '+(y+1.48)+'l-1.06.75.38-1.23-1.02-.78h1.28z" fill="#fff"/>'}).join('')+'</svg>',
+ '<svg class="kiosk-flag" viewBox="0 0 60 40" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#fff"/><rect y="13.33" width="60" height="13.34" fill="#0039a6"/><rect y="26.67" width="60" height="13.33" fill="#d52b1e"/></svg>',
+ '<svg class="kiosk-flag" viewBox="0 0 60 40" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#012169"/><path d="M0 0 60 40M60 0 0 40" stroke="#fff" stroke-width="10"/><path d="M0 0 60 40M60 0 0 40" stroke="#c8102e" stroke-width="3.8"/><path d="M30 0v40M0 20h60" stroke="#fff" stroke-width="14"/><path d="M30 0v40M0 20h60" stroke="#c8102e" stroke-width="8"/></svg>'
+];
+function kioskFlag(i){return staticHTML(KIOSK_FLAG_SVGS[i]||KIOSK_FLAG_SVGS[0])}
 function kioskLanguages(){return html`<div class="kiosk-languages" role="group" aria-label="Tilni tanlash">${languages.map((l,i)=>html`<button type="button" data-kiosk-lang="${i}" aria-label="${esc(words[i][15])}" aria-pressed="${i===state.lang}">${kioskFlag(i)}</button>`).join('')}</div>`}
 function kiosk(){state.page='kiosk';document.body.dataset.page='kiosk';publicTitle();const controls=$('#controls'),content=$('#content');controls.innerHTML='';content.innerHTML='';content.classList.add('kiosk-choices');
 
