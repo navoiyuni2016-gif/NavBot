@@ -187,7 +187,14 @@ body[data-page=kiosk] .kiosk-languages button[aria-pressed=true]{border-color:#1
 body[data-page=kiosk] .kiosk-flag{font-size:clamp(26px,3vw,44px);line-height:1}
 @media(max-height:740px){body[data-page=kiosk] .kiosk-grid .tile,body[data-page=kiosk] .kiosk-grid .tile:nth-child(n+4){min-height:110px}body[data-page=kiosk] .kiosk-grid.section-kiosk .tile,body[data-page=kiosk] .kiosk-grid.section-kiosk .tile:nth-child(n+4){min-height:105px!important}}
 @media(max-width:740px){body[data-page=kiosk] .kiosk-grid .tile .icon{width:48px;height:48px}body[data-page=kiosk] .kiosk-grid .tile,body[data-page=kiosk] .kiosk-grid .tile:nth-child(n+4){min-height:120px;font-size:17px}body[data-page=kiosk] .kiosk-languages button{min-width:110px;padding:7px;font-size:13px}}
-}</style></head><body><div id="app"></div><div id="toast" class="toast" role="status" hidden></div>
+}
+/* Approved screenshot: kiosk language selection consists only of flags. */
+@media screen {
+body[data-page=kiosk] .kiosk-languages{gap:clamp(12px,1.5vw,23px)}
+body[data-page=kiosk] .kiosk-languages button{width:clamp(78px,7.5vw,128px);min-width:0!important;min-height:clamp(54px,6.4vh,72px);padding:6px 12px!important;gap:0!important;border-radius:22px!important}
+body[data-page=kiosk] .kiosk-languages .kiosk-flag{font-size:clamp(35px,3.1vw,50px);line-height:1}
+}
+</style></head><body><div id="app"></div><div id="toast" class="toast" role="status" hidden></div>
 <link rel="stylesheet" href="/assets/dashboard.css"><script src="/assets/dashboard.js"></script>
 <script src="/assets/i18n.js"></script>
 <script>
@@ -238,7 +245,7 @@ const kioskSectionNames=["graduation-cap","lightbulb","globe","briefcase-busines
 const kioskServiceNames=[["file-text","arrow-left-right","key-round","file-pen-line","message-circle"],["book-open-check","presentation","graduation-cap","award","message-circle"],["plane","arrow-left-right","landmark","globe","message-circle"],["credit-card","award","briefcase-business","file-pen-line","message-circle"],["building-2","calendar-check","refresh-cw","file-pen-line","message-circle"]];
 function kioskThemeIcon(s,v){const n=v===null?kioskSectionNames[s]:kioskServiceNames[s]?.[v];return staticHTML('<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+(kioskIcons[n]||kioskIcons['message-circle'])+'</svg>')}
 function kioskFlag(i){const flag=['🇺🇿','🇷🇺','🇬🇧'][i];return html`<span class="kiosk-flag" aria-hidden="true">${flag}</span>`}
-function kioskLanguages(){return html`<div class="kiosk-languages" role="group" aria-label="Tilni tanlash">${languages.map((l,i)=>html`<button type="button" data-kiosk-lang="${i}" aria-pressed="${i===state.lang}">${kioskFlag(i)}<span>${esc(words[i][15])}</span></button>`).join('')}</div>`}
+function kioskLanguages(){return html`<div class="kiosk-languages" role="group" aria-label="Tilni tanlash">${languages.map((l,i)=>html`<button type="button" data-kiosk-lang="${i}" aria-label="${esc(words[i][15])}" aria-pressed="${i===state.lang}">${kioskFlag(i)}</button>`).join('')}</div>`}
 function kiosk(){state.page='kiosk';document.body.dataset.page='kiosk';publicTitle();const controls=$('#controls'),content=$('#content');controls.innerHTML='';content.innerHTML='';content.classList.add('kiosk-choices');
 
  controls.innerHTML=(state.section!==null?html`<button id="back">${esc(tr(2))}</button>`:'');if($('#back'))$('#back').onclick=()=>{if(!state.busy&&state.pending===null){state.section=null;kiosk()}};
@@ -506,7 +513,7 @@ function mountUtilities(){
  const box=document.createElement('div');box.id='ui-utilities';box.className='ui-utilities';
  const currentTheme=localStorage.getItem('navbot-theme')==='dark'?'dark':'light';
  box.innerHTML=html`<details class="utility-menu" id="language-menu"><summary aria-label="Tilni tanlaş">${esc(words[languages.indexOf(NavI18n.language)][15])} ▾</summary><div class="utility-options">${languages.map((l,i)=>html`<button type="button" data-ui-lang="${l}" aria-pressed="${NavI18n.language===l}">${esc(words[i][15])}</button>`).join('')}</div></details><button type="button" id="theme-toggle" data-theme="${currentTheme}" aria-label="To‘q rejim" aria-pressed="${currentTheme==='dark'}" title="${esc(t(currentTheme==='dark'?'Yoruğ rejim':'To‘q rejim'))}"><span id="current-theme-icon">${uiIcon(currentTheme,currentTheme==='dark'?'☾':'☀')}</span></button>`;
- host.prepend(box);const toggle=$('#theme-toggle');toggle.onclick=()=>{const theme=document.documentElement.dataset.theme==='dark'?'light':'dark';document.documentElement.dataset.theme=theme;localStorage.setItem('navbot-theme',theme);toggle.dataset.theme=theme;toggle.setAttribute('aria-pressed',String(theme==='dark'));toggle.title=t(theme==='dark'?'Yoruğ rejim':'To‘q rejim');$('#current-theme-icon').innerHTML=uiIcon(theme,theme==='dark'?'☾':'☀')};
+ host.prepend(box);if(state.page==='kiosk')$('#language-menu')?.remove();const toggle=$('#theme-toggle');toggle.onclick=()=>{const theme=document.documentElement.dataset.theme==='dark'?'light':'dark';document.documentElement.dataset.theme=theme;localStorage.setItem('navbot-theme',theme);toggle.dataset.theme=theme;toggle.setAttribute('aria-pressed',String(theme==='dark'));toggle.title=t(theme==='dark'?'Yoruğ rejim':'To‘q rejim');$('#current-theme-icon').innerHTML=uiIcon(theme,theme==='dark'?'☾':'☀')};
  box.querySelectorAll('[data-ui-lang]').forEach(b=>b.onclick=()=>changeLanguage(b.dataset.uiLang));
  document.documentElement.dataset.theme=localStorage.getItem('navbot-theme')==='dark'?'dark':'light';document.documentElement.lang=NavI18n.language;
 }
