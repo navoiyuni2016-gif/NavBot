@@ -252,6 +252,27 @@ const { chromium } = require("playwright"),
     await kp.setViewportSize({width:360,height:800});
     assert(await kp.locator('body').evaluate(e=>e.scrollWidth<=innerWidth+1));
     await kioskContext.close();
+    const closeContext=await browser.newContext(),managerPage=await closeContext.newPage();
+    await managerPage.goto(base+'/login');
+    await managerPage.locator('[name=username]').fill('manager2');
+    await managerPage.locator('[name=password]').fill('Navbot-Test-2026!');
+    await managerPage.locator('#login-form button').click();
+    await managerPage.locator('[data-dashboard-metric=total]').waitFor();
+    const closeCreated=await managerPage.request.post(base+'/api/request/create',{data:{key:crypto.randomUUID(),channel:'phone',section:0,service:0,lang:'uz',hemis_id:'100000000001',identity_confirmed:true,content:'Close without leaving workspace',note:''}});
+    assert.equal(closeCreated.status(),200);const closeRequest=(await closeCreated.json()).request;
+    await managerPage.evaluate(async()=>{await refreshPrivate();navigate('requests')});
+    await managerPage.locator(`#request-list [data-id="${closeRequest.id}"]`).click();
+    await managerPage.locator('[data-action=resolve]').click();
+    await managerPage.locator('#operation-form [name=answer]').fill('Murojaat hal qilindi');
+    await managerPage.locator('#operation-form button[type=submit]').click();
+    await managerPage.waitForFunction(id=>state.requests.find(r=>r.id===id)?.status==='closed',closeRequest.id);
+    assert.equal(await managerPage.locator('#menu .active').getAttribute('data-view'),'requests');
+    assert.equal(new URL(managerPage.url()).hash,'#requests/'+closeRequest.id);
+    await managerPage.reload();
+    await managerPage.locator('#request-detail .summary-banner').waitFor();
+    assert.equal(await managerPage.locator('#menu .active').getAttribute('data-view'),'requests');
+    assert.match(await managerPage.locator('#request-detail .summary-banner').innerText(),new RegExp(closeRequest.number));
+    await closeContext.close();
     assert.deepEqual(errors, []);
     console.log(
       "PASS dashboard totals, filters, PNG/PDF downloads, mobile layout, service suspension UI, no page errors",
