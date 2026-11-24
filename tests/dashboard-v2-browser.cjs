@@ -215,6 +215,43 @@ const { chromium } = require("playwright"),
       );
       await c.close();
     }
+    const kioskContext=await browser.newContext({viewport:{width:1024,height:768}});
+    const kp=await kioskContext.newPage();
+    await kp.addInitScript(()=>{window.printed=0;window.print=()=>window.printed++});
+    await kp.goto(base+'/kiosk');await kp.locator('[data-kiosk-lang]').first().waitFor();
+    assert.equal(await kp.locator('[data-kiosk-lang]').count(),3);
+    assert.equal(await kp.locator('#language-menu').count(),0);
+    for(const [lang,index] of [['ru',1],['en',2],['uz',0]]){
+      await kp.locator(`[data-kiosk-lang=${lang}]`).click();
+      assert.equal(await kp.locator('html').getAttribute('lang'),lang);
+      assert.equal(await kp.locator(`[data-kiosk-lang=${lang}]`).getAttribute('aria-pressed'),'true');
+      const title=await kp.locator('.kiosk-title h1').innerText();
+      assert.equal(title,['Bölimni tanlang','Выберите раздел','Choose a section'][index]);
+    }
+    const bounds=await kp.evaluate(()=>({grid:document.querySelector('.kiosk-grid').getBoundingClientRect().bottom,flags:document.querySelector('.kiosk-languages').getBoundingClientRect().top,bottom:document.querySelector('.kiosk-languages').getBoundingClientRect().bottom,ys:[...document.querySelectorAll('[data-kiosk-lang]')].map(e=>e.getBoundingClientRect().top)}));
+    assert(bounds.flags>=bounds.grid);assert(bounds.bottom<=768);assert(bounds.ys.every(y=>y===bounds.ys[0]));
+    await kp.screenshot({path:'/tmp/navbot-kiosk-flags.png',fullPage:true});
+    const expectedIcons=[['medical','document','hemis','tools','layers'],['microscope','mentor','cap','sprout','layers'],['people','plane','book','handshake','layers'],['contract','stipend','briefcase','document','layers'],['building','calendar','refresh','shield','layers']];
+    for(let section=0;section<5;section++){
+      await kp.locator(`[data-choice="${section}"]`).click();
+      assert.deepEqual(await kp.locator('[data-choice] [data-kiosk-icon]').evaluateAll(nodes=>nodes.map(e=>e.dataset.kioskIcon)),expectedIcons[section]);
+      if(section===0)await kp.screenshot({path:'/tmp/navbot-kiosk-academic.png',fullPage:true});
+      await kp.locator('#back').click();
+    }
+
+    await kp.locator('[data-choice="0"]').click();
+    await kp.locator('[data-kiosk-lang=en]').click();
+    assert.equal(await kp.locator('#back').count(),1);
+    const issued=kp.waitForRequest(r=>r.url().endsWith('/api/ticket')&&r.method()==='POST');
+    await kp.locator('[data-choice="0"]').click();
+    const issuedRequest=await issued;assert.equal(issuedRequest.postDataJSON().lang,'en');
+    await kp.waitForFunction(()=>window.printed===1);
+    assert.equal(await kp.locator('[data-kiosk-lang]:disabled').count(),3);
+    await kp.evaluate(()=>changeLanguage('ru'));
+    assert.equal(await kp.locator('html').getAttribute('lang'),'en');
+    await kp.setViewportSize({width:360,height:800});
+    assert(await kp.locator('body').evaluate(e=>e.scrollWidth<=innerWidth+1));
+    await kioskContext.close();
     assert.deepEqual(errors, []);
     console.log(
       "PASS dashboard totals, filters, PNG/PDF downloads, mobile layout, service suspension UI, no page errors",

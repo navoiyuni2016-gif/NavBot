@@ -422,7 +422,7 @@ class Handler(BaseHTTPRequestHandler):
                 return self.send_body((ROOT.parent / 'downloads' / 'NAVBOT-NATIVE.zip').read_bytes(),'application/zip',filename='NAVBOT-NATIVE.zip')
             if url.path == '/student':
                 return self.send_body((ROOT / 'student.html').read_bytes(),'text/html; charset=utf-8')
-            mini_assets={'/assets/dashboard.js':('dashboard.js','text/javascript; charset=utf-8'),'/assets/dashboard.css':('dashboard.css','text/css; charset=utf-8'),'/assets/student.js':('student.js','text/javascript; charset=utf-8'),'/assets/student.css':('student.css','text/css; charset=utf-8'),'/assets/student-pattern.svg':('student-pattern.svg','image/svg+xml')}
+            mini_assets={'/assets/kiosk-design.js':('kiosk-design.js','text/javascript; charset=utf-8'),'/assets/kiosk-design.css':('kiosk-design.css','text/css; charset=utf-8'),'/assets/flag-uz.svg':('flag-uz.svg','image/svg+xml'),'/assets/flag-ru.svg':('flag-ru.svg','image/svg+xml'),'/assets/flag-en.svg':('flag-en.svg','image/svg+xml'),'/assets/dashboard.js':('dashboard.js','text/javascript; charset=utf-8'),'/assets/dashboard.css':('dashboard.css','text/css; charset=utf-8'),'/assets/student.js':('student.js','text/javascript; charset=utf-8'),'/assets/student.css':('student.css','text/css; charset=utf-8'),'/assets/student-pattern.svg':('student-pattern.svg','image/svg+xml')}
             if url.path in mini_assets:
                 name,mime=mini_assets[url.path]
                 return self.send_body((ROOT / name).read_bytes(),mime)
