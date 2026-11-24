@@ -2,7 +2,7 @@
 body[data-page=kiosk] .public-header{background:#051c30;border-bottom:1px solid #124563;color:#fff}
 body[data-page=kiosk] .public-main,html[data-theme=dark] body[data-page=kiosk] .public-main{background-color:#001929;background-image:radial-gradient(ellipse at 50% 20%,#03405c75,transparent 65%),linear-gradient(135deg,#04293c55 6%,transparent 6%,transparent 92%,#07374c55 92%);color:#f3f8ff}
 body[data-page=kiosk] .public-main:before,body[data-page=kiosk] .public-main:after{border-color:#0e536e44;box-shadow:0 0 0 42px #0840561a,0 0 0 84px #08405614}
-body[data-page=kiosk] .kiosk-choices{max-width:1500px;width:100%;margin:auto}
+body[data-page=kiosk] .kiosk-choices{max-width:1500px;width:100%;margin:auto;padding:clamp(8px,2vh,24px) 0}
 body[data-page=kiosk] .kiosk-title h1,html[data-theme=dark] body[data-page=kiosk] .kiosk-title h1{color:#f3f7ff;text-shadow:0 2px 6px #0003}
 body[data-page=kiosk] .kiosk-title:before{background:linear-gradient(90deg,#00e1e4,#0d9eff);box-shadow:0 0 12px #00aaff44}
 body[data-page=kiosk] .kiosk-title .eyebrow{display:none}
@@ -29,3 +29,5 @@ body[data-page=kiosk] .kiosk-title .kiosk-print-status{color:#52e8d6}
 @media screen{body[data-page=kiosk] .kiosk-title h1>span{color:#00ded9}}
 /* Longer service names need more room than department headings. */
 @media screen and (min-width:741px){body[data-page=kiosk] .kiosk-grid.section-kiosk .tile{font-size:clamp(18px,1.8vw,28px)!important}body[data-page=kiosk] .kiosk-grid.section-kiosk .tile>span:last-child{overflow-wrap:normal;hyphens:none}}
+@media screen and (min-width:741px){body[data-page=kiosk] .kiosk-grid .tile,body[data-page=kiosk] .kiosk-grid .tile:nth-child(n+4){min-height:clamp(130px,22vh,250px)}}
+@media screen and (min-width:741px) and (max-height:850px){body[data-page=kiosk] .kiosk-grid .tile,body[data-page=kiosk] .kiosk-grid .tile:nth-child(n+4){min-height:20vh}}
