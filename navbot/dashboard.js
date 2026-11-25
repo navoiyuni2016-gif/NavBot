@@ -66,7 +66,7 @@ window.NavDashboard = (() => {
     ["Yakunlangan", "closed"],
     ["Keçikkan", "overdue"],
   ];
-  function render(host, source, catalog, esc) {
+  function render(host, source, catalog, esc, institution="ToşDÖTAU · Registrator ofisi") {
     const m = model(source, catalog);
     document.body.classList.add("dashboard-screen");
     const colors = ["#8374ff", "#2bd36f", "#69d7fa", "#da8dff", "#ffbd36"];
@@ -91,7 +91,7 @@ window.NavDashboard = (() => {
     ];
     const ratio = m.total ? (m.closed / m.total) * 100 : 0;
     host.innerHTML = NavI18n.html`<div class="official-dashboard">
-      <header class="dash-heading"><div><p>ToşDÖTAU · REGISTRATOR OFISI</p><h1>Faoliyat körsatkiçlari</h1><span>${day(Date.now())} · Toşkent vaqti</span></div><div class="dash-export"><button data-export="png">PNG yuklab oliş</button><button data-export="pdf">PDF yuklab oliş</button></div></header>
+      <header class="dash-heading"><div><p>${esc(institution)}</p><h1>Faoliyat körsatkiçlari</h1><span>${day(Date.now())} · Toşkent vaqti</span></div><div class="dash-export"><button data-export="png">PNG yuklab oliş</button><button data-export="pdf">PDF yuklab oliş</button></div></header>
       <div class="dash-filters"><label>Fakultet<select data-filter="faculty">${options("faculty", groups(source, faculty))}</select></label><label>Kurs<select data-filter="course">${options("course", courseGroups(source))}</select></label><label class="dash-period-label">Dinamika davri<select id="dashboard-period">${Object.entries(periodTitles).map(([value,label])=>`<option value="${value}" ${value===trendPeriod?'selected':''}>${esc(NavI18n.t(label))}</option>`).join('')}</select></label><span>${esc(NavI18n.t('Umumiy natijalar: barça sanalar'))}<br>${esc(NavI18n.t(m.periodLabel))}</span></div>
       <div class="dash-kpis">${labels.map(([name, key]) => `<article data-dashboard-metric="${key}" class="dash-kpi-${key}"><span>${esc(NavI18n.t(name))}</span><div class="dash-kpi-number"><strong class="value">${m[key]}</strong><small>ta</small></div><footer>${key === "closed" ? (m.total ? Math.round(ratio) : 0) + "% bajarilgan" : "Tanlangan kesim böyiça"}</footer></article>`).join("")}</div>
       <div class="dash-panels">
@@ -111,7 +111,7 @@ window.NavDashboard = (() => {
       (el) =>
         (el.onchange = () => {
           filters[el.dataset.filter] = el.value;
-          render(host, source, catalog, esc);
+          render(host, source, catalog, esc, institution);
         }),
     );
     host.querySelectorAll("[data-export]").forEach(
@@ -120,7 +120,7 @@ window.NavDashboard = (() => {
           const buttons = host.querySelectorAll("[data-export]");
           buttons.forEach((b) => (b.disabled = true));
           try {
-            await exportFile(m, button.dataset.export);
+            await exportFile(m, button.dataset.export, institution);
             host.querySelector("#dash-export-status").textContent =
               "Fayl yuklab olindi";
           } catch (e) {
@@ -132,7 +132,7 @@ window.NavDashboard = (() => {
         }),
     );
   }
-  function canvas(m) {
+  function canvas(m, institution) {
     const sections = [
       ["Murojaatlar dinamikasi · "+m.periodLabel,m.daily],
       ["Sohalar böyiça", m.sections],
@@ -155,7 +155,7 @@ window.NavDashboard = (() => {
     x.fillRect(0, 0, 1600, 170);
     x.fillStyle = "#fff";
     x.font = "bold 40px sans-serif";
-    x.fillText("ToşDÖTAU · Registrator ofisi", 60, 66);
+    x.fillText(institution, 60, 66, 1480);
     x.font = "26px sans-serif";
     x.fillText("Faoliyat körsatkiçlari · " + day(Date.now()), 60, 115);
     x.fillText(
@@ -242,8 +242,8 @@ window.NavDashboard = (() => {
       type: "application/pdf",
     });
   }
-  async function exportFile(m, format) {
-    const c = canvas(m);
+  async function exportFile(m, format, institution) {
+    const c = canvas(m, institution);
     const blob =
       format === "pdf"
         ? pdf(c)

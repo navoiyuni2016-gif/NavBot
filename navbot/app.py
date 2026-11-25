@@ -33,16 +33,20 @@ import telegram_mini
 import kiosk_printer
 import service_access
 import owner_control
+import tenant_instance
 import workflow as w
 
 ROOT = Path(__file__).resolve().parent
 CATALOG = json.loads((ROOT / 'catalog.json').read_text(encoding='utf-8'))
 LANGUAGES = ('uz', 'ru', 'en')
 DATABASE = ROOT / 'navbot.sqlite3'
+TENANT = None
 DEFAULT_SETTINGS = {
     'university': ['Alişer Navoiy nomidagi Toşkent davlat özbek tili va adabiyoti universiteti',
                    'Ташкентский государственный университет узбекского языка и литературы имени Алишера Навои',
                    'Alisher Navo’i Tashkent State University of Uzbek Language and Literature'],
+    'university_short': ['ToşDÖTAU','ТошДЎТАУ','TSUULL'],
+    'footer_text': ['© 2026 ToşDÖTAU'] * 3,
     'office': ['Registrator ofisi', 'Офис регистратора', 'Registrar’s Office'],
     'tv_language': 'uz', 'warning_hours': 24, 'volume': 0.75, 'blink_count': 3,
     'tv_titles': [['Hozir çaqirilmoqda', 'Xizmat körsatilmoqda', 'Kutilayotgan navbatlar'],
@@ -82,7 +86,7 @@ def save_settings(db, user, data):
     result.update(incoming)
     def translations(value):
         return isinstance(value, list) and len(value) == 3 and all(isinstance(s, str) and 0 < len(s) <= 1000 for s in value)
-    for key in ('university', 'office', 'receipt_footer', 'voice_templates'):
+    for key in ('university', 'university_short', 'footer_text', 'office', 'receipt_footer', 'voice_templates'):
         if not translations(result[key]):
             raise w.Problem(key + ': uçta tarjima zarur')
     if result['tv_language'] not in LANGUAGES:
@@ -321,6 +325,8 @@ class Handler(BaseHTTPRequestHandler):
         self._audit_context={'ip':security_monitor.client_ip(self.client_address[0],self.headers),'path':security_monitor.clean(urlsplit(self.path).path,500),'method':self.command,'request_ref':uuid4().hex,'user_agent':security_monitor.clean(self.headers.get('User-Agent',''))}
         context_token=w.REQUEST_CONTEXT.set(self._audit_context)
         try:
+            if not tenant_instance.valid_host(TENANT,self.headers.get('Host')):
+                return self.reply({'error':'Bu domen tenantga tegishli emas'},421)
             with closing(connection()) as db:
                 self._audit_user=self.user(db)
                 denied=security_monitor.gate(db,self._audit_context,self._audit_user)
@@ -434,6 +440,7 @@ class Handler(BaseHTTPRequestHandler):
                 import hashlib
                 return self.reply({'version':hashlib.sha256(b''.join((ROOT/name).read_bytes() for name in ('index.html','i18n.js','dashboard.js','dashboard.css'))).hexdigest()})
             if url.path == '/downloads/NAVBOT-TV.apk':
+                if TENANT:raise w.Problem('Tenant TV uchun shu domenning /tv sahifasini brauzerda oching',404)
                 return self.send_body((ROOT.parent/'downloads'/'NAVBOT-TV.apk').read_bytes(),'application/vnd.android.package-archive',filename='NAVBOT-TV.apk')
             if url.path == '/downloads/NAVBOT-NATIVE.zip':
                 return self.send_body((ROOT.parent / 'downloads' / 'NAVBOT-NATIVE.zip').read_bytes(),'application/zip',filename='NAVBOT-NATIVE.zip')
@@ -764,12 +771,13 @@ def initialize(demo=False):
         with db:
             config=settings(db)
             renamed=False
-            for section,old_names in ((0,('Transkript oliş','Transkript olish')),(3,('Tölovlar','To‘lovlar',"To'lovlar"))):
-                if config['catalog'][section][1][0][0] in old_names:
-                    config['catalog'][section][1][0]=copy.deepcopy(CATALOG[section][1][0]);renamed=True
-            for section,language,old_name in ((0,2,'Academic services'),(4,2,'Placements and internships'),(1,0,'Ilmiy va innovatsion')):
-                if config['catalog'][section][0][language]==old_name:
-                    config['catalog'][section][0][language]=CATALOG[section][0][language];renamed=True
+            if tenant_instance.identity(db) is None:
+                for section,old_names in ((0,('Transkript oliş','Transkript olish')),(3,('Tölovlar','To‘lovlar',"To'lovlar"))):
+                    if config['catalog'][section][1][0][0] in old_names:
+                        config['catalog'][section][1][0]=copy.deepcopy(CATALOG[section][1][0]);renamed=True
+                for section,language,old_name in ((0,2,'Academic services'),(4,2,'Placements and internships'),(1,0,'Ilmiy va innovatsion')):
+                    if config['catalog'][section][0][language]==old_name:
+                        config['catalog'][section][0][language]=CATALOG[section][0][language];renamed=True
             if renamed:db.execute('UPDATE settings SET value=? WHERE id=1',(json.dumps(config,ensure_ascii=False),))
 
             for ticket in db.execute('SELECT * FROM tickets WHERE prefix IS NULL OR queue_seq IS NULL OR target_operator IS NULL').fetchall():
@@ -801,6 +809,7 @@ if __name__ == '__main__':
     parser.add_argument('--db', type=Path, default=ROOT / 'navbot.sqlite3')
     parser.add_argument('--ensure-admin', action='store_true', help='Create first admin if no accounts exist, then start server')
     parser.add_argument('--init-admin', action='store_true', help='Create first admin interactively; no server start')
+    parser.add_argument('--tenant', help='Require an already provisioned, matching university tenant ID')
     parser.add_argument('--init-owner', action='store_true', help='Enroll license owner with password and authenticator; no server start')
     parser.add_argument('--reset-owner', action='store_true', help='Locally recover owner credentials; revoke owner sessions, preserve service state')
     parser.add_argument('--seed-demo', action='store_true', help='Add fictitious local students and known demo accounts; local test only')
@@ -810,6 +819,14 @@ if __name__ == '__main__':
         parser.error('Demo hisoblar bilan faqat loopbackda işga tuşiring')
     if args.init_owner or args.reset_owner:
         os.umask(0o077)
+    if args.tenant:
+        if not Path(DATABASE).is_file():parser.error('Tenant database must be provisioned first')
+        if args.seed_demo:parser.error('Tenant service cannot seed demo data')
+        try:
+            with closing(connection()) as db:
+                TENANT=tenant_instance.verify(db,args.tenant,None if args.init_admin or args.init_owner or args.reset_owner else args.port)
+        except (ValueError,sqlite3.Error) as error:
+            parser.error(str(error))
     initialize(args.seed_demo)
     if args.init_owner or args.reset_owner:
         import getpass, secrets

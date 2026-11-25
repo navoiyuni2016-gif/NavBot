@@ -566,3 +566,5 @@ NavI18n.add([
 ['Ijro röyxatiga qaytiş','Вернуться к списку исполнений','Back to execution list'],
 ['Muddat belgilanmagan','Срок не установлен','No deadline set']
 ]);
+
+NavI18n.add([['Universitetning qisqa nomi','Краткое название университета','University short name'],['Pastki yozuv','Текст внизу страницы','Footer text']]);

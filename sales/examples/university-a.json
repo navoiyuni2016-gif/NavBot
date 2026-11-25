@@ -1,0 +1,8 @@
+{
+  "id": "university-a",
+  "domain": "a.navbot.example.uz",
+  "port": 18081,
+  "university": ["Namuna A universiteti", "Пример университета А", "Example University A"],
+  "university_short": ["Namuna A", "Пример А", "Example A"],
+  "office": ["Registrator ofisi", "Офис регистратора", "Registrar office"]
+}

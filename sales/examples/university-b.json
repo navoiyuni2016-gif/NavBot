@@ -1,0 +1,8 @@
+{
+  "id": "university-b",
+  "domain": "b.navbot.example.uz",
+  "port": 18082,
+  "university": ["Namuna B universiteti", "Пример университета Б", "Example University B"],
+  "university_short": ["Namuna B", "Пример Б", "Example B"],
+  "office": ["Talabalarga xizmat ko‘rsatish markazi", "Центр обслуживания студентов", "Student service centre"]
+}

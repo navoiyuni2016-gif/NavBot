@@ -126,3 +126,12 @@ Yuborilgan to‘rtta asl yozuv `navbot/voice/uz` ichida. Ovoz sahifasidagi namun
 **Superadmin → Tizim sozlamalari → Logotiplar va interfeys belgilari**: tizim logotipi, kiosk logotipi, menyu va boshqaruv belgilarini alohida PNG/JPEG (2 MB gacha) bilan almashtiring. **Standartga qaytarish** faqat tanlangan rasmni bekor qiladi. Kioskdagi uch bosqichli yo‘riqnoma olib tashlangan. Bo‘lim ikonkalari avvalgi **Bo‘lim logotipi** shaklidan boshqariladi.
 
 **Talabalar bazasi → Talabalarni Excel fayldan qo‘shish** yettita ustunli universitet faylini qabul qiladi: Talaba ID, To‘liq ismi, Jins, Kurs, Fakultet, Ta’lim turi, Ta’lim shakli. Mavjud HEMIS ID yozuvi o‘zgarmaydi; faqat yangisi qo‘shiladi. Yetti asl qiymat ham saqlanadi. Faylda yo‘q guruh va yo‘nalish bo‘sh, talabalik holati noma’lum sifatida qoladi. Asl fayl va ishchi SQLite bazasi ochiq repozitoriyga qo‘shilmaydi.
+
+## Boshqa universitetlar uchun sotuv paketi
+
+Har universitetga alohida domen, Linux foydalanuvchisi, jarayon, baza va backup bilan
+tenant tayyorlash: [sales/README.md](sales/README.md). Paket mijoz ma’lumotlarini
+ko‘chirmaydi va mavjud pilotni o‘zgartirmaydi.
+
+Tayyor distributiv: [NAVBOT-SALES-2026-11-25.zip](downloads/NAVBOT-SALES-2026-11-25.zip),
+[SHA-256](downloads/NAVBOT-SALES-2026-11-25.zip.sha256).
