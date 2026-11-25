@@ -1,11 +1,11 @@
 [
- [["Akademik masalalar","Академические вопросы","Academic services"],[
+ [["Akademik masalalar","Академические вопросы","ISSUES"],[
  ["Tibbiy ma’lumotnoma taqdim etiş","Предоставление медицинской справки","Submit a medical certificate"],
  ["Öqişni köçiriş","Перевод на обучение","Transfer studies"],
  ["HEMIS parolini tiklaş","Восстановление пароля HEMIS","Reset HEMIS password"],
  ["Ariza beriş","Подача заявления","Submit an application"],
  ["Boşqa masala","Другой вопрос","Other request"]]],
- [["Ilmiy va innovatsion","Наука и инновации","Research and innovation"],[
+ [["Ilmiy va innovatsiya masalalari","Наука и инновации","Research and innovation"],[
  ["Ilmiy tögaraklar","Научные кружки","Research clubs"],
  ["Ustoz-şogird","Наставничество","Mentoring"],
  ["Yoş olimlar","Молодые учёные","Young researchers"],
@@ -23,7 +23,7 @@
  ["Bandlik","Занятость","Employment"],
  ["Şartnoma va subsidiya","Договор и субсидия","Contracts and subsidies"],
  ["Boşqa masala","Другой вопрос","Other request"]]],
- [["Amaliyot va stajirovka","Практика и стажировка","Placements and internships"],[
+ [["Amaliyot va stajirovka","Практика и стажировка","Internships"],[
  ["Amaliyot bazalari","Места практики","Placement opportunities"],
  ["Amaliyot jadvali","График практики","Placement schedule"],
  ["Qayta ötaş","Повторная практика","Repeat a placement"],

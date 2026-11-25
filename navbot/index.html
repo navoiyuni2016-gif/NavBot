@@ -225,6 +225,16 @@ function publicShell(){document.body.dataset.page=state.page;app.innerHTML=html`
 function publicTitle(){refreshBranding();document.documentElement.lang=languages[state.lang];$('#brand').textContent=state.page==='tv'?t('ToşDÖTAU')+' · '+state.settings.office[state.lang]:state.settings.university[state.lang]+' · '+state.settings.office[state.lang]}
 let kioskReceipt=null,kioskPrinting=false,kioskPrintTimer=null,kioskRetryTimer=null,kioskRequest=null,kioskSubmitting=false;const KIOSK_MIN_WAIT=5000;
 function kioskReceiptMarkup(ticket){const language=Math.max(0,languages.indexOf(ticket.lang));const label=n=>words[language][n];return html`<section class="receipt kiosk-print-receipt"><p class="receipt-university">${esc(state.settings.university[language])}</p><p><strong>${esc(state.settings.office[language])}</strong></p><p class="receipt-label">${esc(label(3))}</p><h2>${esc(number(ticket))}</h2><p>${esc(label(12))} · ${esc(state.catalog[ticket.section][0][language])}</p><p><strong>${esc(ticket.content||serviceName(ticket))}</strong></p><p class="receipt-time">${esc(label(13))} · ${esc(dateText(ticket.created_at||ticket.created))}</p><p class="receipt-footer">${esc(state.settings.receipt_footer?.[language]||label(11))}</p></section>`}
+function fitKioskLabels(){
+ if(state.page!=='kiosk')return;
+ const context=document.createElement('canvas').getContext('2d');
+ document.querySelectorAll('.kiosk-grid .tile>span:last-child').forEach(label=>{
+  label.style.fontSize='';const style=getComputedStyle(label),base=parseFloat(style.fontSize),width=label.clientWidth;
+  context.font=style.fontWeight+' '+style.fontSize+' '+style.fontFamily;const longest=Math.max(0,...label.textContent.trim().split(/\s+/).map(word=>context.measureText(word).width));
+  if(width>0&&longest>width)label.style.fontSize=Math.max(14,Math.floor(base*(width-2)/longest))+'px';
+ });
+}
+window.addEventListener('resize',()=>requestAnimationFrame(fitKioskLabels));
 function kioskHeading(){if(state.section!==null)return esc(state.catalog[state.section][0][state.lang]);const parts=tr(0).split(' '),last=parts.pop();return html`${esc(parts.join(' '))} <span>${esc(last)}</span>`}
 function kiosk(){state.page='kiosk';document.body.dataset.page='kiosk';publicTitle();const controls=$('#controls'),content=$('#content');controls.innerHTML='';content.innerHTML='';content.classList.add('kiosk-choices');
 
@@ -234,7 +244,7 @@ function kiosk(){state.page='kiosk';document.body.dataset.page='kiosk';publicTit
  content.querySelectorAll('[data-kiosk-lang]').forEach(button=>button.onclick=()=>{if(state.busy||state.pending!==null||kioskPrinting)return;changeLanguage(button.dataset.kioskLang)});
  if(kioskReceipt)content.insertAdjacentHTML('beforeend',kioskReceiptMarkup(kioskReceipt));
  if(state.busy){const caption=document.createElement('p');caption.className='kiosk-print-status';caption.setAttribute('role','status');caption.textContent=t(state.kioskRecovering?'Aloqa yoki printer javobi kutilmoqda. Avvalgi so‘rov tekshirilmoqda…':state.ticket?'Çek printerga yuborilmoqda. Iltimos, qayta bosmang.':'Navbat yaratilmoqda…');$('.kiosk-title',content).append(caption)}
- content.querySelectorAll('[data-choice]').forEach(el=>el.onclick=()=>{if(state.busy||kioskPrinting)return;if(state.section===null){state.section=Number(el.dataset.choice);kiosk()}else issue(Number(el.dataset.choice))});}
+ content.querySelectorAll('[data-choice]').forEach(el=>el.onclick=()=>{if(state.busy||kioskPrinting)return;if(state.section===null){state.section=Number(el.dataset.choice);kiosk()}else issue(Number(el.dataset.choice))});requestAnimationFrame(fitKioskLabels);}
 function resetKioskTicket(){clearTimeout(kioskPrintTimer);clearTimeout(kioskRetryTimer);kioskRequest=null;state.kioskRecovering=false;sessionStorage.removeItem('navbot-ticket-request');state.ticket=null;state.section=null;state.key=null;state.pending=null;state.busy=false;sessionStorage.removeItem('navbot-ticket');kiosk()}
 function finishKioskTicket(){if(!state.ticket)return;const key=state.key;clearTimeout(kioskPrintTimer);const elapsed=Date.now()-state.ticket.accepted_at;const delay=Math.max(0,KIOSK_MIN_WAIT-(Number.isFinite(elapsed)?elapsed:0));kioskPrintTimer=setTimeout(()=>{if(state.key===key)resetKioskTicket()},delay)}
 async function waitKioskPrinter(){const key=state.key;if(!state.ticket||!key)return;try{const result=await api('/api/kiosk-printer/status',{key});if(state.key!==key)return;if(result.state==='spooled'||result.state==='cancelled'){if(result.state==='cancelled')notice(t('Çek bekor qilindi. Xodimga murojaat qiling.'));finishKioskTicket();return}if(['failed','uncertain'].includes(result.state))notice(t('Printer javobi kutilmoqda. Xodimga murojaat qiling.'))}catch(error){if(state.key!==key)return;notice(t('Printer bilan aloqa vaqtincha uzildi. Qayta bosmang.'))}kioskPrintTimer=setTimeout(waitKioskPrinter,1000)}

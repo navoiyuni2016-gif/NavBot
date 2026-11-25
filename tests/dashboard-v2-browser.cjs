@@ -250,6 +250,20 @@ const { chromium } = require("playwright"),
       const title=await kp.locator('.kiosk-title h1').innerText();
       assert.equal(title,['Bölimni tanlang','Выберите раздел','Choose a section'][index]);
     }
+    await kp.locator('[data-kiosk-lang=en]').click();
+    assert.equal(await kp.locator('[data-choice="0"]>span:last-child').innerText(),'ISSUES');
+    assert.equal(await kp.locator('[data-choice="4"]>span:last-child').innerText(),'Internships');
+    await kp.locator('[data-kiosk-lang=ru]').click();
+    for(const width of [955,1024,1280,1920]){
+      await kp.setViewportSize({width,height:width===955?920:width===1024?768:1080});
+      await kp.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+      const fit=await kp.locator('.kiosk-grid .tile>span:last-child').evaluateAll(labels=>labels.every(label=>label.scrollWidth<=label.clientWidth+1));
+      assert(fit,'Russian department titles must fit without splitting words at width '+width);
+    }
+    await kp.setViewportSize({width:1024,height:768});
+    await kp.screenshot({path:'/tmp/navbot-kiosk-russian-fitted.png',fullPage:true});
+    await kp.locator('[data-kiosk-lang=uz]').click();
+    assert.equal(await kp.locator('[data-choice="1"]>span:last-child').innerText(),'Ilmiy va innovatsiya masalalari');
     const bounds=await kp.evaluate(()=>({grid:document.querySelector('.kiosk-grid').getBoundingClientRect().bottom,flags:document.querySelector('.kiosk-languages').getBoundingClientRect().top,bottom:document.querySelector('.kiosk-languages').getBoundingClientRect().bottom,ys:[...document.querySelectorAll('[data-kiosk-lang]')].map(e=>e.getBoundingClientRect().top)}));
     assert(bounds.flags>=bounds.grid);assert(bounds.bottom<=768);assert(bounds.ys.every(y=>y===bounds.ys[0]));
     await kp.screenshot({path:'/tmp/navbot-kiosk-flags.png',fullPage:true});

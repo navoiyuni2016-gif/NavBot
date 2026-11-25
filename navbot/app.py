@@ -735,6 +735,9 @@ def initialize(demo=False):
             for section,old_names in ((0,('Transkript oliş','Transkript olish')),(3,('Tölovlar','To‘lovlar',"To'lovlar"))):
                 if config['catalog'][section][1][0][0] in old_names:
                     config['catalog'][section][1][0]=copy.deepcopy(CATALOG[section][1][0]);renamed=True
+            for section,language,old_name in ((0,2,'Academic services'),(4,2,'Placements and internships'),(1,0,'Ilmiy va innovatsion')):
+                if config['catalog'][section][0][language]==old_name:
+                    config['catalog'][section][0][language]=CATALOG[section][0][language];renamed=True
             if renamed:db.execute('UPDATE settings SET value=? WHERE id=1',(json.dumps(config,ensure_ascii=False),))
 
             for ticket in db.execute('SELECT * FROM tickets WHERE prefix IS NULL OR queue_seq IS NULL OR target_operator IS NULL').fetchall():

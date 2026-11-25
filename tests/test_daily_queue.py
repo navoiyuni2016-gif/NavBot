@@ -62,3 +62,18 @@ class DailyQueue(unittest.TestCase):
         self.assertEqual(app.settings(self.db)['catalog'][0][1][0][0],'Tibbiy ma’lumotnoma taqdim etiş')
         self.assertEqual(app.settings(self.db)['catalog'][3][1][0][0],'Tölov-kontrakt')
         self.assertEqual(self.db.execute('SELECT content_name FROM tickets WHERE id=?',(ticket['id'],)).fetchone()[0],'Transkript oliş')
+
+    def test_section_title_updates_preserve_custom_translations(self):
+        import copy,json
+        config=copy.deepcopy(app.settings(self.db))
+        config['catalog'][0][0][2]='Academic services'
+        config['catalog'][4][0][2]='Placements and internships'
+        config['catalog'][1][0][0]='Ilmiy va innovatsion'
+        config['catalog'][1][0][1]='Custom Russian title'
+        self.db.execute('INSERT OR REPLACE INTO settings VALUES(1,?)',(json.dumps(config),))
+        self.db.commit();app.initialize()
+        saved=app.settings(self.db)['catalog']
+        self.assertEqual(saved[0][0][2],'ISSUES')
+        self.assertEqual(saved[4][0][2],'Internships')
+        self.assertEqual(saved[1][0][0],'Ilmiy va innovatsiya masalalari')
+        self.assertEqual(saved[1][0][1],'Custom Russian title')

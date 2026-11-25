@@ -20,7 +20,7 @@ class EncodingTest(unittest.TestCase):
         with patch.object(sys, 'path', [str(APP.parent), *sys.path]), patch.object(Path, 'read_text', windows_read_text):
             spec.loader.exec_module(module)
         self.assertEqual(module.CATALOG[0][0][1], 'Академические вопросы')
-        self.assertEqual(module.CATALOG[0][0][2], 'Academic services')
+        self.assertEqual(module.CATALOG[0][0][2], 'ISSUES')
 
 
 if __name__ == '__main__':

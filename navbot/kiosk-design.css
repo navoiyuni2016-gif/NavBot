@@ -76,3 +76,5 @@ html[data-theme=dark] body[data-page=kiosk] .public-header .institution{color:#e
 html[data-theme=dark] body[data-page=kiosk] .public-header .logo{color:#f3f8ff}
 html[data-theme=dark] body[data-page=kiosk] .public-main:before,html[data-theme=dark] body[data-page=kiosk] .public-main:after{background-image:url('/assets/national-mosaic.svg');opacity:.35}
 }
+
+@media screen{body[data-page=kiosk] .kiosk-grid .tile>span:last-child{flex:1;min-width:0;overflow-wrap:normal;word-break:normal;hyphens:none}html[lang=ru] body[data-page=kiosk] .kiosk-grid:not(.section-kiosk) .tile{font-size:clamp(16px,1.5vw,26px)!important}}
