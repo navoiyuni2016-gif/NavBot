@@ -80,6 +80,18 @@ const { chromium } = require("playwright"),
       path: "/tmp/navbot-dashboard-v2.png",
       fullPage: true,
     });
+    await page.evaluate(()=>window.scrollTo(0,0));await page.waitForTimeout(100);
+    await page.screenshot({path:'/tmp/navbot-dashboard-mosaic-light.png'});
+    const dashLight=await page.locator('.workmain').evaluate(el=>({bg:getComputedStyle(el).backgroundColor,image:getComputedStyle(el).backgroundImage}));
+    assert.match(dashLight.image,/national-mosaic/);
+    const lightChartText=await page.locator('.dash-panels h2').first().evaluate(el=>getComputedStyle(el).color);
+    await page.locator('#theme-toggle').click();
+    assert.equal(await page.locator('html').getAttribute('data-theme'),'dark');
+    const dashDark=await page.locator('.workmain').evaluate(el=>({bg:getComputedStyle(el).backgroundColor,image:getComputedStyle(el).backgroundImage}));
+    assert.match(dashDark.image,/national-mosaic/);assert.notEqual(dashLight.bg,dashDark.bg);
+    assert.notEqual(await page.locator('.dash-panels h2').first().evaluate(el=>getComputedStyle(el).color),lightChartText);
+    await page.screenshot({path:'/tmp/navbot-dashboard-mosaic-dark.png'});
+    await page.locator('#theme-toggle').click();
     for (const format of ["png", "pdf"]) {
       const download = page.waitForEvent("download");
       await page.locator(`[data-export=${format}]`).click();
@@ -241,6 +253,21 @@ const { chromium } = require("playwright"),
     const bounds=await kp.evaluate(()=>({grid:document.querySelector('.kiosk-grid').getBoundingClientRect().bottom,flags:document.querySelector('.kiosk-languages').getBoundingClientRect().top,bottom:document.querySelector('.kiosk-languages').getBoundingClientRect().bottom,ys:[...document.querySelectorAll('[data-kiosk-lang]')].map(e=>e.getBoundingClientRect().top)}));
     assert(bounds.flags>=bounds.grid);assert(bounds.bottom<=768);assert(bounds.ys.every(y=>y===bounds.ys[0]));
     await kp.screenshot({path:'/tmp/navbot-kiosk-flags.png',fullPage:true});
+    const kioskThemeColors=()=>kp.evaluate(()=>Object.fromEntries(['.public-main','.public-header','.kiosk-grid .tile','.kiosk-title h1','.kiosk-languages button span'].map(selector=>{const c=getComputedStyle(document.querySelector(selector));return [selector,[c.backgroundColor,c.backgroundImage,c.color]]})));
+    const lightColors=await kioskThemeColors();
+    await kp.locator('#theme-toggle').click();
+    assert.equal(await kp.locator('html').getAttribute('data-theme'),'dark');
+    const darkColors=await kioskThemeColors();
+    for(const selector of Object.keys(lightColors))assert.notDeepEqual(darkColors[selector],lightColors[selector],selector+' must follow the selected theme');
+    assert.match(darkColors['.public-main'][1],/national-mosaic/);
+    await kp.screenshot({path:'/tmp/navbot-kiosk-night.png',fullPage:true});
+    await kp.locator('[data-choice="0"]').click();
+    assert.equal(await kp.locator('html').getAttribute('data-theme'),'dark');
+    await kp.reload();await kp.locator('[data-choice="0"]').waitFor();
+    assert.equal(await kp.locator('html').getAttribute('data-theme'),'dark');
+    await kp.locator('#theme-toggle').click();
+    assert.deepEqual(await kioskThemeColors(),lightColors);
+
     const expectedIcons=[['medical','transfer','hemis','document','layers'],['microscope','mentor','cap','sprout','layers'],['people','plane','book','handshake','layers'],['contract','stipend','briefcase','document','layers'],['building','calendar','refresh','document','layers']];
     for(let section=0;section<5;section++){
       await kp.locator(`[data-choice="${section}"]`).click();

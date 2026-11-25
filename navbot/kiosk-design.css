@@ -38,32 +38,41 @@ body[data-page=kiosk] .kiosk-grid .tile .icon img{width:100%!important;height:10
 body[data-page=kiosk] .kiosk-grid .tile .icon{box-sizing:border-box;align-self:center}
 @media(max-width:740px){body[data-page=kiosk] .kiosk-grid .tile .icon.uploaded-kiosk-icon{padding:5px}body[data-page=kiosk] .kiosk-grid .tile .icon img{border-radius:9px}}
 }
-/* Light national mosaic preview: scoped to the kiosk, including saved dark preferences. */
+/* Light national mosaic palette; dark mode uses the matching night palette. */
 @media screen {
-body[data-page=kiosk] .public-header,html[data-theme=dark] body[data-page=kiosk] .public-header{background:#fffdf6;color:#123c53;border-bottom:3px solid #c7ad70;box-shadow:0 3px 15px #28465508}
-body[data-page=kiosk] .public-header .institution{color:#153d53}
-body[data-page=kiosk] .public-main,html[data-theme=dark] body[data-page=kiosk] .public-main{background-color:#fbf8ef;background-image:linear-gradient(90deg,#f9f6eb11,#fffdf9e8 18%,#fffdf9ee 82%,#f9f6eb11),url('/assets/national-mosaic.svg');background-size:auto,180px 180px;color:#173e52}
-body[data-page=kiosk] .public-main:before,body[data-page=kiosk] .public-main:after{width:360px;height:480px;border-radius:50% 50% 4px 4px;border:2px solid #0f7d8d12;box-shadow:0 0 0 14px #ba955012,0 0 0 22px #0f7d8d08;background-image:url('/assets/national-mosaic.svg');opacity:.65}
-body[data-page=kiosk] .public-main:before{top:auto;bottom:-200px;right:-180px}body[data-page=kiosk] .public-main:after{bottom:-200px;left:-180px}
-body[data-page=kiosk] .kiosk-title h1,html[data-theme=dark] body[data-page=kiosk] .kiosk-title h1{color:#163c52;text-shadow:none}
-body[data-page=kiosk] .kiosk-title h1>span{color:#008e8b}
-body[data-page=kiosk] .kiosk-title:before{background:linear-gradient(90deg,#ba9856,#00a7a0);box-shadow:none}
-body[data-page=kiosk] .kiosk-title .muted,html[data-theme=dark] body[data-page=kiosk] .kiosk-title .muted{color:#537783}
-body[data-page=kiosk] .kiosk-grid .tile{--card-accent:#70a9c6;--card-tint:#d8eff9;background:linear-gradient(125deg,#fffefb,#f3f9f9)!important;color:#163c52!important;border-color:var(--card-accent)!important;box-shadow:0 6px 18px #2045570a,inset 0 1px 0 white!important}
-body[data-page=kiosk] .kiosk-grid .tile[data-section="1"],body[data-page=kiosk] .kiosk-grid .tile[data-section="4"]{--card-accent:#6dbcb0;--card-tint:#d6f2ec}
-body[data-page=kiosk] .kiosk-grid .tile[data-section="2"]{--card-accent:#b8a0d6;--card-tint:#eee4fc}
-body[data-page=kiosk] .kiosk-grid .tile[data-section="4"]{--card-accent:#75b4b8}
-body[data-page=kiosk] .kiosk-grid .tile:hover{background:linear-gradient(125deg,#fffefb,var(--card-tint))!important;box-shadow:0 7px 22px #17637618!important}
-body[data-page=kiosk] .kiosk-grid .tile:after{color:#367a8d}
-body[data-page=kiosk] .kiosk-grid .tile .icon,html[data-theme=dark] body[data-page=kiosk] .kiosk-grid .tile .icon{background:linear-gradient(145deg,#0e4262,#082b48);box-shadow:0 3px 10px #23445b10}
-body[data-page=kiosk] .kiosk-grid .tile[data-section="1"] .icon,body[data-page=kiosk] .kiosk-grid .tile[data-section="4"] .icon{background:linear-gradient(145deg,#087b7b,#064758)}
-body[data-page=kiosk] .kiosk-grid .tile[data-section="2"] .icon{background:linear-gradient(145deg,#6a469e,#352561)}
-body[data-page=kiosk] .kiosk-languages button,html[data-theme=dark] body[data-page=kiosk] .kiosk-languages button{background:transparent;border-color:transparent}
-body[data-page=kiosk] .kiosk-languages button span,html[data-theme=dark] body[data-page=kiosk] .kiosk-languages button span{color:#163c52}
-body[data-page=kiosk] .kiosk-languages button[aria-pressed=true],html[data-theme=dark] body[data-page=kiosk] .kiosk-languages button[aria-pressed=true]{background:#fffdf3b8;border-color:#bda260;box-shadow:0 3px 12px #a180300e}
-body[data-page=kiosk] #back{background:#fffdf5;color:#246372;border-color:#c4b784}
-body[data-page=kiosk] .kiosk-title .kiosk-print-status{color:#008675}
+html:not([data-theme=dark]) body[data-page=kiosk] .public-header{background:#fffdf6;color:#123c53;border-bottom:3px solid #c7ad70;box-shadow:0 3px 15px #28465508}
+html:not([data-theme=dark]) body[data-page=kiosk] .public-header .institution{color:#153d53}
+html:not([data-theme=dark]) body[data-page=kiosk] .public-main{background-color:#fbf8ef;background-image:linear-gradient(90deg,#f9f6eb11,#fffdf9e8 18%,#fffdf9ee 82%,#f9f6eb11),url('/assets/national-mosaic.svg');background-size:auto,180px 180px;color:#173e52}
+html:not([data-theme=dark]) body[data-page=kiosk] .public-main:before,html:not([data-theme=dark]) body[data-page=kiosk] .public-main:after{width:360px;height:480px;border-radius:50% 50% 4px 4px;border:2px solid #0f7d8d12;box-shadow:0 0 0 14px #ba955012,0 0 0 22px #0f7d8d08;background-image:url('/assets/national-mosaic.svg');opacity:.65}
+html:not([data-theme=dark]) body[data-page=kiosk] .public-main:before{top:auto;bottom:-200px;right:-180px}html:not([data-theme=dark]) body[data-page=kiosk] .public-main:after{bottom:-200px;left:-180px}
+html:not([data-theme=dark]) body[data-page=kiosk] .kiosk-title h1{color:#163c52;text-shadow:none}
+html:not([data-theme=dark]) body[data-page=kiosk] .kiosk-title h1>span{color:#008e8b}
+html:not([data-theme=dark]) body[data-page=kiosk] .kiosk-title:before{background:linear-gradient(90deg,#ba9856,#00a7a0);box-shadow:none}
+html:not([data-theme=dark]) body[data-page=kiosk] .kiosk-title .muted{color:#537783}
+html:not([data-theme=dark]) body[data-page=kiosk] .kiosk-grid .tile{--card-accent:#70a9c6;--card-tint:#d8eff9;background:linear-gradient(125deg,#fffefb,#f3f9f9)!important;color:#163c52!important;border-color:var(--card-accent)!important;box-shadow:0 6px 18px #2045570a,inset 0 1px 0 white!important}
+html:not([data-theme=dark]) body[data-page=kiosk] .kiosk-grid .tile[data-section="1"],html:not([data-theme=dark]) body[data-page=kiosk] .kiosk-grid .tile[data-section="4"]{--card-accent:#6dbcb0;--card-tint:#d6f2ec}
+html:not([data-theme=dark]) body[data-page=kiosk] .kiosk-grid .tile[data-section="2"]{--card-accent:#b8a0d6;--card-tint:#eee4fc}
+html:not([data-theme=dark]) body[data-page=kiosk] .kiosk-grid .tile[data-section="4"]{--card-accent:#75b4b8}
+html:not([data-theme=dark]) body[data-page=kiosk] .kiosk-grid .tile:hover{background:linear-gradient(125deg,#fffefb,var(--card-tint))!important;box-shadow:0 7px 22px #17637618!important}
+html:not([data-theme=dark]) body[data-page=kiosk] .kiosk-grid .tile:after{color:#367a8d}
+html:not([data-theme=dark]) body[data-page=kiosk] .kiosk-grid .tile .icon{background:linear-gradient(145deg,#0e4262,#082b48);box-shadow:0 3px 10px #23445b10}
+html:not([data-theme=dark]) body[data-page=kiosk] .kiosk-grid .tile[data-section="1"] .icon,html:not([data-theme=dark]) body[data-page=kiosk] .kiosk-grid .tile[data-section="4"] .icon{background:linear-gradient(145deg,#087b7b,#064758)}
+html:not([data-theme=dark]) body[data-page=kiosk] .kiosk-grid .tile[data-section="2"] .icon{background:linear-gradient(145deg,#6a469e,#352561)}
+html:not([data-theme=dark]) body[data-page=kiosk] .kiosk-languages button{background:transparent;border-color:transparent}
+html:not([data-theme=dark]) body[data-page=kiosk] .kiosk-languages button span{color:#163c52}
+html:not([data-theme=dark]) body[data-page=kiosk] .kiosk-languages button[aria-pressed=true]{background:#fffdf3b8;border-color:#bda260;box-shadow:0 3px 12px #a180300e}
+html:not([data-theme=dark]) body[data-page=kiosk] #back{background:#fffdf5;color:#246372;border-color:#c4b784}
+html:not([data-theme=dark]) body[data-page=kiosk] .kiosk-title .kiosk-print-status{color:#008675}
 }
-@media screen{body[data-page=kiosk] .public-header .logo{color:#143e56}body[data-page=kiosk] .public-header .logo i,body[data-page=kiosk] .public-header .logo b{color:#009e97}}
+@media screen{html:not([data-theme=dark]) body[data-page=kiosk] .public-header .logo{color:#143e56}html:not([data-theme=dark]) body[data-page=kiosk] .public-header .logo i,html:not([data-theme=dark]) body[data-page=kiosk] .public-header .logo b{color:#009e97}}
 
-@media screen{body[data-page=kiosk]{--ink:#163c52;--paper:#fbf8ef;--line:#d7dfd9;--muted:#537783}}
+@media screen{html:not([data-theme=dark]) body[data-page=kiosk]{--ink:#163c52;--paper:#fbf8ef;--line:#d7dfd9;--muted:#537783}}
+
+@media screen{
+html[data-theme=dark] body[data-page=kiosk]{--ink:#e4f0fa;--paper:#071e2e;--line:#31495d;--muted:#a3b8ca}
+html[data-theme=dark] body[data-page=kiosk] .public-main{background-color:#001929;background-image:linear-gradient(90deg,#00192922,#001929ed 18%,#001929f5 82%,#00192922),url('/assets/national-mosaic.svg');background-size:auto,180px 180px}
+html[data-theme=dark] body[data-page=kiosk] .public-header{background:#051c30;color:#f3f8ff;border-bottom:3px solid #426269}
+html[data-theme=dark] body[data-page=kiosk] .public-header .institution{color:#e8f3ff}
+html[data-theme=dark] body[data-page=kiosk] .public-header .logo{color:#f3f8ff}
+html[data-theme=dark] body[data-page=kiosk] .public-main:before,html[data-theme=dark] body[data-page=kiosk] .public-main:after{background-image:url('/assets/national-mosaic.svg');opacity:.35}
+}
