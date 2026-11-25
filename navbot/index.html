@@ -208,7 +208,7 @@ async function api(path,data,options={}){
  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),timeout);
  try{const res=await fetch(path,{...(data===undefined?{cache:'no-store'}:{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}),signal:controller.signal});
  let result;try{result=await res.json()}catch(error){if(controller.signal.aborted)throw error;const invalid=new Error(t('Server javobi olinmadi. Aloqa qayta tekshirilmoqda.'));invalid.status=res.status;invalid.retryable=[502,503,504].includes(res.status);throw invalid}
- if(!res.ok){const error=new Error(localizedError(result.error,res.status));error.status=res.status;error.retryable=[502,503,504].includes(res.status);throw error}return result;
+ if(!res.ok){if(result.code==='service_suspended')location.reload();const error=new Error(localizedError(result.error,res.status));error.status=res.status;error.retryable=[502,503,504].includes(res.status);throw error}return result;
  }catch(error){if(controller.signal.aborted||error.name==='AbortError'||error instanceof TypeError){const network=new Error(t('Server bilan aloqa vaqtincha uzildi. Qayta ulanmoqda…'));network.retryable=true;network.name='NetworkRecoveryError';throw network}throw error}finally{clearTimeout(timer)}
 }
 

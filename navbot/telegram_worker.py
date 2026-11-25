@@ -12,6 +12,7 @@ import time
 from urllib import request, error
 from uuid import uuid4
 import integrations
+import owner_control
 import telegram_bot as bot
 import workflow as w
 
@@ -98,6 +99,7 @@ def recover(db):
 
 
 def deliver_one(db,api,expected_config=None):
+    if owner_control.suspended(db):return False
     now=int(time.time())
     if now<int(bot.runtime(db,'send_after','0')):return False
     db.execute('BEGIN IMMEDIATE')
@@ -143,10 +145,12 @@ def deliver_one(db,api,expected_config=None):
 
 
 def poll(db,api):
+    if owner_control.suspended(db):return
     offset=int(bot.runtime(db,'last_update_id','-1'))+1
     updates=api.call('getUpdates',{'offset':offset,'timeout':15,'limit':50,'allowed_updates':['message','callback_query']})
     if not isinstance(updates,list):raise TelegramError('invalid_updates')
     for update in updates:
+        if owner_control.suspended(db):return
         with db:bot.process_update(db,update)
     with db:
         bot.set_runtime(db,'last_poll',w.now());bot.set_runtime(db,'worker_error','')
@@ -174,6 +178,8 @@ def main():
             if not db.execute("SELECT 1 FROM sqlite_master WHERE name='telegram_outbox'").fetchone():parser.error('Update and start NAVBOT first')
             previous=None;api=None
             while True:
+                if owner_control.suspended(db):
+                    time.sleep(5);continue
                 config=configured(db)
                 if not config:
                     with db:bot.set_runtime(db,'worker_error','not_configured')

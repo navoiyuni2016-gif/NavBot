@@ -32,6 +32,7 @@ import telegram_bot
 import telegram_mini
 import kiosk_printer
 import service_access
+import owner_control
 import workflow as w
 
 ROOT = Path(__file__).resolve().parent
@@ -325,6 +326,14 @@ class Handler(BaseHTTPRequestHandler):
                 denied=security_monitor.gate(db,self._audit_context,self._audit_user)
             if denied:
                 return self.reply({'error':'IP vaqtincha bloklangan' if denied==429 else 'Sörov rad etildi'},denied)
+            path=urlsplit(self.path).path
+            if path not in ('/owner','/api/owner/login','/api/owner/status','/api/owner/control','/api/owner/logout','/assets/owner.js','/assets/owner.css'):
+                with closing(connection()) as db:
+                    suspended=owner_control.status(db)['suspended']
+                if suspended:
+                    if path.startswith('/api/'):
+                        return self.reply({'error':'Xizmat litsenziya egasi tomonidan vaqtincha to‘xtatilgan','code':'service_suspended'},503)
+                    return self.send_body(owner_control.MAINTENANCE.encode(), 'text/html; charset=utf-8',503)
             return operation()
         finally:
             try:
@@ -411,6 +420,14 @@ class Handler(BaseHTTPRequestHandler):
     def _do_GET(self):
         url = urlsplit(self.path)
         try:
+            if url.path == '/owner':
+                return self.send_body((ROOT/'owner.html').read_bytes(),'text/html; charset=utf-8')
+            if url.path in ('/assets/owner.js','/assets/owner.css'):
+                name=url.path.rsplit('/',1)[-1]
+                return self.send_body((ROOT/name).read_bytes(),'text/javascript; charset=utf-8' if name.endswith('.js') else 'text/css; charset=utf-8')
+            if url.path == '/api/owner/status':
+                with closing(connection()) as db:
+                    return self.reply(owner_control.overview(db,self.headers.get('Cookie','')))
             if url.path in ('/', '/kiosk', '/operator', '/manager', '/tv', '/tablo', '/login', '/executor', '/head', '/director', '/admin', '/profile'):
                 return self.send_body((ROOT / 'index.html').read_bytes(), 'text/html; charset=utf-8')
             if url.path == '/api/tv-version':
@@ -540,12 +557,26 @@ class Handler(BaseHTTPRequestHandler):
         try:
             self.same_origin()
             length = int(self.headers.get('Content-Length', '0'))
-            limit = 32768 if self.path == '/api/telegram/mini' else 16 * 1024 * 1024 if self.path == '/api/attachment/upload' else 8 * 1024 * 1024 if self.path in ('/api/admin/audio/upload','/api/students/import-xlsx') else 4 * 1024 * 1024
+            limit = 4096 if self.path.startswith('/api/owner/') else 32768 if self.path == '/api/telegram/mini' else 16 * 1024 * 1024 if self.path == '/api/attachment/upload' else 8 * 1024 * 1024 if self.path in ('/api/admin/audio/upload','/api/students/import-xlsx') else 4 * 1024 * 1024
             if not 0 < length <= limit:
                 raise w.Problem('Sörov hajmi belgilangan limitdan katta', 413)
             data = json.loads(self.rfile.read(length), parse_constant=lambda _: (_ for _ in ()).throw(ValueError()))
             if not isinstance(data, dict):
                 raise w.Problem('JSON obyekt yuboring')
+            if self.path in ('/api/owner/login','/api/owner/control','/api/owner/logout'):
+                cookie=None
+                secure='; Secure' if self.headers.get('X-Forwarded-Proto')=='https' and self.client_address[0] in ('127.0.0.1','::1') else ''
+                with closing(connection()) as db:
+                    if self.path.endswith('/login'):
+                        token=owner_control.login(db,data)
+                        response={'ok':True}
+                        cookie=f'{owner_control.COOKIE}={token}; HttpOnly; SameSite=Strict; Path=/api/owner; Max-Age={owner_control.SESSION_SECONDS}'+secure
+                    elif self.path.endswith('/control'):
+                        response=owner_control.change(db,self.headers.get('Cookie',''),data)
+                    else:
+                        response=owner_control.logout(db,self.headers.get('Cookie',''))
+                        cookie=f'{owner_control.COOKIE}=; HttpOnly; SameSite=Strict; Path=/api/owner; Max-Age=0'+secure
+                return self.reply(response,cookie=cookie)
             self._audit_context['request_bytes']=length
             self._audit_context['metadata']=security_monitor.metadata(data)
             upload_path='upload' in self.path or 'import' in self.path or self.path in ('/api/profile/photo','/api/admin/branding','/api/admin/logo')
@@ -729,6 +760,7 @@ def initialize(demo=False):
         telegram_mini.initialize(db)
         kiosk_printer.initialize(db)
         service_access.initialize(db)
+        owner_control.initialize(db)
         with db:
             config=settings(db)
             renamed=False
@@ -769,12 +801,37 @@ if __name__ == '__main__':
     parser.add_argument('--db', type=Path, default=ROOT / 'navbot.sqlite3')
     parser.add_argument('--ensure-admin', action='store_true', help='Create first admin if no accounts exist, then start server')
     parser.add_argument('--init-admin', action='store_true', help='Create first admin interactively; no server start')
+    parser.add_argument('--init-owner', action='store_true', help='Enroll license owner with password and authenticator; no server start')
+    parser.add_argument('--reset-owner', action='store_true', help='Locally recover owner credentials; revoke owner sessions, preserve service state')
     parser.add_argument('--seed-demo', action='store_true', help='Add fictitious local students and known demo accounts; local test only')
     args = parser.parse_args()
     DATABASE = args.db
     if args.host not in ('127.0.0.1', 'localhost', '::1') and args.seed_demo:
         parser.error('Demo hisoblar bilan faqat loopbackda işga tuşiring')
+    if args.init_owner or args.reset_owner:
+        os.umask(0o077)
     initialize(args.seed_demo)
+    if args.init_owner or args.reset_owner:
+        import getpass, secrets
+        with closing(connection()) as db:
+            if db.execute('SELECT 1 FROM owner_account').fetchone() and not args.reset_owner:
+                parser.error('Egasi hisobi mavjud. Tiklash uchun --reset-owner ishlating.')
+            try:
+                username=input('Egasi logini: ').strip()
+                password=getpass.getpass('Egasi paroli (12–128 belgi, harf va raqam): ')
+                if password!=getpass.getpass('Parolni takrorlang: '):
+                    parser.error('Parollar mos emas')
+                secret=base64.b32encode(secrets.token_bytes(20)).decode()
+                print('Autentifikatorga NAVBOT Owner sifatida qo‘shing. Maxfiy kalitni xavfsiz saqlang: '+secret)
+                code=input('Autentifikatordagi 6 raqamli kod: ').strip()
+                with db:
+                    owner_control.configure(db,username,password,secret,code,reset=args.reset_owner)
+            except (EOFError,KeyboardInterrupt):
+                parser.exit(1,'\nEgasi hisobi yaratilmadi.\n')
+            except auth.AuthError as error:
+                parser.exit(1,str(error)+'\n')
+        print('Egasi hisobi tayyor. Keyingi autentifikator kodi bilan /owner sahifasiga kiring.')
+        raise SystemExit(0)
     if args.init_admin or args.ensure_admin:
         import getpass
         with closing(connection()) as db, db:
