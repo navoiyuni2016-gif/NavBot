@@ -66,6 +66,16 @@ const { chromium } = require("playwright"),
           ?.textContent === "1",
     );
     assert.equal(await page.locator("[data-dashboard-request]").count(), 0);
+    assert.equal(await page.locator('#dashboard-service-bars .dash-hrow').count(),5);
+    assert.equal(await page.locator('#dashboard-service-total').innerText(),'1 ta');
+    assert.equal(await page.locator('#dashboard-service-bars .dash-hrow strong').first().innerText(),'1');
+    const serviceTotals=await page.evaluate(()=>NavDashboard.model(state.requests,state.catalog).services.map(group=>[group.total,group.items.reduce((n,item)=>n+item[1],0)]));
+    assert.deepEqual(serviceTotals,[[1,1],[0,0],[0,0],[0,0],[0,0]]);
+    await page.locator('#dashboard-service-section').selectOption('1');
+    assert.equal(await page.locator('#dashboard-service-total').innerText(),'0 ta');
+    await page.locator('#dashboard-service-section').selectOption('0');
+    await page.locator('.dash-service-panel').screenshot({path:'/tmp/navbot-dashboard-service-statistics.png'});
+
     await page.screenshot({
       path: "/tmp/navbot-dashboard-v2.png",
       fullPage: true,
@@ -231,7 +241,7 @@ const { chromium } = require("playwright"),
     const bounds=await kp.evaluate(()=>({grid:document.querySelector('.kiosk-grid').getBoundingClientRect().bottom,flags:document.querySelector('.kiosk-languages').getBoundingClientRect().top,bottom:document.querySelector('.kiosk-languages').getBoundingClientRect().bottom,ys:[...document.querySelectorAll('[data-kiosk-lang]')].map(e=>e.getBoundingClientRect().top)}));
     assert(bounds.flags>=bounds.grid);assert(bounds.bottom<=768);assert(bounds.ys.every(y=>y===bounds.ys[0]));
     await kp.screenshot({path:'/tmp/navbot-kiosk-flags.png',fullPage:true});
-    const expectedIcons=[['medical','document','hemis','tools','layers'],['microscope','mentor','cap','sprout','layers'],['people','plane','book','handshake','layers'],['contract','stipend','briefcase','document','layers'],['building','calendar','refresh','shield','layers']];
+    const expectedIcons=[['medical','transfer','hemis','document','layers'],['microscope','mentor','cap','sprout','layers'],['people','plane','book','handshake','layers'],['contract','stipend','briefcase','document','layers'],['building','calendar','refresh','document','layers']];
     for(let section=0;section<5;section++){
       await kp.locator(`[data-choice="${section}"]`).click();
       assert.deepEqual(await kp.locator('[data-choice] [data-kiosk-icon]').evaluateAll(nodes=>nodes.map(e=>e.dataset.kioskIcon)),expectedIcons[section]);

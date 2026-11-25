@@ -7,6 +7,7 @@ window.NavKioskDesign = (() => {
     finance: '<path d="M11 19V9h4v10M17 19V5h4v14M9 7l5-4 4 1 4-4M19 0h3v3"/><ellipse cx="5" cy="13" rx="4" ry="2"/><path d="M1 13v6c0 3 8 3 8 0v-6M1 16c2 2 6 2 8 0"/>',
     clipboard: '<path d="M8 4H4v18h15V4h-4M9 2h5v4H9Z"/><path d="m7 11 2 2 3-4M7 17l2 2 3-4M14 11h2M14 17h2"/>',
     medical: '<path d="M8 4H4v18h16V4h-4M9 2h6v4H9Z"/><path d="M10 10h4v3h3v4h-3v3h-4v-3H7v-4h3Z"/>',
+    transfer: '<path d="M4 2h10l5 5v7H4ZM14 2v6h5M5 18h15l-3-3M20 18l-3 3M18 23H3l3-3" fill="none"/>',
     document: '<path d="M4 2h11l5 5v15H4ZM14 2v6h6M7 11h9M7 15h7M7 19h5"/><path d="m15 21 6-7 2 2-6 7-3 1Z"/>',
     hemis: '<path d="M4 3h16v14H4ZM2 20h20l-2 2H4Z"/><text x="12" y="12" text-anchor="middle" font-size="5" font-weight="900" stroke="none" fill="white">HEMIS</text>',
     tools: '<path d="m4 2 4 4-2 2-4-4c-2 5 2 8 6 7l10 11 4-4L11 8c1-4-2-8-7-6Z"/><path d="m3 21 6-6M14 9l6-6 2 2-6 6"/>',
@@ -28,11 +29,11 @@ window.NavKioskDesign = (() => {
   };
   const sections = ['cap','bulb','globe','finance','clipboard'];
   const services = [
-    ['medical','document','hemis','tools','layers'],
+    ['medical','transfer','hemis','document','layers'],
     ['microscope','mentor','cap','sprout','layers'],
     ['people','plane','book','handshake','layers'],
     ['contract','stipend','briefcase','document','layers'],
-    ['building','calendar','refresh','shield','layers'],
+    ['building','calendar','refresh','document','layers'],
   ];
   const colors = [['#c4f0ff','#198fe9'],['#b2fff0','#11c2be'],['#e9cbff','#a36bff'],['#c4f0ff','#198fe9'],['#b2fff0','#11c2be']];
   function icon(section, service=null) {

@@ -544,3 +544,5 @@ NavI18n.add([
 ['Server bilan aloqa vaqtincha uzildi. Qayta ulanmoqda…','Связь с сервером временно потеряна. Переподключение…','Server connection interrupted. Reconnecting…'],
 ['Aloqa yoki printer javobi kutilmoqda. Avvalgi so‘rov tekshirilmoqda…','Ожидаем соединение или принтер. Проверяем предыдущий запрос…','Waiting for connection or printer. Checking the previous request…']
 ]);
+
+NavI18n.add([['Xizmatlar kesimida murojaatlar','Обращения по услугам','Requests by service'],['Bölim içidagi har bir xizmat böyiça','По каждой услуге раздела','Each service within the section']]);

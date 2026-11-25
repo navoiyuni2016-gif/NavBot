@@ -24,6 +24,7 @@ window.NavDashboard = (() => {
     const rank = (name) => /^\d+-kurs$/.test(name) ? Number.parseInt(name, 10) : Infinity;
     return rank(a) - rank(b) || a.localeCompare(b);
   });
+  let serviceSection=0;
   function model(source, catalog) {
     const rows = source.filter(
       (r) =>
@@ -43,6 +44,10 @@ window.NavDashboard = (() => {
         rows,
         (r) => catalog[r.section]?.[0]?.[0] || "Bölim noma’lum",
       ),
+      services: catalog.map((entry,section)=>({
+        label:entry[0][0],total:rows.filter(r=>r.section===section).length,
+        items:entry[1].map((names,service)=>[names[0],rows.filter(r=>r.section===section&&r.service===service).length])
+      })),
       faculties: groups(rows, faculty),
       courses: courseGroups(rows),
       daily: Array.from({ length: 7 }, (_, i) => {
@@ -88,6 +93,7 @@ window.NavDashboard = (() => {
       <div class="dash-panels">
         <section><header><h2>Sohalar böyiça murojaatlar</h2><span class="dash-tag">Jami ${m.total} ta</span></header>${barChart(m.sections)}</section>
         <section><header><h2>Murojaatlar holati</h2><span class="dash-tag">Umumiy</span></header><div class="dash-donut-layout"><div class="dash-donut" style="--segments:${m.total ? `#2bd36f 0% ${ratio}%,#8374ff ${ratio}% 100%` : "#2b3752 0% 100%"}" role="img" aria-label="Jami ${m.total}, yakunlangan ${m.closed}, faol ${m.active}"><div><strong>${m.total} <small>ta</small></strong><span>Jami murojaatlar</span></div></div><div class="dash-legend">${statuses.map(([name, count, color]) => `<div><i style="background:${color}"></i><span>${esc(NavI18n.t(name))}</span><strong>${count}</strong></div>`).join("")}<p>Keçikkan murojaatlar faol murojaatlar tarkibiga kiradi.</p></div></div></section>
+        <section class="dash-wide dash-service-panel"><header><div><h2>Xizmatlar kesimida murojaatlar</h2><p>Bölim içidagi har bir xizmat böyiça</p></div><label class="dash-service-select">Xizmat bölimi<select id="dashboard-service-section">${m.services.map((section,i)=>`<option value="${i}" ${serviceSection===i?'selected':''}>${esc(section.label)}</option>`).join('')}</select></label></header><div class="dash-service-head"><strong>${esc(m.services[serviceSection]?.label||'')}</strong><span class="dash-tag" id="dashboard-service-total">${m.services[serviceSection]?.total||0} ta</span></div><div id="dashboard-service-bars">${barChart(m.services[serviceSection]?.items||[])}</div></section>
         <section class="dash-wide"><header><h2>Murojaatlar dinamikasi</h2><span class="dash-tag">Oxirgi 7 kun</span></header>${barChart(
           m.daily.map(([date, count]) => [date.slice(5), count]),
           true,
@@ -95,6 +101,7 @@ window.NavDashboard = (() => {
         <section><header><h2>Fakultetlar kesimida</h2><span class="dash-tag">Murojaatlar soni</span></header>${barChart(m.faculties)}</section>
         <section><header><h2>Kurslar kesimida</h2><span class="dash-tag">Murojaatlar soni</span></header>${barChart(m.courses, true)}</section>
       </div><p class="dash-foot">NAVBOT · Vakolatingiz doirasidagi ma’lumotlar · Jami ${m.total} ta murojaat</p><div role="status" id="dash-export-status"></div></div>`;
+    host.querySelector('#dashboard-service-section').onchange=event=>{serviceSection=Number(event.target.value);render(host,source,catalog,esc)};
     host.querySelectorAll("[data-filter]").forEach(
       (el) =>
         (el.onchange = () => {
@@ -124,6 +131,7 @@ window.NavDashboard = (() => {
     const sections = [
       ["Murojaatlar dinamikasi · oxirgi 7 kun", m.daily],
       ["Sohalar böyiça", m.sections],
+      ...m.services.map(section=>[section.label+" · xizmatlar",section.items]),
       ["Fakultetlar kesimida", m.faculties],
       ["Kurslar kesimida", m.courses],
     ];
