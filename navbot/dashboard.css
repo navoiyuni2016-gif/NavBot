@@ -507,3 +507,5 @@ html:not([data-theme=dark]) .dash-column>span,html:not([data-theme=dark]) .dash-
 html:not([data-theme=dark]) .dash-donut>div{background:#fffefb}
 html:not([data-theme=dark]) .dash-donut strong{color:#163c52}
 html:not([data-theme=dark]) .dash-donut span,html:not([data-theme=dark]) .dash-legend p,html:not([data-theme=dark]) .dash-foot,html:not([data-theme=dark]) .dash-empty,html:not([data-theme=dark]) .dash-service-panel header p{color:#587487}
+
+.dash-filters{flex-wrap:wrap}.dash-period-label{max-width:260px!important;min-width:170px!important}.dash-trend-panel header p{color:var(--muted);font-size:12px;margin:9px 0 0}.dash-trend-scroll{max-width:100%;overflow-x:auto;overscroll-behavior-x:contain;padding-bottom:4px}.dash-trend-scroll[data-period="30d"] .dash-column-chart{min-width:960px;gap:10px}.dash-trend-scroll[data-period="12m"] .dash-column-chart{min-width:480px;gap:12px}

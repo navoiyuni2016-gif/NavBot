@@ -66,6 +66,24 @@ const { chromium } = require("playwright"),
           ?.textContent === "1",
     );
     assert.equal(await page.locator("[data-dashboard-request]").count(), 0);
+    assert.equal(await page.locator('.dash-trend-panel .dash-column').count(),7);
+    await page.locator('#dashboard-period').selectOption('30d');
+    assert.equal(await page.locator('.dash-trend-panel .dash-column').count(),30);
+    assert.match(await page.locator('#dashboard-period-caption').innerText(),/30/);
+    assert.equal(await page.locator('[data-dashboard-metric=total] .value').innerText(),'1');
+    await page.locator('#dashboard-period').selectOption('12m');
+    assert.equal(await page.locator('.dash-trend-panel .dash-column').count(),12);
+    assert.match(await page.locator('#dashboard-period-caption').innerText(),/12/);
+    await page.locator('[data-filter=course]').selectOption('2-kurs');
+    assert.equal(await page.locator('#dashboard-period').inputValue(),'12m');
+    await page.setViewportSize({width:360,height:800});
+    assert(await page.locator('body').evaluate(e=>e.scrollWidth<=innerWidth+1));
+    await page.locator('#dashboard-period').selectOption('30d');
+    assert(await page.locator('body').evaluate(e=>e.scrollWidth<=innerWidth+1));
+    await page.setViewportSize({width:1440,height:1100});
+    await page.locator('[data-filter=course]').selectOption('');
+    await page.locator('#dashboard-period').selectOption('7d');
+
     assert.equal(await page.locator('#dashboard-service-bars .dash-hrow').count(),5);
     assert.equal(await page.locator('#dashboard-service-total').innerText(),'1 ta');
     assert.equal(await page.locator('#dashboard-service-bars .dash-hrow strong').first().innerText(),'1');

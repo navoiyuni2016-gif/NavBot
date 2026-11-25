@@ -235,6 +235,9 @@ function fitKioskLabels(){
  });
 }
 window.addEventListener('resize',()=>requestAnimationFrame(fitKioskLabels));
+if(document.fonts){document.fonts.ready.then(()=>requestAnimationFrame(fitKioskLabels));document.fonts.addEventListener('loadingdone',()=>requestAnimationFrame(fitKioskLabels))}
+let kioskLabelsObserver=null;
+function observeKioskLabels(){if(!window.ResizeObserver)return;kioskLabelsObserver?.disconnect();const grid=document.querySelector('.kiosk-grid');if(grid){kioskLabelsObserver=new ResizeObserver(()=>requestAnimationFrame(fitKioskLabels));kioskLabelsObserver.observe(grid)}}
 function kioskHeading(){if(state.section!==null)return esc(state.catalog[state.section][0][state.lang]);const parts=tr(0).split(' '),last=parts.pop();return html`${esc(parts.join(' '))} <span>${esc(last)}</span>`}
 function kiosk(){state.page='kiosk';document.body.dataset.page='kiosk';publicTitle();const controls=$('#controls'),content=$('#content');controls.innerHTML='';content.innerHTML='';content.classList.add('kiosk-choices');
 
@@ -244,7 +247,7 @@ function kiosk(){state.page='kiosk';document.body.dataset.page='kiosk';publicTit
  content.querySelectorAll('[data-kiosk-lang]').forEach(button=>button.onclick=()=>{if(state.busy||state.pending!==null||kioskPrinting)return;changeLanguage(button.dataset.kioskLang)});
  if(kioskReceipt)content.insertAdjacentHTML('beforeend',kioskReceiptMarkup(kioskReceipt));
  if(state.busy){const caption=document.createElement('p');caption.className='kiosk-print-status';caption.setAttribute('role','status');caption.textContent=t(state.kioskRecovering?'Aloqa yoki printer javobi kutilmoqda. Avvalgi so‘rov tekshirilmoqda…':state.ticket?'Çek printerga yuborilmoqda. Iltimos, qayta bosmang.':'Navbat yaratilmoqda…');$('.kiosk-title',content).append(caption)}
- content.querySelectorAll('[data-choice]').forEach(el=>el.onclick=()=>{if(state.busy||kioskPrinting)return;if(state.section===null){state.section=Number(el.dataset.choice);kiosk()}else issue(Number(el.dataset.choice))});requestAnimationFrame(fitKioskLabels);}
+ content.querySelectorAll('[data-choice]').forEach(el=>el.onclick=()=>{if(state.busy||kioskPrinting)return;if(state.section===null){state.section=Number(el.dataset.choice);kiosk()}else issue(Number(el.dataset.choice))});observeKioskLabels();requestAnimationFrame(fitKioskLabels);}
 function resetKioskTicket(){clearTimeout(kioskPrintTimer);clearTimeout(kioskRetryTimer);kioskRequest=null;state.kioskRecovering=false;sessionStorage.removeItem('navbot-ticket-request');state.ticket=null;state.section=null;state.key=null;state.pending=null;state.busy=false;sessionStorage.removeItem('navbot-ticket');kiosk()}
 function finishKioskTicket(){if(!state.ticket)return;const key=state.key;clearTimeout(kioskPrintTimer);const elapsed=Date.now()-state.ticket.accepted_at;const delay=Math.max(0,KIOSK_MIN_WAIT-(Number.isFinite(elapsed)?elapsed:0));kioskPrintTimer=setTimeout(()=>{if(state.key===key)resetKioskTicket()},delay)}
 async function waitKioskPrinter(){const key=state.key;if(!state.ticket||!key)return;try{const result=await api('/api/kiosk-printer/status',{key});if(state.key!==key)return;if(result.state==='spooled'||result.state==='cancelled'){if(result.state==='cancelled')notice(t('Çek bekor qilindi. Xodimga murojaat qiling.'));finishKioskTicket();return}if(['failed','uncertain'].includes(result.state))notice(t('Printer javobi kutilmoqda. Xodimga murojaat qiling.'))}catch(error){if(state.key!==key)return;notice(t('Printer bilan aloqa vaqtincha uzildi. Qayta bosmang.'))}kioskPrintTimer=setTimeout(waitKioskPrinter,1000)}

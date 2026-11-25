@@ -24,14 +24,20 @@ window.NavDashboard = (() => {
     const rank = (name) => /^\d+-kurs$/.test(name) ? Number.parseInt(name, 10) : Infinity;
     return rank(a) - rank(b) || a.localeCompare(b);
   });
-  let serviceSection=0;
-  function model(source, catalog) {
+  let serviceSection=0,trendPeriod='7d';
+  const periodTitles={'7d':'Oxirgi 7 kun','30d':'Oxirgi 30 kun (1 oy)','12m':'Oxirgi 12 oy (1 yil)'};
+  function model(source, catalog, period=trendPeriod, now=Date.now()) {
+    if(!Object.prototype.hasOwnProperty.call(periodTitles,period))period='7d';
     const rows = source.filter(
       (r) =>
         (!filters.faculty || faculty(r) === filters.faculty) &&
         (!filters.course || course(r) === filters.course),
     );
-    const now = Date.now();
+    const today=day(now),year=Number(today.slice(0,4)),month=Number(today.slice(5,7));
+    const keys=period==='12m'?Array.from({length:12},(_,i)=>new Date(Date.UTC(year,month-12+i,1)).toISOString().slice(0,7)):
+      Array.from({length:period==='30d'?30:7},(_,i)=>new Date(Date.parse(today+'T12:00:00Z')-((period==='30d'?29:6)-i)*86400000).toISOString().slice(0,10));
+    const counts=new Map(keys.map(key=>[key,0]));
+    for(const row of rows){const date=day(row.created_at);if(!date||date>today)continue;const key=period==='12m'?date.slice(0,7):date;if(counts.has(key))counts.set(key,counts.get(key)+1)}
     return {
       total: rows.length,
       active: rows.filter((r) => r.status !== "closed").length,
@@ -50,10 +56,8 @@ window.NavDashboard = (() => {
       })),
       faculties: groups(rows, faculty),
       courses: courseGroups(rows),
-      daily: Array.from({ length: 7 }, (_, i) => {
-        const date = day(now - (6 - i) * 86400000);
-        return [date, rows.filter((r) => day(r.created_at) === date).length];
-      }),
+      period,periodLabel:periodTitles[period],rangeFrom:keys[0]+(period==='12m'?'-01':''),rangeTo:today,
+      daily:keys.map(key=>[key,counts.get(key)]),
     };
   }
   const labels = [
@@ -88,19 +92,20 @@ window.NavDashboard = (() => {
     const ratio = m.total ? (m.closed / m.total) * 100 : 0;
     host.innerHTML = NavI18n.html`<div class="official-dashboard">
       <header class="dash-heading"><div><p>ToşDÖTAU · REGISTRATOR OFISI</p><h1>Faoliyat körsatkiçlari</h1><span>${day(Date.now())} · Toşkent vaqti</span></div><div class="dash-export"><button data-export="png">PNG yuklab oliş</button><button data-export="pdf">PDF yuklab oliş</button></div></header>
-      <div class="dash-filters"><label>Fakultet<select data-filter="faculty">${options("faculty", groups(source, faculty))}</select></label><label>Kurs<select data-filter="course">${options("course", courseGroups(source))}</select></label><span>Umumiy natijalar: barça sanalar<br>Dinamika: oxirgi 7 kun</span></div>
+      <div class="dash-filters"><label>Fakultet<select data-filter="faculty">${options("faculty", groups(source, faculty))}</select></label><label>Kurs<select data-filter="course">${options("course", courseGroups(source))}</select></label><label class="dash-period-label">Dinamika davri<select id="dashboard-period">${Object.entries(periodTitles).map(([value,label])=>`<option value="${value}" ${value===trendPeriod?'selected':''}>${esc(NavI18n.t(label))}</option>`).join('')}</select></label><span>${esc(NavI18n.t('Umumiy natijalar: barça sanalar'))}<br>${esc(NavI18n.t(m.periodLabel))}</span></div>
       <div class="dash-kpis">${labels.map(([name, key]) => `<article data-dashboard-metric="${key}" class="dash-kpi-${key}"><span>${esc(NavI18n.t(name))}</span><div class="dash-kpi-number"><strong class="value">${m[key]}</strong><small>ta</small></div><footer>${key === "closed" ? (m.total ? Math.round(ratio) : 0) + "% bajarilgan" : "Tanlangan kesim böyiça"}</footer></article>`).join("")}</div>
       <div class="dash-panels">
         <section><header><h2>Sohalar böyiça murojaatlar</h2><span class="dash-tag">Jami ${m.total} ta</span></header>${barChart(m.sections)}</section>
         <section><header><h2>Murojaatlar holati</h2><span class="dash-tag">Umumiy</span></header><div class="dash-donut-layout"><div class="dash-donut" style="--segments:${m.total ? `#2bd36f 0% ${ratio}%,#8374ff ${ratio}% 100%` : "#2b3752 0% 100%"}" role="img" aria-label="Jami ${m.total}, yakunlangan ${m.closed}, faol ${m.active}"><div><strong>${m.total} <small>ta</small></strong><span>Jami murojaatlar</span></div></div><div class="dash-legend">${statuses.map(([name, count, color]) => `<div><i style="background:${color}"></i><span>${esc(NavI18n.t(name))}</span><strong>${count}</strong></div>`).join("")}<p>Keçikkan murojaatlar faol murojaatlar tarkibiga kiradi.</p></div></div></section>
         <section class="dash-wide dash-service-panel"><header><div><h2>Xizmatlar kesimida murojaatlar</h2><p>Bölim içidagi har bir xizmat böyiça</p></div><label class="dash-service-select">Xizmat bölimi<select id="dashboard-service-section">${m.services.map((section,i)=>`<option value="${i}" ${serviceSection===i?'selected':''}>${esc(section.label)}</option>`).join('')}</select></label></header><div class="dash-service-head"><strong>${esc(m.services[serviceSection]?.label||'')}</strong><span class="dash-tag" id="dashboard-service-total">${m.services[serviceSection]?.total||0} ta</span></div><div id="dashboard-service-bars">${barChart(m.services[serviceSection]?.items||[])}</div></section>
-        <section class="dash-wide"><header><h2>Murojaatlar dinamikasi</h2><span class="dash-tag">Oxirgi 7 kun</span></header>${barChart(
-          m.daily.map(([date, count]) => [date.slice(5), count]),
+        <section class="dash-wide dash-trend-panel"><header><div><h2>Murojaatlar dinamikasi</h2><p>${m.rangeFrom} — ${m.rangeTo}</p></div><span class="dash-tag" id="dashboard-period-caption">${esc(NavI18n.t(m.periodLabel))}</span></header><div class="dash-trend-scroll" data-period="${m.period}">${barChart(
+          m.daily.map(([date, count]) => [m.period==='12m'?date.slice(5)+'/'+date.slice(2,4):date.slice(5), count]),
           true,
-        )}</section>
+        )}</div></section>
         <section><header><h2>Fakultetlar kesimida</h2><span class="dash-tag">Murojaatlar soni</span></header>${barChart(m.faculties)}</section>
         <section><header><h2>Kurslar kesimida</h2><span class="dash-tag">Murojaatlar soni</span></header>${barChart(m.courses, true)}</section>
       </div><p class="dash-foot">NAVBOT · Vakolatingiz doirasidagi ma’lumotlar · Jami ${m.total} ta murojaat</p><div role="status" id="dash-export-status"></div></div>`;
+    host.querySelector('#dashboard-period').onchange=event=>{trendPeriod=event.target.value;render(host,source,catalog,esc)};
     host.querySelector('#dashboard-service-section').onchange=event=>{serviceSection=Number(event.target.value);render(host,source,catalog,esc)};
     host.querySelectorAll("[data-filter]").forEach(
       (el) =>
@@ -129,7 +134,7 @@ window.NavDashboard = (() => {
   }
   function canvas(m) {
     const sections = [
-      ["Murojaatlar dinamikasi · oxirgi 7 kun", m.daily],
+      ["Murojaatlar dinamikasi · "+m.periodLabel,m.daily],
       ["Sohalar böyiça", m.sections],
       ...m.services.map(section=>[section.label+" · xizmatlar",section.items]),
       ["Fakultetlar kesimida", m.faculties],
@@ -200,7 +205,7 @@ window.NavDashboard = (() => {
     x.font = "20px sans-serif";
     x.fillStyle = "#b5c4df";
     x.fillText(
-      "NAVBOT · Umumiy natijalar: barça sanalar · Dinamika: oxirgi 7 kun",
+      "NAVBOT · Umumiy natijalar: barça sanalar · "+m.periodLabel,
       60,
       c.height - 30,
     );

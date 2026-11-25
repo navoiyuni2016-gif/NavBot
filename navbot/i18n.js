@@ -546,3 +546,11 @@ NavI18n.add([
 ]);
 
 NavI18n.add([['Xizmatlar kesimida murojaatlar','Обращения по услугам','Requests by service'],['Bölim içidagi har bir xizmat böyiça','По каждой услуге раздела','Each service within the section']]);
+
+NavI18n.add([
+['Dinamika davri','Период динамики','Trend period'],
+['Oxirgi 7 kun','Последние 7 дней','Last 7 days'],
+['Oxirgi 30 kun (1 oy)','Последние 30 дней (1 месяц)','Last 30 days (1 month)'],
+['Oxirgi 12 oy (1 yil)','Последние 12 месяцев (1 год)','Last 12 months (1 year)'],
+['Umumiy natijalar: barça sanalar','Общие результаты: за всё время','Overall totals: all time']
+]);
