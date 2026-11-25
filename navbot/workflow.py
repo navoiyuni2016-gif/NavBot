@@ -98,7 +98,8 @@ def work_scope(user, row, db):
 
 
 def visible(user, row, db):
-    return user['role'] in ('admin','director','manager','head') or work_scope(user,row,db)
+    return (user['role'] in ('admin','director','manager','head') or
+            user['role']=='executor' and row['status'] in ('in_progress','pending_approval','returned') or work_scope(user,row,db))
 
 
 def serialize(db, row, related=None):

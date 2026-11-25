@@ -342,6 +342,23 @@ const { chromium } = require("playwright"),
     assert.equal(await managerPage.locator('#menu .active').getAttribute('data-view'),'requests');
     assert.match(await managerPage.locator('#request-detail .summary-banner').innerText(),new RegExp(closeRequest.number));
     await closeContext.close();
+    await page.evaluate(() => {
+      window.executionOriginal = state.requests;
+      const base = state.requests[0], now = Date.now();
+      state.requests = ['in_progress','pending_approval','returned','new','closed'].map((status,i) => ({...base,id:9000+i,status,created_at:'2026-01-01T00:00:00+00:00',deadline:i===0?new Date(now-3600000).toISOString():i===1?new Date(now+3600000).toISOString():null}));
+      state.selected=null;navigate('execution');
+    });
+    assert.equal(await page.locator('[data-execution-row]').count(),3);
+    assert.equal(await page.locator('[data-execution-metric=overdue] strong').innerText(),'1');
+    assert.equal(await page.locator('[data-execution-metric=near] strong').innerText(),'1');
+    assert.equal(await page.locator('#call-next').count(),0);
+    await page.locator('[data-execution-metric=overdue]').click();
+    assert.equal(await page.locator('[data-execution-row]').count(),1);
+    await page.locator('#execution-reset').click();
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),true);
+    await page.setViewportSize({width:1440,height:1100});
+    await page.screenshot({path:'/tmp/navbot-execution-monitor.png',fullPage:true});
+    await page.evaluate(() => {state.requests=window.executionOriginal;navigate('dashboard')});
     assert.deepEqual(errors, []);
     console.log(
       "PASS dashboard totals, filters, PNG/PDF downloads, mobile layout, service suspension UI, no page errors",

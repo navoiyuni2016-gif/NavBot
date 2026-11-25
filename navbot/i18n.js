@@ -554,3 +554,15 @@ NavI18n.add([
 ['Oxirgi 12 oy (1 yil)','Последние 12 месяцев (1 год)','Last 12 months (1 year)'],
 ['Umumiy natijalar: barça sanalar','Общие результаты: за всё время','Overall totals: all time']
 ]);
+
+NavI18n.add([
+['Ijro nazorati','Контроль исполнения','Execution monitor'],
+['Ijroda','На исполнении','In execution'],
+['Tasdiqda','На согласовании','Pending approval'],
+['Jarayon bosqiçi','Этап процесса','Process stage'],
+['Qabul qilindi','Принято','Received'],
+['Mas’ul xodim','Ответственный сотрудник','Responsible staff'],
+['Barça kunlardagi oçiq ijrolar. Mas’ul, muddat va jarayon bir oynada.','Открытые исполнения за все дни. Ответственный, срок и процесс в одном окне.','Open work across all dates. Responsibility, deadlines and stages in one view.'],
+['Ijro röyxatiga qaytiş','Вернуться к списку исполнений','Back to execution list'],
+['Muddat belgilanmagan','Срок не установлен','No deadline set']
+]);

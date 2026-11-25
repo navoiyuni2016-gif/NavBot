@@ -8,7 +8,7 @@ class StaffDepartmentAcceptance(WorkflowAcceptance):
         payload={'username':'department'+str(index),'full_name':'Department Staff '+str(index),'role':'executor','department':DEPARTMENTS[index],'operator':None,'password':'Temporary-Dept-2026!',**extra}
         return self.client('admin').request('/api/admin/user',payload)
 
-    def test_departments_keep_executor_permissions_and_scoped_requests(self):
+    def test_departments_share_execution_but_keep_executor_permissions(self):
         admin=self.client('admin');manager=self.client('manager')
         for index in range(4):
             status,result,_=self.create(index,employee_number='007' if index==3 else None)
@@ -16,14 +16,18 @@ class StaffDepartmentAcceptance(WorkflowAcceptance):
             client=Client(self.base);self.ok(client,'/api/login',{'username':user['username'],'password':'Temporary-Dept-2026!'})
             self.ok(client,'/api/password',{'current_password':'Temporary-Dept-2026!','new_password':'Changed-Dept-2026!'})
             self.ok(client,'/api/login',{'username':user['username'],'password':'Changed-Dept-2026!'})
-            self.assertEqual(self.ok(client,'/api/requests')['requests'],[])
+            shared=self.ok(client,'/api/requests')['requests']
+            self.assertEqual(len(shared),index)
+            for other in shared:
+                self.assertEqual(client.request('/api/request/action',{'id':other['id'],'version':other['version'],'action':'submit','answer':'Unauthorized'})[0],403)
             request=self.ok(manager,'/api/request/create',{'key':str(uuid4()),'channel':'phone','section':0,'service':0,'lang':'uz','hemis_id':'100000000001','identity_confirmed':True,'content':'Department work','note':''})['request']
             self.ok(manager,'/api/request/action',{'id':request['id'],'version':request['version'],'action':'assign','assignee_id':user['id'],'deadline':'2099-01-01T10:00:00+00:00','internal_basis':'Test','legal_basis':''})
-            visible=self.ok(client,'/api/requests')['requests'];self.assertEqual([r['id'] for r in visible],[request['id']])
+            visible=self.ok(client,'/api/requests')['requests'];self.assertEqual(len(visible),index+1)
+            assigned=next(r for r in visible if r['id']==request['id'])
             self.assertEqual(client.request('/api/admin/users')[0],403)
             self.assertEqual(client.request('/api/report')[0],403)
             self.assertEqual(client.request('/api/action',{'operator':1,'action':'call'})[0],403)
-            submitted=self.ok(client,'/api/request/action',{'id':request['id'],'version':visible[0]['version'],'action':'submit','answer':'Prepared answer'})['request']
+            submitted=self.ok(client,'/api/request/action',{'id':request['id'],'version':assigned['version'],'action':'submit','answer':'Prepared answer'})['request']
             self.assertEqual(submitted['status'],'pending_approval')
         self.assertEqual(len(self.ok(admin,'/api/requests')['requests']),4)
 
