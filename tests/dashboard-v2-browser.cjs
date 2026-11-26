@@ -272,11 +272,19 @@ const { chromium } = require("playwright"),
     assert.equal(await kp.locator('[data-choice="0"]>span:last-child').innerText(),'ISSUES');
     assert.equal(await kp.locator('[data-choice="4"]>span:last-child').innerText(),'Internships');
     await kp.locator('[data-kiosk-lang=ru]').click();
-    for(const width of [955,1024,1280,1920]){
+    for(const width of [741,800,900,955,1024,1280,1920]){
       await kp.setViewportSize({width,height:width===955?920:width===1024?768:1080});
       await kp.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
       const fit=await kp.locator('.kiosk-grid .tile>span:last-child').evaluateAll(labels=>labels.every(label=>label.scrollWidth<=label.clientWidth+1));
       assert(fit,'Russian department titles must fit without splitting words at width '+width);
+      const wordsIntact=await kp.locator('.kiosk-grid .tile>span:last-child').evaluateAll(labels=>labels.every(label=>{
+        const walker=document.createTreeWalker(label,NodeFilter.SHOW_TEXT);let node;
+        while(node=walker.nextNode())for(const match of node.textContent.matchAll(/\S+/g)){
+          const range=document.createRange();range.setStart(node,match.index);range.setEnd(node,match.index+match[0].length);
+          if([...range.getClientRects()].filter(rect=>rect.width>0).length!==1)return false;
+        }return true;
+      }));
+      assert(wordsIntact,'Russian words must stay on one line at width '+width);
     }
     await kp.setViewportSize({width:1024,height:768});
     await kp.screenshot({path:'/tmp/navbot-kiosk-russian-fitted.png',fullPage:true});
