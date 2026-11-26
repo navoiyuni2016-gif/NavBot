@@ -5,6 +5,17 @@ import re
 from test_workflow import WorkflowAcceptance
 
 class SecurityHeadersAcceptance(WorkflowAcceptance):
+    def test_operational_report_is_admin_only_and_has_no_credentials(self):
+        status,_,_=self.public.request('/api/admin/operations')
+        self.assertIn(status,(401,403))
+        from test_workflow import Client
+        manager=Client(self.base);manager.login('manager')
+        self.assertEqual(manager.request('/api/admin/operations')[0],403)
+        admin=Client(self.base);admin.login('admin')
+        status,report,_=admin.request('/api/admin/operations')
+        self.assertEqual(status,200);self.assertIn('checks',report)
+        for key in ('token','password','alert_chat_id','code_dir','data_dir'):self.assertNotIn(key,report)
+
     def test_static_pages_only_allow_hashes_of_their_actual_scripts(self):
         for path in ('/login','/kiosk','/tv'):
             status,body,headers=self.public.request(path)

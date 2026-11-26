@@ -1,5 +1,11 @@
 # NAVBOT verified backups
 
+For installation together with monitoring, SSL reminders, administrator alerts
+and a functional isolated recovery drill, use [OPERATIONS.md](OPERATIONS.md).
+Completed archives now publish a private `last-verified.json` report. An optional
+external mounted target receives an atomic, checksum-verified copy; a missing
+mount is an error and never silently falls back to the root filesystem.
+
 `navbot-backup.py` runs as root. It briefly stops an active navbot.service, copies
 /var/lib/navbot (including integration secret sidecars), application code without
 .git, the systemd unit and Nginx site configuration. It restarts the application

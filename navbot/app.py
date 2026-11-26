@@ -34,6 +34,7 @@ import kiosk_printer
 import service_access
 import owner_control
 import tenant_instance
+import operations
 import workflow as w
 
 ROOT = Path(__file__).resolve().parent
@@ -512,6 +513,9 @@ class Handler(BaseHTTPRequestHandler):
                 if url.path == '/api/telegram/health':
                     w.need(user,('admin',))
                     return self.reply(telegram_bot.health(db))
+                if url.path == '/api/admin/operations':
+                    w.need(user,('admin',))
+                    return self.reply(operations.status())
                 if url.path == '/api/manager-service':
                     return self.reply(service_access.managers(db,user))
                 if url.path == '/api/users':

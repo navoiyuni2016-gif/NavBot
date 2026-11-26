@@ -49,6 +49,9 @@ function signed(){const values={auth_date:String(Math.floor(Date.now()/1000)),qu
  const sessionStorage=await page.evaluate(()=>JSON.stringify({...localStorage,...window.sessionStorage}));assert(!sessionStorage.includes(code));assert(!sessionStorage.includes('init_data'));
  const plain=await browser.newContext();await plain.route('https://telegram.org/js/telegram-web-app.js',route=>route.fulfill({contentType:'text/javascript',body:''}));const outside=await plain.newPage();await outside.goto(base+'/student');await outside.getByText('Ilovani Telegram bot içidan oçing.',{exact:true}).waitFor();
  const staff=await admin.newPage();await staff.goto(base+'/admin');await staff.locator('[data-view=integrations]').click();await staff.locator('#telegram-mini-form').waitFor();assert.equal(await staff.locator('#telegram-mini-form [name=url]').inputValue(),'https://example.com/student');
+ await staff.locator('#operations-status').waitFor();
+ await staff.waitForFunction(()=>!document.querySelector('#operations-status').textContent.includes('Yuklanmoqda'));
+ assert.equal(await staff.locator('#operations-status').getByText('Xizmat nazorati',{exact:true}).count(),1);
  // Optional health failure must not leave the visible connection button inert.
  await staff.route('**/api/telegram/health',route=>route.abort());
  await staff.locator('[data-view=integrations]').click();

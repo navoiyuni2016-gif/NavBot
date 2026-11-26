@@ -15,6 +15,7 @@ import subprocess
 import tarfile
 import tempfile
 import uuid
+import time
 
 
 def digest(path):
@@ -101,7 +102,33 @@ def prune_backups(output, keep=30):
         old.unlink()
 
 
-def create_backup(data, code, output, pause, configs=()):
+def publish_report(output,archive,counts,offsite_ok=False):
+    fd,name=tempfile.mkstemp(prefix='.verified-',dir=output)
+    try:
+        with os.fdopen(fd,'w') as out:
+            json.dump({'archive':archive.name,'verified_at':time.time(),'counts':counts,'offsite_ok':offsite_ok},out)
+            out.flush();os.fsync(out.fileno());os.fchmod(out.fileno(),0o600)
+        os.replace(name,Path(output)/'last-verified.json')
+    finally:
+        if os.path.exists(name):os.unlink(name)
+
+
+def mirror_backup(archive,target):
+    target=Path(target)
+    # Never silently fill the root disk when an external mount disappears.
+    if not target.is_mount() or target.is_symlink():raise RuntimeError('External backup mount is unavailable')
+    fd,name=tempfile.mkstemp(prefix='.copy-',dir=target)
+    try:
+        with archive.open('rb') as source,os.fdopen(fd,'wb') as out:
+            shutil.copyfileobj(source,out);out.flush();os.fsync(out.fileno());os.fchmod(out.fileno(),0o600)
+        if digest(Path(name))!=digest(archive):raise RuntimeError('External backup checksum failed')
+        os.replace(name,target/archive.name)
+        prune_backups(target)
+    finally:
+        if os.path.exists(name):os.unlink(name)
+
+
+def create_backup(data, code, output, pause, configs=(),mirror=None):
     data, code, output = Path(data), Path(code), Path(output)
     if not (data / 'navbot.sqlite3').is_file() or not (code / 'navbot' / 'app.py').is_file():
         raise RuntimeError('Database or application files are missing')
@@ -135,6 +162,10 @@ def create_backup(data, code, output, pause, configs=()):
             verify_backup(partial)
             destination = output / f'navbot-backup-{stamp}-{uuid.uuid4().hex[:8]}.tar.gz'
             os.replace(partial, destination)
+            publish_report(output,destination,counts)
+            if mirror:
+                mirror_backup(destination,mirror)
+                publish_report(output,destination,counts,offsite_ok=True)
             prune_backups(output)
             return destination, counts
 
@@ -156,8 +187,13 @@ def main():
     if telegram_unit.is_file():
         configs.append(telegram_unit)
         configs.extend(sorted(Path('/etc/systemd/system/navbot-telegram.service.d').glob('*.conf')))
+    operations=Path('/etc/navbot/operations.json')
+    mirror=None
+    if operations.exists():
+        configs.append(operations)
+        mirror=json.loads(operations.read_text()).get('offsite_dir')
     destination, counts = create_backup('/var/lib/navbot', '/opt/navbot', '/var/backups/navbot',
-        stopped_services, configs)
+        stopped_services, configs,mirror=mirror)
     print('Verified backup:', destination)
     print('Restored record counts:', json.dumps(counts))
 

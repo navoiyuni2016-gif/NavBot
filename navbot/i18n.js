@@ -568,3 +568,26 @@ NavI18n.add([
 ]);
 
 NavI18n.add([['Universitetning qisqa nomi','Краткое название университета','University short name'],['Pastki yozuv','Текст внизу страницы','Footer text']]);
+
+NavI18n.add([
+ ['Xizmat nazorati','Мониторинг системы','System monitoring'],
+ ['Monitoring hali o‘rnatilmagan','Мониторинг ещё не установлен','Monitoring is not installed yet'],
+ ['Monitoring holati eskirgan yoki mavjud emas','Данные мониторинга устарели или отсутствуют','Monitoring data is stale or unavailable'],
+ ['Monitoring holati olinmadi','Не удалось получить данные мониторинга','Monitoring status could not be loaded'],
+ ['Sayt xizmati','Служба сайта','Web service'],
+ ['Telegram xizmati','Служба Telegram','Telegram service'],
+ ['Avtomatik zaxira','Автоматическое резервирование','Automatic backup'],
+ ['Sayt javobi','Ответ сайта','Web response'],
+ ['Ma’lumotlar diski','Диск данных','Data disk'],
+ ['Zaxira diski','Диск резервных копий','Backup disk'],
+ ['Tekshirilgan zaxira','Проверенная резервная копия','Verified backup'],
+ ['SSL sertifikat','Сертификат SSL','SSL certificate'],
+ ['Telegram ulanishi','Соединение Telegram','Telegram connection'],
+ ['Maxfiy fayllar','Защищённые файлы','Private files'],
+ ['Tashqi zaxira','Внешняя резервная копия','External backup'],
+ ['Administrator ogohlantirishi','Оповещения администратора','Administrator alerts'],
+ ['Parolni yangilash','Обновление пароля','Password updates'],
+ ['Xavfsizlik tekshiruvi','Проверка безопасности','Security audit'],
+ ['Ogohlantirish','Предупреждение','Warning'],
+ ['Tekshirilmoqda…','Проверяется…','Checking…']
+]);
