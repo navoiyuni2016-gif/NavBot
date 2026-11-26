@@ -24,6 +24,20 @@ class FakeAPI:
         return {'message_id':77}
 
 class TelegramBotTests(unittest.TestCase):
+    def test_real_poll_updates_connection_only_for_current_enabled_bot(self):
+        api=FakeAPI();api.call=lambda *args:[]
+        with self.db:
+            self.db.execute("UPDATE integration_config SET enabled=1,token_ref='current',connected=0 WHERE kind='telegram'")
+            bot.set_runtime(self.db,'bot_username','fixture_bot')
+        worker.poll(self.db,api,('old','unused'))
+        self.assertEqual(self.db.execute("SELECT connected FROM integration_config WHERE kind='telegram'").fetchone()[0],0)
+        worker.poll(self.db,api,('current','unused'))
+        row=self.db.execute("SELECT * FROM integration_config WHERE kind='telegram'").fetchone()
+        self.assertEqual(row['connected'],1);self.assertEqual(row['bot_username'],'fixture_bot');self.assertTrue(row['last_success'])
+        with self.db:self.db.execute("UPDATE integration_config SET enabled=0,connected=0 WHERE kind='telegram'")
+        worker.poll(self.db,api,('current','unused'))
+        self.assertEqual(self.db.execute("SELECT connected FROM integration_config WHERE kind='telegram'").fetchone()[0],0)
+
     def test_menu_sync_updates_once_changes_url_and_resets_when_disabled(self):
         calls=[]
         api=FakeAPI()

@@ -61,6 +61,7 @@ function signed(){const values={auth_date:String(Math.floor(Date.now()/1000)),qu
 
  await staff.unroute('**/api/admin/integrations/test');
  await staff.route('**/api/admin/integrations/test',async route=>{const config=await(await staff.request.get(base+'/api/integrations')).json();config.telegram.connected=true;config.telegram.bot_username='fixture_bot';await route.fulfill({json:config})});
+ await staff.locator('[data-test=telegram]').evaluate(button=>button.replaceWith(button.cloneNode(true)));
  await staff.locator('[data-test=telegram]').click();
  await staff.locator('[data-connection-result=telegram]').filter({hasText:'Ulangan'}).waitFor();
  assert.equal(await staff.locator('#integration-telegram').locator('..').locator('.badge').innerText(),'Ulangan');

@@ -160,7 +160,7 @@ def sync_menu(db,api):
         with db:bot.set_runtime(db,'menu_error',failure.code)
 
 
-def poll(db,api):
+def poll(db,api,expected_config=None):
     if owner_control.suspended(db):return
     offset=int(bot.runtime(db,'last_update_id','-1'))+1
     updates=api.call('getUpdates',{'offset':offset,'timeout':15,'limit':50,'allowed_updates':['message','callback_query']})
@@ -170,6 +170,11 @@ def poll(db,api):
         with db:bot.process_update(db,update)
     with db:
         bot.set_runtime(db,'last_poll',w.now());bot.set_runtime(db,'worker_error','')
+        # A successful authenticated poll is a real connection check. Match the
+        # token reference so a response from a replaced bot cannot mark it ready.
+        if expected_config is not None:
+            stamp=w.now()
+            db.execute("UPDATE integration_config SET connected=1,last_checked=?,last_success=?,last_error='',bot_username=? WHERE kind='telegram' AND enabled=1 AND token_ref=?",(stamp,stamp,bot.runtime(db,'bot_username'),expected_config[0]))
         bot.schedule_releases(db)
 
 
@@ -206,7 +211,7 @@ def main():
                     sync_menu(db,api)
                     for _ in range(10):
                         if not deliver_one(db,api,config):break
-                    poll(db,api)
+                    poll(db,api,config)
                 except TelegramError as failure:
                     with db:bot.set_runtime(db,'worker_error',failure.code)
                     time.sleep(max(3,min(failure.retry_after,30)))
