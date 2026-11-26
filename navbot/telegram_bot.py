@@ -34,6 +34,9 @@ def initialize(db):
 
 
 def _keyboard(db,lang):
+    exists=db.execute("SELECT 1 FROM sqlite_master WHERE name='telegram_mini_config'").fetchone()
+    row=db.execute("SELECT url FROM telegram_mini_config WHERE id=1").fetchone() if exists else None
+    if row and row['url']:return {'remove_keyboard':True}
     return main_keyboard(lang)
 
 
@@ -46,7 +49,10 @@ def _launch_button(db,chat_id,batch,student=None):
     chat=db.execute('SELECT lang FROM telegram_chats WHERE chat_id=?',(chat_id,)).fetchone()
     lang=chat['lang'] if chat else 'uz'
     label=t('app_open',lang)
-    _job(db,chat_id,'message',{'text':card('NAVBOT · '+t('portal',lang),t('app_note',lang)),'reply_markup':{'inline_keyboard':[[{'text':label,'web_app':{'url':row['url']}}]]}},batch,student)
+    buttons=[[{'text':label,'web_app':{'url':row['url']}}]]
+    for keys in (('requests','track'),('profile','help')):
+        buttons.append([{'text':t(key,lang),'web_app':{'url':row['url']+'#'+key}} for key in keys])
+    _job(db,chat_id,'message',{'text':card('NAVBOT · '+t('portal',lang),t('app_note',lang)),'reply_markup':{'inline_keyboard':buttons}},batch,student)
 
 
 def background_audit(db,action,detail):
@@ -161,7 +167,7 @@ def _message(db,chat_id,text,keyboard,batch,student=None,request_id=None,approve
         if approved:payload['approved_answer']=True
         if keyboard and index==len(pieces)-1:payload['reply_markup']=keyboard
         _job(db,chat_id,'message',payload,batch,student,request_id)
-    if keyboard and 'keyboard' in keyboard:_launch_button(db,chat_id,batch,student)
+    if keyboard and ('keyboard' in keyboard or keyboard.get('remove_keyboard')):_launch_button(db,chat_id,batch,student)
 
 
 def _release_valid(db,release):
@@ -320,7 +326,6 @@ def process_update(db,update):
                 db.execute("UPDATE telegram_chats SET state='id',pending_sid=NULL WHERE chat_id=?",(chat_id,))
                 _message(db,chat_id,t('welcome',lang),{'remove_keyboard':True},batch)
                 _message(db,chat_id,t('choose_language',lang),languages(),batch)
-                _launch_button(db,chat_id,batch)
             return
         outcome=_verify(db,chat_id,state['pending_sid'],text)
         if outcome=='linked':

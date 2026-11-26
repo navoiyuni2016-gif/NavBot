@@ -248,6 +248,17 @@ class TelegramBotTests(unittest.TestCase):
         self.assertNotIn(SID,str(payloads))
         self.assertIsNone(self.db.execute('SELECT * FROM telegram_links').fetchone())
 
+    def test_configured_app_replaces_reply_keyboard_with_section_links(self):
+        with self.db:self.db.execute("UPDATE telegram_mini_config SET url='https://example.com/student'")
+        self.assertEqual(bot._keyboard(self.db,'uz'),{'remove_keyboard':True})
+        with self.db:bot._message(self.db,101,'Menu',bot._keyboard(self.db,'uz'),'menu-test')
+        payloads=[json.loads(r[0]) for r in self.db.execute("SELECT payload FROM telegram_outbox ORDER BY id")]
+        self.assertEqual(payloads[0]['reply_markup'],{'remove_keyboard':True})
+        rows=payloads[-1]['reply_markup']['inline_keyboard']
+        self.assertEqual([b['web_app']['url'] for row in rows[1:] for b in row],['https://example.com/student#'+key for key in ('requests','track','profile','help')])
+        with self.db:self.db.execute("UPDATE telegram_mini_config SET url=''")
+        self.assertIn('keyboard',bot._keyboard(self.db,'uz'))
+
     def test_unicode_messages_stay_under_telegram_limit(self):
         text='😀'*6000+'abc';parts=list(bot.chunks(text))
         self.assertEqual(''.join(parts),text)
