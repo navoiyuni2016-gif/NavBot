@@ -24,6 +24,34 @@ class FakeAPI:
         return {'message_id':77}
 
 class TelegramBotTests(unittest.TestCase):
+    def test_menu_sync_updates_once_changes_url_and_resets_when_disabled(self):
+        calls=[]
+        api=FakeAPI()
+        def call(method,data=None):
+            calls.append((method,data));return True
+        api.call=call
+        self.db.execute("UPDATE telegram_mini_config SET url='https://navbot.example/student'")
+        self.db.commit()
+        worker.sync_menu(self.db,api);worker.sync_menu(self.db,api)
+        self.assertEqual(calls,[('setChatMenuButton',{'menu_button':{'type':'web_app','text':'NAVBOT','web_app':{'url':'https://navbot.example/student'}}})])
+        self.db.execute("UPDATE telegram_mini_config SET url='https://other.example/student'");self.db.commit()
+        worker.sync_menu(self.db,api)
+        self.assertEqual(calls[-1][1]['menu_button']['web_app']['url'],'https://other.example/student')
+        self.db.execute("UPDATE telegram_mini_config SET url=''");self.db.commit()
+        worker.sync_menu(self.db,api)
+        self.assertEqual(calls[-1][1],{'menu_button':{'type':'default'}})
+
+    def test_menu_failure_retries_later_without_stopping_bot(self):
+        api=FakeAPI(worker.TelegramError(429,120))
+        worker.sync_menu(self.db,api);worker.sync_menu(self.db,api)
+        self.assertEqual(len(api.calls),1)
+        self.assertEqual(bot.runtime(self.db,'menu_error'),'429')
+        self.assertGreater(api._menu_retry,time.time()+100)
+        api._menu_retry=0
+        api.call=lambda *args:True
+        worker.sync_menu(self.db,api)
+        self.assertEqual(bot.runtime(self.db,'menu_error'),'')
+
     @classmethod
     def setUpClass(cls):
         cls.temp=tempfile.TemporaryDirectory();cls.path=Path(cls.temp.name)/'base.sqlite3'

@@ -1,5 +1,11 @@
 # Telegram dizayni
 
+## Mini Appga tez kirish
+
+Telegram worker saqlangan Mini App manzilini `setChatMenuButton` orqali chat menyusiga **NAVBOT** tugmasi sifatida avtomatik o‘rnatadi. Manzil o‘zgarsa tugma yangilanadi; bo‘shatilsa odatiy Telegram menyusi qaytadi. API xatosida chat ishlashda davom etadi va sozlash keyinroq takrorlanadi.
+
+Profilga **Ilovani ochish** tugmasi uchun bot egasi **@BotFather → /mybots → kerakli bot → Bot Settings → Configure Mini App → Enable Mini App** orqali `https://navbot.tsuull.uz/student` manzilini kiritadi. Telegram interfeysida nomlar farq qilishi mumkin; Main Mini App sozlamasini tanlang. Bu profil tugmasi Bot API orqali o‘rnatilmaydi. **Xabar yuborish** tugmasi esa Telegram chatini ochishda davom etadi.
+
 Bot xabarlari tartibli kartalar, holat belgilari va sahifalangan murojaatlar bilan yangilandi. Mini App shaxsiy bosh sahifa, to‘rtta xizmat kartasi, pastki navigatsiya, jarayon lentasi, uch til va Telegram mavzusiga mos yorug‘/qorong‘i ko‘rinishga ega.
 
 Talabani kod bilan bog‘lash, imzolangan Telegram initData, murojaat egaligi va faqat tasdiqlangan javob/fayllarni ko‘rsatish talablari saqlangan. Yangi foydalanuvchi ham `/start` orqali inline WebApp tugmasini oladi; tugma o‘zi hisobni bog‘lamaydi.

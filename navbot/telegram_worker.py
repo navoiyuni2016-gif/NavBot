@@ -35,7 +35,7 @@ class API:
         self._opener=request.build_opener(NoRedirect())
 
     def call(self,method,data=None,file=None):
-        if method not in ('getMe','getUpdates','sendMessage','sendDocument','answerCallbackQuery'):raise TelegramError('invalid_method')
+        if method not in ('getMe','getUpdates','sendMessage','sendDocument','answerCallbackQuery','setChatMenuButton'):raise TelegramError('invalid_method')
         data=data or {}
         if file:
             boundary=uuid4().hex;body=bytearray()
@@ -144,6 +144,22 @@ def deliver_one(db,api,expected_config=None):
         return True
 
 
+def sync_menu(db,api):
+    """Sync the default private-chat menu; retry failures without blocking chat."""
+    exists=db.execute("SELECT 1 FROM sqlite_master WHERE name='telegram_mini_config'").fetchone()
+    row=db.execute('SELECT url FROM telegram_mini_config WHERE id=1').fetchone() if exists else None
+    url=row['url'] if row else ''
+    if getattr(api,'_menu_url',None)==url or time.time()<getattr(api,'_menu_retry',0):return
+    menu={'type':'web_app','text':'NAVBOT','web_app':{'url':url}} if url else {'type':'default'}
+    try:
+        if api.call('setChatMenuButton',{'menu_button':menu}) is not True:raise TelegramError('invalid_menu_response')
+        api._menu_url=url
+        with db:bot.set_runtime(db,'menu_error','')
+    except TelegramError as failure:
+        api._menu_retry=time.time()+max(60,failure.retry_after)
+        with db:bot.set_runtime(db,'menu_error',failure.code)
+
+
 def poll(db,api):
     if owner_control.suspended(db):return
     offset=int(bot.runtime(db,'last_update_id','-1'))+1
@@ -187,6 +203,7 @@ def main():
                 try:
                     if config!=previous:
                         api=API(config[1]);identity(db,api);previous=config
+                    sync_menu(db,api)
                     for _ in range(10):
                         if not deliver_one(db,api,config):break
                     poll(db,api)
