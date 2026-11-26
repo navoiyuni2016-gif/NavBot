@@ -52,6 +52,28 @@ TEXT={
  'flood':('Iltimos, biroz kutib qayta bosing.','Подождите немного и повторите.','Please wait a little before trying again.'),
 }
 
+TEXT.update({
+ 'welcome':('🏛 NAVBOT · Talaba kabineti\n\nMurojaatlar, ijro jarayoni va tasdiqlangan javoblar — bir joyda.\n\n① HEMIS ID raqamingizni kiriting.\n② Xodim bergan bir martalik kod bilan hisobingizni bog‘lang.','🏛 NAVBOT · Кабинет студента\n\nОбращения, этапы исполнения и утверждённые ответы — в одном месте.\n\n① Введите свой HEMIS ID.\n② Привяжите аккаунт одноразовым кодом от сотрудника.','🏛 NAVBOT · Student portal\n\nYour requests, progress and approved answers — in one place.\n\n① Enter your HEMIS ID.\n② Link your account using the one-time code from staff.'),
+ 'code':('🔐 Bog‘lash · 2-bosqich\n\nXodim shaxsingizni tekshirgach bergan bir martalik kodni kiriting. Kod 10 daqiqa amal qiladi.','🔐 Привязка · Шаг 2\n\nВведите одноразовый код от сотрудника после проверки личности. Код действует 10 минут.','🔐 Link account · Step 2\n\nEnter the one-time code staff issued after checking your identity. It expires in 10 minutes.'),
+ 'linked':('✅ Hisobingiz muvaffaqiyatli bog‘landi.\nEndi faqat o‘z murojaatlaringizni kuzatasiz.','✅ Аккаунт успешно привязан.\nТеперь вы можете отслеживать свои обращения.','✅ Your account is linked.\nYou can now follow your own requests.'),
+ 'created':('Yaratilgan','Создано','Created'),
+ 'service':('Xizmat','Услуга','Service'),
+ 'portal':('Talaba kabineti','Кабинет студента','Student portal'),
+ 'menu_note':('Murojaatlar, jarayon va javoblar quyidagi tugmalarda.','Обращения, этапы и ответы — в меню ниже.','Find your requests, progress and answers in the menu below.'),
+ 'app_open':('📲 NAVBOT ilovasini ochish','📲 Открыть NAVBOT','📲 Open NAVBOT'),
+ 'app_note':('Murojaatlar, jarayon va hujjatlarni qulay ko‘rinishda oching.','Откройте обращения, этапы и документы в удобном интерфейсе.','View your requests, progress and documents in one clear interface.'),
+ 'page':('Sahifa','Страница','Page'),
+ 'help_text':('❓ NAVBOT · Yordam\n\n① Murojaatni rasmiylashtirish\nXodim murojaatingizni shaxsan yoki telefon orqali qabul qiladi.\n\n② Jarayonni kuzatish\n«Murojaatlarim» va «Jarayonni kuzatish» orqali holatni tekshiring.\n\n③ Javob va hujjatlar\nJavob va tanlangan fayllar faqat rahbar tasdig‘idan keyin yuboriladi.\n\n🔐 Hisobni bog‘lash kodi uchun xodimga murojaat qiling.','❓ NAVBOT · Помощь\n\n① Регистрация обращения\nСотрудник принимает обращение лично или по телефону.\n\n② Отслеживание\nПроверяйте статус через «Мои обращения» и «Отследить процесс».\n\n③ Ответ и документы\nОтвет и выбранные файлы отправляются только после утверждения руководителем.\n\n🔐 Обратитесь к сотруднику за кодом привязки.','❓ NAVBOT · Help\n\n① Register a request\nStaff accept your request in person or by phone.\n\n② Follow progress\nUse My requests or Track progress to check the status.\n\n③ Answers and documents\nAnswers and selected files are sent only after approval.\n\n🔐 Ask staff for an account linking code.'),
+})
+
+
+def status_icon(status):
+    return {'new':'🔵','in_progress':'🟡','returned':'🟠','pending_approval':'🟣','closed':'✅','approved':'✅'}.get(status,'▫️')
+
+
+def card(title,body):
+    return title+'\n'+'─'*18+'\n'+body
+
 
 def uz(text):
     """Apply the same Uzbek alphabet used by the staff UI, to UI text only."""
@@ -73,8 +95,8 @@ def t(key,lang='uz'):
 
 
 def main_keyboard(lang):
-    return {'keyboard':[[{'text':t('requests',lang)},{'text':t('track',lang)}],[{'text':t('profile',lang)},{'text':t('help',lang)}],[{'text':t('language',lang)}]],'resize_keyboard':True,'is_persistent':True}
+    return {'keyboard':[[{'text':t('requests',lang)},{'text':t('track',lang)}],[{'text':t('profile',lang)},{'text':t('help',lang)}],[{'text':t('language',lang)}]],'resize_keyboard':True,'is_persistent':True,'input_field_placeholder':t('menu',lang)}
 
 
 def languages():
-    return {'inline_keyboard':[[{'text':'Özbekça','callback_data':'lang:uz'},{'text':'Русский','callback_data':'lang:ru'},{'text':'English','callback_data':'lang:en'}]]}
+    return {'inline_keyboard':[[{'text':'🇺🇿 Özbekça','callback_data':'lang:uz'},{'text':'🇷🇺 Русский','callback_data':'lang:ru'},{'text':'🇬🇧 English','callback_data':'lang:en'}]]}

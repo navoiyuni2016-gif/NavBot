@@ -196,6 +196,30 @@ class TelegramBotTests(unittest.TestCase):
         self.assertIn('Kuzatiş uçun',self.payloads());self.assertIn('Shavkat O‘g‘li',self.payloads())
         self.assertEqual(main_keyboard('uz')['keyboard'][0][1]['text'],'📍 Jarayonni kuzatiş')
 
+    def test_redesigned_cards_keep_student_text_literal_and_private_fields_hidden(self):
+        self.link()
+        request=self.request()
+        with self.db:
+            self.db.execute("UPDATE students SET full_name=? WHERE hemis_id=?",("Shavkat <b>O‘g‘li</b>",SID))
+            self.db.execute("UPDATE requests SET note='PRIVATE STAFF NOTE',internal_basis='PRIVATE BASIS' WHERE id=?",(request['id'],))
+        self.send('/start');self.send('/profile');self.send(data='req:'+str(request['id']))
+        payloads=[json.loads(row[0]) for row in self.db.execute("SELECT payload FROM telegram_outbox WHERE kind='message'")]
+        self.assertTrue(any('─'*18 in p['text'] for p in payloads))
+        self.assertTrue(any('Shavkat <b>O‘g‘li</b>' in p['text'] for p in payloads))
+        self.assertTrue(all('parse_mode' not in p for p in payloads))
+        self.assertNotIn('PRIVATE STAFF NOTE',str(payloads));self.assertNotIn('PRIVATE BASIS',str(payloads))
+
+    def test_unlinked_start_shows_signed_app_entry_without_student_data(self):
+        import telegram_mini
+        with self.db:telegram_mini.save_config(self.db,self.users['admin'],{'url':'https://example.com/student'})
+        self.send('/start')
+        payloads=[json.loads(row[0]) for row in self.db.execute("SELECT payload FROM telegram_outbox WHERE kind='message'")]
+        launch=[p for p in payloads if 'web_app' in str(p)]
+        self.assertEqual(len(launch),1)
+        self.assertEqual(launch[0]['reply_markup']['inline_keyboard'][0][0]['web_app']['url'],'https://example.com/student')
+        self.assertNotIn(SID,str(payloads))
+        self.assertIsNone(self.db.execute('SELECT * FROM telegram_links').fetchone())
+
     def test_unicode_messages_stay_under_telegram_limit(self):
         text='😀'*6000+'abc';parts=list(bot.chunks(text))
         self.assertEqual(''.join(parts),text)

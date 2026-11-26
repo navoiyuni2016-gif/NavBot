@@ -12,7 +12,7 @@ from datetime import datetime, timezone, timedelta
 from uuid import uuid4
 from pathlib import Path
 import workflow as w
-from telegram_text import LANGS, t, main_keyboard, languages, uz, labels
+from telegram_text import LANGS, t, main_keyboard, languages, uz, labels, card, status_icon
 
 DEFAULT_CATALOG=json.loads(Path(__file__).with_name('catalog.json').read_text(encoding='utf-8'))
 CODE_TTL=600
@@ -45,8 +45,8 @@ def _launch_button(db,chat_id,batch,student=None):
     if not row or not row['url']:return
     chat=db.execute('SELECT lang FROM telegram_chats WHERE chat_id=?',(chat_id,)).fetchone()
     lang=chat['lang'] if chat else 'uz'
-    label={'uz':'NAVBOT ilovasini oçiş','ru':'Открыть NAVBOT','en':'Open NAVBOT'}.get(lang,'Open NAVBOT')
-    _job(db,chat_id,'message',{'text':label,'reply_markup':{'inline_keyboard':[[{'text':label,'web_app':{'url':row['url']}}]]}},batch,student)
+    label=t('app_open',lang)
+    _job(db,chat_id,'message',{'text':card('NAVBOT · '+t('portal',lang),t('app_note',lang)),'reply_markup':{'inline_keyboard':[[{'text':label,'web_app':{'url':row['url']}}]]}},batch,student)
 
 
 def background_audit(db,action,detail):
@@ -171,7 +171,7 @@ def _release_valid(db,release):
 
 def _release_messages(db,link,release,batch,lang):
     if not _release_valid(db,release):return
-    text='✅ NAV-'+str(release['request_id']).zfill(4)+' · '+t('approved',lang)+'\n\n'+release['answer']
+    text=card('✅ NAV-'+str(release['request_id']).zfill(4)+' · '+t('approved',lang),release['answer'])
     if release['result'] and release['result']!=release['answer']:text+='\n\n'+release['result']
     keyboard={'inline_keyboard':[[{'text':t('details',lang),'callback_data':'req:'+str(release['request_id'])},{'text':t('requests',lang),'callback_data':'list:1'}]]}
     _message(db,link['chat_id'],text,keyboard,batch,link,release['request_id'],approved=True)
@@ -244,17 +244,18 @@ def _list(db,link,page,lang,batch,tracking=False):
     rows=db.execute('SELECT * FROM requests WHERE student_id=? AND deleted_at IS NULL ORDER BY id DESC LIMIT 5 OFFSET ?',(link['student_id'],(page-1)*5)).fetchall()
     if not rows:
         _message(db,link['chat_id'],t('none',lang),_keyboard(db,lang),batch,link);return
-    buttons=[];lines=[t('choose_request' if tracking else 'your_requests',lang)]
+    buttons=[];lines=[card('📍 '+t('track',lang).lstrip('📍 ') if tracking else t('requests',lang),t('choose_request' if tracking else 'your_requests',lang))]
     for row in rows:
         released=db.execute('SELECT 1 FROM telegram_releases WHERE request_id=?',(row['id'],)).fetchone()
         state=t('approved' if released else row['status'],lang)
         label='NAV-'+str(row['id']).zfill(4)+' · '+_service(db,row,lang)
-        lines.append(label+'\n'+t('status',lang)+': '+state+' · '+t(row['channel'] if row['channel'] in ('phone','kiosk') else 'kiosk',lang)+'\n'+_date(row['created_at']))
+        lines.append(label+'\n'+status_icon('approved' if released else row['status'])+' '+state+'\n📅 '+_date(row['created_at'])+' · '+t(row['channel'] if row['channel'] in ('phone','kiosk') else 'kiosk',lang))
         buttons.append([{'text':label[:80],'callback_data':('track:' if tracking else 'req:')+str(row['id'])}])
     paging=[]
     if page>1:paging.append({'text':t('previous',lang),'callback_data':('tracks:' if tracking else 'list:')+str(page-1)})
     if page*5<total:paging.append({'text':t('next',lang),'callback_data':('tracks:' if tracking else 'list:')+str(page+1)})
     if paging:buttons.append(paging)
+    lines.append(t('page',lang)+' '+str(page)+' / '+str(max(1,(total+4)//5)))
     _message(db,link['chat_id'],'\n\n'.join(lines),{'inline_keyboard':buttons},batch,link)
 
 
@@ -264,10 +265,10 @@ def _detail(db,link,row,lang,batch,tracking=False):
     state=t('approved' if release else row['status'],lang)
     if tracking:
         stages=[('new',True),('assigned',row['status']!='new'),('prepared',row['status'] in ('pending_approval','closed')),('approved' if release else 'pending_approval',bool(release)),('delivered',delivery(db,row['id'])['state']=='sent')]
-        text=title+'\n\n'+'\n'.join(('✅ ' if done else '🟠 ' if key=='pending_approval' and row['status']=='pending_approval' else '○ ')+t(key,lang) for key,done in stages)
+        text=card(title,status_icon('approved' if release else row['status'])+' '+state)+'\n\n'+'\n'.join(('✅ ' if done else '🟠 ' if key=='pending_approval' and row['status']=='pending_approval' else '○ ')+t(key,lang) for key,done in stages)
         text+='\n\n'+t('wait' if not release else 'approved',lang)
     else:
-        text=title+'\n'+t('status',lang)+': '+state+'\n'+_date(row['created_at'])+'\n\n'+(row['content'] or '')[:2000]
+        text=card(title,status_icon('approved' if release else row['status'])+' '+state+'\n📅 '+t('created',lang)+': '+_date(row['created_at']))+'\n\n'+(row['content'] or '')[:2000]
         if row['deadline']:text+='\n'+t('deadline',lang)+': '+_date(row['deadline'])
     if row['status']=='closed' and not release:text+='\n'+t('not_approved',lang)
     buttons=[[{'text':t('update' if tracking else 'track',lang),'callback_data':'track:'+str(row['id'])}]]
@@ -319,6 +320,7 @@ def process_update(db,update):
                 db.execute("UPDATE telegram_chats SET state='id',pending_sid=NULL WHERE chat_id=?",(chat_id,))
                 _message(db,chat_id,t('welcome',lang),{'remove_keyboard':True},batch)
                 _message(db,chat_id,t('choose_language',lang),languages(),batch)
+                _launch_button(db,chat_id,batch)
             return
         outcome=_verify(db,chat_id,state['pending_sid'],text)
         if outcome=='linked':
@@ -348,10 +350,10 @@ def process_update(db,update):
     elif text in ('/track',*labels('track')):_list(db,link,1,lang,batch,True)
     elif text in ('/profile',*labels('profile')):
         fields=[('HEMIS ID',student['hemis_id']),(t('course',lang),student['course']),(t('faculty',lang),student['faculty']),(t('group',lang),student['student_group']),(t('specialty',lang),student['programme']),(t('type',lang),student['education_type']),(t('form',lang),student['education_form'])]
-        _message(db,chat_id,'👤 '+student['full_name']+'\n'+'\n'.join(str(key)+': '+str(value or '—') for key,value in fields)+'\n'+t('verified',lang),_keyboard(db,lang),batch,link)
+        _message(db,chat_id,card('👤 '+student['full_name'],'\n'.join(str(key)+': '+str(value or '—') for key,value in fields))+'\n\n✅ '+t('verified',lang),_keyboard(db,lang),batch,link)
     elif text in ('/help',*labels('help')):_message(db,chat_id,t('help_text',lang),_keyboard(db,lang),batch,link)
     elif text in ('/language',*labels('language')):_message(db,chat_id,t('choose_language',lang),languages(),batch,link)
-    else:_message(db,chat_id,t('menu',lang),_keyboard(db,lang),batch,link)
+    else:_message(db,chat_id,card('🏛 NAVBOT · '+t('portal',lang),student['full_name']+'\n\n'+t('menu_note',lang)),_keyboard(db,lang),batch,link)
 
 
 def retry(db,user,data):
