@@ -49,6 +49,16 @@ function signed(){const values={auth_date:String(Math.floor(Date.now()/1000)),qu
  const sessionStorage=await page.evaluate(()=>JSON.stringify({...localStorage,...window.sessionStorage}));assert(!sessionStorage.includes(code));assert(!sessionStorage.includes('init_data'));
  const plain=await browser.newContext();await plain.route('https://telegram.org/js/telegram-web-app.js',route=>route.fulfill({contentType:'text/javascript',body:''}));const outside=await plain.newPage();await outside.goto(base+'/student');await outside.getByText('Ilovani Telegram bot içidan oçing.',{exact:true}).waitFor();
  const staff=await admin.newPage();await staff.goto(base+'/admin');await staff.locator('[data-view=integrations]').click();await staff.locator('#telegram-mini-form').waitFor();assert.equal(await staff.locator('#telegram-mini-form [name=url]').inputValue(),'https://example.com/student');
+ // Optional health failure must not leave the visible connection button inert.
+ await staff.route('**/api/telegram/health',route=>route.abort());
+ await staff.locator('[data-view=integrations]').click();
+ await staff.locator('[data-test=telegram]').waitFor();
+ let connectionTests=0;
+ await staff.route('**/api/admin/integrations/test',async route=>{connectionTests++;const config=await(await staff.request.get(base+'/api/integrations')).json();await route.fulfill({json:config})});
+ await staff.locator('[data-test=telegram]').click();
+ await staff.waitForResponse(r=>r.url().endsWith('/api/integrations'));
+ assert.equal(connectionTests,1,'connection test stays clickable when health fails');
+ await staff.unroute('**/api/telegram/health');
  // Use the repository's known-good raster fixture, then verify the shared logo URL.
  const imageData='iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aVZkAAAAASUVORK5CYII=';
  const branding=(await post('/api/admin/branding',{target:'system_logo',mime:'image/png',data:imageData})).settings.branding;
