@@ -56,8 +56,19 @@ function signed(){const values={auth_date:String(Math.floor(Date.now()/1000)),qu
  let connectionTests=0;
  await staff.route('**/api/admin/integrations/test',async route=>{connectionTests++;const config=await(await staff.request.get(base+'/api/integrations')).json();await route.fulfill({json:config})});
  await staff.locator('[data-test=telegram]').click();
- await staff.waitForResponse(r=>r.url().endsWith('/api/integrations'));
+ await staff.locator('[data-connection-result=telegram]').filter({hasText:'Ulanmagan'}).waitFor();
  assert.equal(connectionTests,1,'connection test stays clickable when health fails');
+
+ await staff.unroute('**/api/admin/integrations/test');
+ await staff.route('**/api/admin/integrations/test',async route=>{const config=await(await staff.request.get(base+'/api/integrations')).json();config.telegram.connected=true;config.telegram.bot_username='fixture_bot';await route.fulfill({json:config})});
+ await staff.locator('[data-test=telegram]').click();
+ await staff.locator('[data-connection-result=telegram]').filter({hasText:'Ulangan'}).waitFor();
+ assert.equal(await staff.locator('#integration-telegram').locator('..').locator('.badge').innerText(),'Ulangan');
+ await staff.unroute('**/api/admin/integrations/test');
+ await staff.route('**/api/admin/integrations/test',route=>route.fulfill({status:502,json:{error:'Fixture network failure'}}));
+ await staff.locator('[data-test=telegram]').click();
+ await staff.locator('[data-connection-result=telegram]').filter({hasText:'Fixture network failure'}).waitFor();
+ assert.equal(await staff.locator('[data-test=telegram]').isEnabled(),true);
  await staff.unroute('**/api/telegram/health');
  // Use the repository's known-good raster fixture, then verify the shared logo URL.
  const imageData='iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aVZkAAAAASUVORK5CYII=';
