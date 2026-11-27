@@ -3,6 +3,16 @@
 ToshDO‘TAU Registrator ofisi: navbat, murojaatlar reyestri va ijro nazorati.
 Talab manbasi: [0.5 hujjati](docs/requirements-v0.5.txt). Kiosk, TV, tablo va kabinetlar navy/teal dizayn namunalariga moslashtirilgan.
 
+## Foydalanish yo‘riqnomalari
+
+Xodimlar va talabalar uchun ekran namunalari bilan tayyorlangan qo‘llanmalar:
+
+- **To‘liq yo‘riqnoma — 31 bet:** [PDF](docs/yoriqnomalar/NAVBOT-toliq-yoriqnoma.pdf) · [Word](docs/yoriqnomalar/NAVBOT-toliq-yoriqnoma.docx)
+- **Talabalar uchun — 9 bet:** [PDF](docs/yoriqnomalar/NAVBOT-talabalar-yoriqnoma.pdf) · [Word](docs/yoriqnomalar/NAVBOT-talabalar-yoriqnoma.docx)
+- **[Barcha yo‘riqnomalarni ZIP qilib yuklab olish](https://github.com/navoiyuni2016-gif/NavBot/raw/refs/heads/main/docs/yoriqnomalar/NAVBOT-yoriqnomalar.zip)**
+
+GitHubda faylni ochib **Download raw file** tugmasini bosing. Qo‘llanmalar 2026-yil 26-noyabrdagi funksiyalar asosida tayyorlangan; rasmlar sun’iy o‘quv ma’lumotlaridan olingan.
+
 ## Windowsda ishga tushirish
 
 1. GitHubda **Code → Download ZIP** ni bosing; ZIPni to‘liq yangi papkaga oching.
