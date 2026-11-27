@@ -1,5 +1,7 @@
 # NAVBOT foydalanish yo‘riqnomalari
 
+**Yangi: [48 sahifali, dizaynli kitob nashri va bosma paket](kitob/README.md)**
+
 Versiya 1.0 • 26-noyabr 2026-yil. Rasmlar sun’iy ma’lumotli o‘quv muhitidan.
 
 | Qo‘llanma | PDF | Word |

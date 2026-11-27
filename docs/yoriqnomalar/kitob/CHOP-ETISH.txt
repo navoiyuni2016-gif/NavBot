@@ -1,0 +1,40 @@
+NAVBOT — KITOB MAKETI
+27-noyabr 2026-yil
+
+1. FAYLLAR
+NAVBOT-KITOB.pdf — to‘liq kitob: 48 sahifa, old/orqa muqova bilan.
+NAVBOT-ICHKI-SAHIFALAR.pdf — 44 ta ichki sahifa; muqovani alohida bosish uchun.
+NAVBOT-MUQOVA-3MM.pdf — old va orqa muqova, 2 sahifa, har tomonda 3 mm bleed.
+NAVBOT-KITOB.docx — matnni tahrirlash uchun Word nusxasi. Wordda sahifalanish o‘zgarishi mumkin; chop uchun PDF maket asosiy.
+
+2. O‘LCHAM VA TARTIB
+Tayyor kitob o‘lchami A4: 210 × 297 mm.
+Ichki hoshiya 26 mm; tashqi hoshiya 18 mm; yuqori/pastki hoshiya 22 mm.
+Hoshiyalar ikki tomonlama bosishda muqovalash tomonga mos ravishda almashadi.
+PDFlar oddiy o‘qish tartibida. Polosa/montaj (imposition) qilinmagan.
+Bosmaxona montajni o‘z uskunasi va muqovalash usuliga qarab bajaradi.
+
+3. TO‘LIQ KITOBNI ODDIY PRINTERDA SINASH
+A4, «Actual size / 100%», ikki tomonlama bosish, uzun qirra bo‘ylab aylantirish.
+«Booklet» yoki avtomatik ikki sahifani bitta A4ga joylashni tanlamang: bu maket A4 tayyor format uchun.
+Avval bir necha sahifani sinab, hoshiyalar va yozuv yo‘nalishini tekshiring.
+1-sahifa — old muqova; 2-sahifa — muqova ichi, bo‘sh.
+3–46-sahifalar — kitobning ichki betlari.
+47-sahifa — orqa muqova ichi, bo‘sh; 48-sahifa — orqa muqova.
+
+4. BOSMAXONADA MUQOVANI ALOHIDA CHIQARISH
+Ichki sahifalar fayli: A4, 44 bet, ikki tomonlama; birinchi bet kitobning o‘ng tomonida boshlanadi.
+Muqova fayli: 216 × 303 mm MediaBox, 210 × 297 mm TrimBox, 3 mm bleed.
+Muqova faylining 1-beti old, 2-beti orqa tashqi tomon. Ichki tomonlar bo‘sh.
+O‘zak (koreshok) eni belgilanmagan. Uni tanlangan qog‘oz, 22 ta ichki varaq va muqovalash usuliga qarab bosmaxona hisoblaydi.
+Agar yaxlit yoyilma muqova kerak bo‘lsa, bosmaxona shu ikki tashqi yuzani hisoblangan o‘zak bilan montaj qiladi.
+
+5. QOG‘OZ VA RANG
+Tavsiya: ichki betlarga 80–100 g/m² oq qog‘oz; muqovaga 250–300 g/m² qalin qog‘oz va mat qoplama. Bu majburiy texnik talab emas.
+Maket RGB rangida. PDF/X yoki CMYK bosma sertifikati sifatida taqdim etilmagan; bosmaxona o‘z rang profili bilan preflight/konvertatsiya qiladi.
+Matnlar va naqshlar vektor; ekran namunalari rastr. Kitobdagi rangli jadval va muhim eslatmalar oq-qora bosmada ham mazmunini saqlaydi.
+
+6. MAZMUN
+4 bo‘lim, 20 bob, mundarija havolalari, jarayon sxemasi, 4 ta sun’iy ma’lumotli ekran namunasi, kundalik nazorat va eslatma betlari.
+Haqiqiy parol, bir martalik kod va talabalar maxfiy ma’lumoti kiritilmagan.
+Qo‘llanma universitetning tasdiqlangan xizmat reglamenti va shaxsni tekshirish tartibini almashtirmaydi.

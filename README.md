@@ -5,6 +5,8 @@ Talab manbasi: [0.5 hujjati](docs/requirements-v0.5.txt). Kiosk, TV, tablo va ka
 
 ## Foydalanish yo‘riqnomalari
 
+**[Yangi: 48 sahifali kitob maketi — muqova, ichki betlar va bosma paket](docs/yoriqnomalar/kitob/README.md)**
+
 Xodimlar va talabalar uchun ekran namunalari bilan tayyorlangan qo‘llanmalar:
 
 - **To‘liq yo‘riqnoma — 31 bet:** [PDF](docs/yoriqnomalar/NAVBOT-toliq-yoriqnoma.pdf) · [Word](docs/yoriqnomalar/NAVBOT-toliq-yoriqnoma.docx)
